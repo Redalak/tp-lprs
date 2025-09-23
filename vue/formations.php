@@ -179,32 +179,44 @@
 
     <div class="cards">
         <div class="card">
-            <h3>Licence Informatique</h3>
-            <p>Une base solide pour débuter dans le développement, les algorithmes et les systèmes informatiques.</p>
+            <h3>Bac professionnel TRPM</h3>
+            <p>Technicien de Réalisation de Produits Mécaniques : maîtrisez les techniques de fabrication industrielle.</p>
             <a href="#">Voir détails</a>
         </div>
 
         <div class="card">
-            <h3>Master Intelligence Artificielle</h3>
-            <p>Spécialisez-vous en IA, machine learning et vision artificielle avec des projets concrets et encadrés.</p>
+            <h3>Bac professionnel MSPC</h3>
+            <p>Maintenance des Systèmes de Production Connectés, spécialisez-vous dans la maintenance industrielle moderne.</p>
             <a href="#">Voir détails</a>
         </div>
 
         <div class="card">
-            <h3>Diplôme d'Ingénieur</h3>
-            <p>Un parcours complet en 5 ans avec un fort ancrage scientifique et professionnel.</p>
+            <h3>Bac professionnel CIEL</h3>
+            <p>Conduite et Innovation en Équipement Logistique : devenez expert en gestion logistique et flux.</p>
             <a href="#">Voir détails</a>
         </div>
 
         <div class="card">
-            <h3>Formation continue</h3>
-            <p>Modules courts ou longs pour professionnels en reconversion ou montée en compétences.</p>
+            <h3>Bac technologique STI2D</h3>
+            <p>Sciences et Technologies de l’Industrie et du Développement Durable, orienté innovation technologique.</p>
             <a href="#">Voir détails</a>
         </div>
 
         <div class="card">
-            <h3>Cycle Préparatoire</h3>
-            <p>Préparez-vous aux concours et aux formations d’excellence dans un environnement stimulant.</p>
+            <h3>BTS CPRP</h3>
+            <p>Conception de Produits Industriels : développez vos compétences en conception et industrialisation.</p>
+            <a href="#">Voir détails</a>
+        </div>
+
+        <div class="card">
+            <h3>BTS MSPC</h3>
+            <p>Maintenance des Systèmes de Production Connectés, formation avancée en maintenance industrielle.</p>
+            <a href="#">Voir détails</a>
+        </div>
+
+        <div class="card">
+            <h3>BTS SIO</h3>
+            <p>Services Informatiques aux Organisations, spécialisation dans le développement et la gestion des systèmes.</p>
             <a href="#">Voir détails</a>
         </div>
     </div>

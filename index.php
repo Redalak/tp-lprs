@@ -218,6 +218,7 @@
                 <li><a href="#">Accueil</a></li>
                 <li><a href="#">Formations</a></li>
                 <li><a href="#">Relations Entreprise</a></li>
+                <li><a href="#">Contact</a></li>
                 <li><a href="#">Forum</a></li>
 
                 <li><a href="#">Connexion</a></li>
