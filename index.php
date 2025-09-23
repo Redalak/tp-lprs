@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>École Exemple</title>
+    <title>École</title>
     <style>
         body {
             margin: 0;
@@ -212,14 +212,14 @@
 <!-- HEADER -->
 <header>
     <div class="container">
-        <h1 class="logo">École Exemple</h1>
+        <h1 class="logo">École</h1>
         <nav>
             <ul>
-                <li><a href="#">L'École</a></li>
+                <li><a href="#">Accueil</a></li>
                 <li><a href="#">Formations</a></li>
-                <li><a href="#">Recherche</a></li>
-                <li><a href="#">Campus</a></li>
-                <li><a href="#">Relations</a></li>
+                <li><a href="#">Relations Entreprise</a></li>
+                <li><a href="#">Forum</a></li>
+
                 <li><a href="#">Connexion</a></li>
             </ul>
         </nav>
