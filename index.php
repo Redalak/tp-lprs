@@ -215,13 +215,12 @@
         <h1 class="logo">École</h1>
         <nav>
             <ul>
-                <li><a href="#">Accueil</a></li>
-                <li><a href="#">Formations</a></li>
+                <li><a href="index.php">Accueil</a></li>
+                <li><a href="vue/formations.php">Formations</a></li>
                 <li><a href="#">Relations Entreprise</a></li>
-                <li><a href="#">Contact</a></li>
-                <li><a href="#">Forum</a></li>
-
-                <li><a href="#">Connexion</a></li>
+                <li><a href="vue/supportContact.php">Contact</a></li>
+                <li><a href="vue/forum.php">Forum</a></li>
+                <li><a href="vue/connexion.php">Connexion</a></li>
             </ul>
         </nav>
     </div>
