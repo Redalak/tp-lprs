@@ -3,24 +3,46 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin - École Exemple</title>
+    <title>Admin - École Sup.</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        /* Définition de la palette de couleurs et des variables globales de la page principale */
+        :root {
+            --primary-color: #0A4D68; /* Bleu profond */
+            --secondary-color: #088395; /* Turquoise */
+            --accent-color: #F39C12; /* Accent orange/jaune (optionnel) */
+            --background-color: #f8f9fa; /* Fond clair de la page principale */
+            --surface-color: #ffffff;
+            --text-color: #343a40;
+            --light-text-color: #f8f9fa;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+            --border-radius: 8px;
+        }
+
         /* Reset & base */
         * {
             box-sizing: border-box;
         }
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f4f6f8;
-            color: #333;
+            /* Utilisation de Poppins */
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
         }
+
+        /* --- HEADER --- */
         header {
-            background-color: #005baa;
-            color: white;
+            /* Couleur primaire de la page principale */
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
             padding: 20px 40px;
             font-size: 1.5em;
-            font-weight: bold;
+            font-weight: 700; /* Utilisation d'un poids de police de Poppins */
             text-align: center;
             position: sticky;
             top: 0;
@@ -35,45 +57,66 @@
         }
 
         h1 {
-            color: #003a70;
+            /* Couleur primaire pour les titres importants */
+            color: var(--primary-color);
             margin-bottom: 30px;
             text-align: center;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+            display: inline-block;
         }
 
         /* Nav tabs */
         nav.tabs {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 40px;
             flex-wrap: wrap;
         }
 
         nav.tabs button {
-            background: #e4e9f2;
-            border: none;
-            padding: 12px 25px;
-            font-size: 1em;
-            border-radius: 6px;
+            background: var(--surface-color);
+            border: 1px solid var(--primary-color);
+            padding: 10px 20px;
+            font-size: 0.95em;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            transition: background 0.3s;
-            font-weight: 600;
-            color: #005baa;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         nav.tabs button.active,
         nav.tabs button:hover {
-            background: #005baa;
-            color: white;
+            /* Couleurs inversées ou accentuées */
+            background: var(--primary-color);
+            color: var(--light-text-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        nav.tabs button:hover:not(.active) {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
         }
 
         /* Sections */
         section.admin-section {
             display: none;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            background: var(--surface-color);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
         }
         section.admin-section.active {
             display: block;
@@ -86,114 +129,143 @@
             margin-top: 15px;
         }
         table thead {
-            background-color: #005baa;
+            background-color: var(--secondary-color); /* Utilisation de la couleur secondaire pour le header du tableau */
             color: white;
+            font-weight: 600;
         }
         table th, table td {
             padding: 12px 15px;
-            border: 1px solid #ddd;
+            border: 1px solid #dee2e6;
             text-align: left;
         }
         table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f6f7f9; /* Légèrement plus clair que le fond */
         }
 
-        /* Buttons inside tables */
+        /* Buttons inside tables (styles de la page principale pour les CTA/boutons) */
         .btn {
             padding: 6px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
             color: white;
+            font-weight: 500;
         }
 
         .btn.edit {
-            background-color: #007bff;
+            background-color: var(--secondary-color); /* Bleu turquoise */
         }
         .btn.edit:hover {
-            background-color: #0056b3;
+            background-color: #066d7c;
+            transform: translateY(-1px);
         }
 
         .btn.delete {
-            background-color: #dc3545;
+            background-color: #dc3545; /* Rouge standard pour danger */
         }
         .btn.delete:hover {
             background-color: #a71d2a;
+            transform: translateY(-1px);
         }
 
         /* Form styling */
         form.admin-form {
-            margin-top: 20px;
+            margin-top: 40px;
             max-width: 600px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: var(--border-radius);
+            background: #fcfcfc;
+        }
+        form.admin-form h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
         }
         form.admin-form label {
             display: block;
             margin-bottom: 6px;
-            font-weight: 600;
+            font-weight: 500;
             margin-top: 15px;
+            color: var(--text-color);
         }
         form.admin-form input,
         form.admin-form textarea,
         form.admin-form select {
             width: 100%;
             padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
             font-size: 1em;
-            font-family: inherit;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        form.admin-form input:focus,
+        form.admin-form textarea:focus,
+        form.admin-form select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(8, 131, 149, 0.25);
+            outline: none;
         }
         form.admin-form textarea {
             resize: vertical;
             min-height: 80px;
         }
         form.admin-form button.submit-btn {
-            margin-top: 20px;
-            background-color: #005baa;
+            margin-top: 25px;
+            background-color: var(--primary-color);
             color: white;
             padding: 12px 20px;
             font-weight: 600;
             border: none;
-            border-radius: 6px;
+            border-radius: 50px; /* Bord arrondi style CTA de la page principale */
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(10, 77, 104, 0.2);
         }
         form.admin-form button.submit-btn:hover {
-            background-color: #003a70;
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(8, 131, 149, 0.2);
         }
 
         /* Responsive */
         @media(max-width: 700px) {
             nav.tabs {
-                flex-direction: column;
-                align-items: center;
+                gap: 10px;
+                padding: 0 10px;
+            }
+            nav.tabs button {
+                flex-grow: 1;
+                font-size: 0.9em;
             }
             form.admin-form {
                 width: 100%;
             }
             table th, table td {
-                font-size: 0.9em;
+                font-size: 0.85em;
+                padding: 10px 8px;
             }
         }
     </style>
 </head>
 <body>
 
-<header>Admin - École Exemple</header>
+<header>Admin - École Supérieure</header>
 
 <div class="container">
 
-    <h1>Tableau de bord</h1>
+    <h1>Tableau de bord de l'Administration</h1>
 
     <nav class="tabs" role="tablist">
         <button class="tab-btn active" data-target="users" role="tab" aria-selected="true">Utilisateurs</button>
-        <button class="tab-btn" data-target="contents" role="tab" aria-selected="false">Contenus</button>
         <button class="tab-btn" data-target="jobs" role="tab" aria-selected="false">Offres d'emploi / stage</button>
         <button class="tab-btn" data-target="events" role="tab" aria-selected="false">Événements</button>
     </nav>
 
-    <!-- Utilisateurs -->
     <section id="users" class="admin-section active" role="tabpanel">
         <h2>Gestion des utilisateurs</h2>
         <table>
@@ -238,53 +310,8 @@
         </form>
     </section>
 
-    <!-- Contenus -->
-    <section id="contents" class="admin-section" role="tabpanel" aria-hidden="true">
-        <h2>Gestion des contenus</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th><th>Titre</th><th>Type</th><th>Publié le</th><th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>101</td><td>Présentation de l'école</td><td>Page</td><td>15/08/2025</td>
-                <td>
-                    <button class="btn edit">Modifier</button>
-                    <button class="btn delete">Supprimer</button>
-                </td>
-            </tr>
-            <tr>
-                <td>102</td><td>Article actualités</td><td>Article</td><td>20/08/2025</td>
-                <td>
-                    <button class="btn edit">Modifier</button>
-                    <button class="btn delete">Supprimer</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <form class="admin-form" aria-label="Ajouter un contenu">
-            <h3>Ajouter un contenu</h3>
-            <label for="content-title">Titre</label>
-            <input type="text" id="content-title" name="content-title" required />
 
-            <label for="content-type">Type</label>
-            <select id="content-type" name="content-type" required>
-                <option value="">-- Sélectionnez un type --</option>
-                <option value="page">Page</option>
-                <option value="article">Article</option>
-                <option value="blog">Blog</option>
-            </select>
 
-            <label for="content-body">Contenu</label>
-            <textarea id="content-body" name="content-body" required></textarea>
-
-            <button type="submit" class="submit-btn">Ajouter</button>
-        </form>
-    </section>
-
-    <!-- Offres d'emploi / stage -->
     <section id="jobs" class="admin-section" role="tabpanel" aria-hidden="true">
         <h2>Gestion des offres d'emploi / stage</h2>
         <table>
@@ -329,7 +356,6 @@
         </form>
     </section>
 
-    <!-- Événements -->
     <section id="events" class="admin-section" role="tabpanel" aria-hidden="true">
         <h2>Gestion des événements</h2>
         <table>
