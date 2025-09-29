@@ -140,4 +140,21 @@ class userRepo
         $req = $db->prepare("DELETE FROM {$this->table} WHERE id_user = :id");
         $req->execute(['id' => (int)$id]);
     }
+
+    public function connexion(user $u){
+        $db  = \bdd();
+        $req = $db->prepare('SELECT * FROM user WHERE email = :email');
+        $req->execute(array(
+            'email' => $u->getEmail()
+        ));
+        $utilisateur = $req->fetch();
+        if($utilisateur){
+            $u->setMdp($utilisateur['mdp']);
+            $u->setRole($utilisateur["role"]);
+            $u->setIdUser($utilisateur["id_user"]);
+            $u->setEmail($utilisateur["email"]);
+        }
+        return $u;
+    }
+
 }

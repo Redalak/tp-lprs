@@ -77,7 +77,7 @@
 
 <div class="container">
     <h2>Connexion</h2>
-    <form action="#" method="POST">
+    <form action="../src/traitement/gestionConnexion.php" method="POST">
         <label for="email">Adresse email</label>
         <input type="email" id="email" name="email" required />
 
