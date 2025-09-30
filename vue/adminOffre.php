@@ -32,6 +32,55 @@ $etats = ['ouvert','ferme','brouillon'];
         .w-pre{white-space:pre-line; word-break:break-word;}
     </style>
 </head>
+<style>
+    header {
+        text-align: center;
+        font-size: 1.8em;
+        font-weight: 700;
+        color: #0A4D68;
+        padding: 20px 0;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    nav.tabs {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 40px;
+    }
+
+    nav.tabs a {
+        text-decoration: none;
+        background: #fff;
+        border: 2px solid #0A4D68;
+        padding: 10px 25px;
+        font-weight: 600;
+        color: #0A4D68;
+        border-radius: 8px;
+        transition: background 0.3s, color 0.3s;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    nav.tabs a.active {
+        background: #0A4D68;
+        color: #f8f9fa;
+        box-shadow: 0 4px 10px rgba(0, 77, 104, 0.4);
+    }
+
+    nav.tabs a:hover:not(.active) {
+        background: #088395;
+        color: #f8f9fa;
+    }
+</style>
+
+<header>Admin - École</header>
+
+<nav class="tabs" role="navigation" aria-label="Navigation principale">
+    <a href="adminUser.php" class="">Utilisateurs</a>
+    <a href="adminOffre.php" class="active">Offres d'emploi / stage</a>
+    <a href="adminEvent.php" class="">Événements</a>
+</nav>
+
 <body>
 <div class="container my-4">
     <h1 class="mb-3">Gestion des offres</h1>

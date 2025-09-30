@@ -56,13 +56,26 @@ class userRepo
     public function ajoutUser(user $u) {
         $db  = \bdd();
         $req = $db->prepare("
-            INSERT INTO {$this->table}
-                (nom, prenom, email, mdp, role, specialite, matiere, poste,
-                 annee_promo, cv, promo, motif_partenariat, est_verifie, ref_entreprise, ref_formation)
-            VALUES
-                (:nom, :prenom, :email, :mdp, :role, :specialite, :matiere, :poste,
-                 :annee_promo, :cv, :promo, :motif_partenariat, :est_verifie, :ref_entreprise, :ref_formation)
-        ");
+        INSERT INTO {$this->table}
+            (nom, prenom, email, mdp, role, specialite, matiere, poste,
+             annee_promo, cv, promo, motif_partenariat, est_verifie, ref_entreprise, ref_formation)
+        VALUES
+            (:nom, :prenom, :email, :mdp, :role, :specialite, :matiere, :poste,
+             :annee_promo, :cv, :promo, :motif_partenariat, :est_verifie, :ref_entreprise, :ref_formation)
+    ");
+
+        // 🧠 Nettoyage ref_entreprise
+        $refEntreprise = $u->getRefEntreprise();
+        if ($refEntreprise === '' || $refEntreprise === null || $refEntreprise == 0) {
+            $refEntreprise = null;
+        }
+
+        // 🧠 Nettoyage ref_formation
+        $refFormation = $u->getRefFormation();
+        if ($refFormation === '' || $refFormation === null || $refFormation == 0) {
+            $refFormation = null;
+        }
+
         $req->execute([
             'nom'                => $u->getNom(),
             'prenom'             => $u->getPrenom(),
@@ -77,34 +90,48 @@ class userRepo
             'promo'              => $u->getPromo(),
             'motif_partenariat'  => $u->getMotifPartenariat(),
             'est_verifie'        => $u->getEstVerifie(),
-            'ref_entreprise'     => $u->getRefEntreprise(),
-            'ref_formation'      => $u->getRefFormation(),
+            'ref_entreprise'     => $refEntreprise,
+            'ref_formation'      => $refFormation,
         ]);
+
         $u->setIdUser((int)$db->lastInsertId());
         return $u;
     }
+
 
     /** @return user */
     public function modifUser(user $u) {
         $db = \bdd();
 
+        // Nettoyage ref_entreprise
+        $refEntreprise = $u->getRefEntreprise();
+        if ($refEntreprise === '' || $refEntreprise === null || $refEntreprise == 0) {
+            $refEntreprise = null;
+        }
+
+        // Nettoyage ref_formation
+        $refFormation = $u->getRefFormation();
+        if ($refFormation === '' || $refFormation === null || $refFormation == 0) {
+            $refFormation = null;
+        }
+
         // SET dynamique : on n’update mdp que s’il est fourni
         $set = "
-            nom=:nom,
-            prenom=:prenom,
-            email=:email,
-            role=:role,
-            specialite=:specialite,
-            matiere=:matiere,
-            poste=:poste,
-            annee_promo=:annee_promo,
-            cv=:cv,
-            promo=:promo,
-            motif_partenariat=:motif_partenariat,
-            est_verifie=:est_verifie,
-            ref_entreprise=:ref_entreprise,
-            ref_formation=:ref_formation
-        ";
+        nom=:nom,
+        prenom=:prenom,
+        email=:email,
+        role=:role,
+        specialite=:specialite,
+        matiere=:matiere,
+        poste=:poste,
+        annee_promo=:annee_promo,
+        cv=:cv,
+        promo=:promo,
+        motif_partenariat=:motif_partenariat,
+        est_verifie=:est_verifie,
+        ref_entreprise=:ref_entreprise,
+        ref_formation=:ref_formation
+    ";
         $params = [
             'id_user'            => $u->getIdUser(),
             'nom'                => $u->getNom(),
@@ -119,8 +146,8 @@ class userRepo
             'promo'              => $u->getPromo(),
             'motif_partenariat'  => $u->getMotifPartenariat(),
             'est_verifie'        => $u->getEstVerifie(),
-            'ref_entreprise'     => $u->getRefEntreprise(),
-            'ref_formation'      => $u->getRefFormation(),
+            'ref_entreprise'     => $refEntreprise,
+            'ref_formation'      => $refFormation,
         ];
 
         if ($u->getMdp() !== null && $u->getMdp() !== '') {
@@ -133,6 +160,7 @@ class userRepo
         $req->execute($params);
         return $u;
     }
+
 
     /** @param int $id */
     public function suppUser($id) {
