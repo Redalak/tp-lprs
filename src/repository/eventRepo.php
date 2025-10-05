@@ -10,18 +10,66 @@ use PDO;
 class eventRepo
 {
     /** @var string */
-    private $table = '`event`'; // IMPORTANT : backticks car EVENT est un mot réservé MySQL
+    private $table = '`event`'; // backticks car EVENT est un mot réservé MySQL
 
-    /** Liste brute pour la page */
-    public function getAllRaw() {
-        $db  = \bdd(); // DB par défaut = Tplprs (cf. bdd.php)
-        $sql = "SELECT * FROM {$this->table} ORDER BY id_evenement DESC";
+    /** 🔹 Liste des événements sous forme d'objets pour affichage public */
+    public function getAll(): array {
+        $db = \bdd();
+        $sql = "
+            SELECT 
+                id_evenement   AS idEvent,
+                type           AS type,
+                titre          AS titre,
+                description    AS description,
+                lieu           AS lieu,
+                element_requis AS elementRequis,
+                nombre_place   AS nombrePlace,
+                date_creation  AS dateCreation,
+                etat           AS etat
+            FROM {$this->table}
+            ORDER BY date_creation DESC
+        ";
         $req = $db->prepare($sql);
         $req->execute();
-        return $req->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $req->fetchAll(PDO::FETCH_ASSOC);
+
+        $events = [];
+        foreach ($rows as $row) {
+            $events[] = new event($row);
+        }
+        return $events;
     }
 
-    /** @param int $id @return event|null */
+    /** 🔹 Récupérer les événements créés par un utilisateur spécifique */
+    public function getByUser(int $idUser): array {
+        $db = \bdd();
+        $sql = "
+            SELECT 
+                id_evenement   AS idEvent,
+                type           AS type,
+                titre          AS titre,
+                description    AS description,
+                lieu           AS lieu,
+                element_requis AS elementRequis,
+                nombre_place   AS nombrePlace,
+                date_creation  AS dateCreation,
+                etat           AS etat
+            FROM {$this->table}
+            WHERE id_utilisateur = :id
+            ORDER BY date_creation DESC
+        ";
+        $req = $db->prepare($sql);
+        $req->execute(['id' => $idUser]);
+        $rows = $req->fetchAll(PDO::FETCH_ASSOC);
+
+        $events = [];
+        foreach ($rows as $row) {
+            $events[] = new event($row);
+        }
+        return $events;
+    }
+
+    /** 🔹 Récupération d’un événement précis */
     public function getModelById($id) {
         $db  = \bdd();
         $req = $db->prepare("
@@ -43,7 +91,7 @@ class eventRepo
         return $row ? new event($row) : null;
     }
 
-    /** @param event $e @return event */
+    /** 🔹 Ajout d’un événement */
     public function ajoutEvent(event $e) {
         $db  = \bdd();
         $req = $db->prepare("
@@ -65,7 +113,7 @@ class eventRepo
         return $e;
     }
 
-    /** @param event $e @return event */
+    /** 🔹 Modification d’un événement */
     public function modifEvent(event $e) {
         $db  = \bdd();
         $req = $db->prepare("
@@ -92,7 +140,7 @@ class eventRepo
         return $e;
     }
 
-    /** @param int $id */
+    /** 🔹 Suppression d’un événement */
     public function suppEvent($id) {
         $db  = \bdd();
         $req = $db->prepare("DELETE FROM {$this->table} WHERE id_evenement = :id");

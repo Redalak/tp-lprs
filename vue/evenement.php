@@ -1,3 +1,10 @@
+<?php
+require_once __DIR__ . '/../src/repository/eventRepo.php';
+use repository\eventRepo;
+
+$repo = new eventRepo();
+$events = $repo->getAll();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,7 +18,6 @@
             background-color: #f4f4f4;
         }
 
-        /* HEADER */
         header {
             background: white;
             border-bottom: 1px solid #ddd;
@@ -53,7 +59,6 @@
             color: #005baa;
         }
 
-        /* CONTENU */
         .container-content {
             max-width: 1000px;
             margin: 40px auto;
@@ -86,24 +91,18 @@
         }
 
         .event p {
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
-        .event a {
+        .badge {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 4px 10px;
+            font-size: 0.8em;
+            border-radius: 12px;
             background-color: #005baa;
             color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background 0.3s;
         }
 
-        .event a:hover {
-            background-color: #003f66;
-        }
-
-        /* FOOTER */
         footer {
             background: #003a70;
             color: white;
@@ -147,7 +146,6 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
     <div class="container">
         <div class="logo">École Exemple</div>
@@ -164,33 +162,30 @@
     </div>
 </header>
 
-<!-- CONTENU -->
 <div class="container-content">
     <h2>Événements à venir</h2>
 
-    <div class="event">
-        <h3>Journée Portes Ouvertes 2025</h3>
-        <div class="meta">📅 12 octobre 2025 | 📍 Campus Paris</div>
-        <p>Découvrez nos formations, échangez avec les étudiants et rencontrez nos enseignants lors de cette journée d'immersion exceptionnelle.</p>
-        <a href="#">Plus d'infos</a>
-    </div>
-
-    <div class="event">
-        <h3>Forum Entreprises</h3>
-        <div class="meta">📅 5 novembre 2025 | 📍 Amphithéâtre A</div>
-        <p>Rencontrez les recruteurs de grandes entreprises partenaires de l’école, participez à des ateliers CV et simulation d'entretien.</p>
-        <a href="#">S'inscrire</a>
-    </div>
-
-    <div class="event">
-        <h3>Conférence : IA & Climat</h3>
-        <div class="meta">📅 20 novembre 2025 | 📍 En ligne</div>
-        <p>Des experts en intelligence artificielle et climatologie débattent de l’impact de l’IA dans la transition écologique.</p>
-        <a href="#">Participer</a>
-    </div>
+    <?php if (empty($events)): ?>
+        <p>Aucun événement disponible pour le moment.</p>
+    <?php else: ?>
+        <?php foreach ($events as $event): ?>
+            <div class="event">
+                <h3><?= htmlspecialchars($event->getTitre()) ?></h3>
+                <div class="meta">
+                    <strong>ID :</strong> <?= htmlspecialchars($event->getIdEvent()) ?> <br>
+                    📅 Créé le <?= htmlspecialchars($event->getDateCreation()) ?>
+                    | 📍 <?= htmlspecialchars($event->getLieu()) ?>
+                </div>
+                <p><strong>Type :</strong> <?= htmlspecialchars($event->getType()) ?></p>
+                <p><strong>Description :</strong> <?= nl2br(htmlspecialchars($event->getDescription())) ?></p>
+                <p><strong>Éléments requis :</strong> <?= htmlspecialchars($event->getElementRequis()) ?></p>
+                <p><strong>Nombre de places :</strong> <?= htmlspecialchars($event->getNombrePlace()) ?></p>
+                
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 
-<!-- FOOTER -->
 <footer>
     <div class="container footer-grid">
         <div>
