@@ -333,6 +333,7 @@
                 <li><a href="vue/supportContact.php">Contact</a></li>
                 <li><a href="vue/forum.php">Forum</a></li>
                 <li><a href="vue/connexion.php">Connexion</a></li>
+                <li><a href="vue/inscription.php">inscription</a></li>
             </ul>
         </nav>
     </div>
