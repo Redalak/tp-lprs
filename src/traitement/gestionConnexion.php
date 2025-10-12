@@ -1,11 +1,9 @@
 <?php
+// src/traitement/gestionConnexion.php
 
-use repository\userRepo;
-use modele\user;
-
-require_once '../modele/user.php';
-require_once "../repository/UserRepo.php";
-require_once "../bdd/Bdd.php";
+require_once __DIR__ . '/../bdd/Bdd.php';
+require_once __DIR__ . '/../modele/User.php';
+require_once __DIR__ . '/../repository/UserRepo.php';
 
 session_start();
 
@@ -14,31 +12,36 @@ if (empty($_POST['email']) || empty($_POST['password'])) {
     exit();
 }
 
-$user = new user([
+$userClass = 'modele\\User';
+
+// Création de l'objet user avec l'email fourni
+$user = new $userClass([
     'email' => $_POST["email"]
 ]);
 
-$userRepository = new userRepo();
-$user = $userRepository->connexion($user);
+// Instanciation
+$userRepository = new UserRepo();
 
-if (!empty($user->getIdUser())) {
-    if (password_verify($_POST['password'], $user->getMdp())) {
-        $_SESSION['id_user'] = $user->getIdUser();
-        $_SESSION['email'] = $user->getEmail();
-        $_SESSION["connexion"] = true;
+$userFromDb = $userRepository->connexion($user);
 
-        if ($user->getRole() == "admin") {
-            $_SESSION["connexionAdmin"] = true;
-        }
+if ($userFromDb === null) {
+    header("Location: ../../vue/connexion.php?parametre=emailmdpInvalide");
+    exit();
+}
 
-        header("Location: ../../index.php");
-        exit();
-    } else {
-        header("Location: ../../vue/connexion.php?parametre=emailmdpInvalide");
-        exit();
+// Vérification du mot de passe
+if (!empty($userFromDb->getIdUser()) && password_verify($_POST['password'], $userFromDb->getMdp())) {
+    $_SESSION['id_user'] = $userFromDb->getIdUser();
+    $_SESSION['email'] = $userFromDb->getEmail();
+    $_SESSION["connexion"] = true;
+
+    if ($userFromDb->getRole() === "admin") {
+        $_SESSION["connexionAdmin"] = true;
     }
+
+    header("Location: ../../index.php");
+    exit();
 } else {
     header("Location: ../../vue/connexion.php?parametre=emailmdpInvalide");
     exit();
 }
-?>

@@ -1,3 +1,26 @@
+<?php
+session_start();
+require_once __DIR__ . "/src/bdd/Bdd.php";
+
+if (!isset($_SESSION['connexion'])) {
+    $_SESSION['connexion'] = false;
+}
+
+// Déconnexion via ?deco=true
+if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    session_destroy();
+    header("Location: index.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
