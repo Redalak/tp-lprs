@@ -3,10 +3,9 @@ namespace modele;
 
 class alumni
 {
-    private $idAlumni;
-    private $promotion;
-    private $emploiActuel;
-    private $entrepriseActuel;
+    private $ref_user;
+    private $emploi_actuel;
+    private $ref_entreprise;
 
 
     public function __construct(array $donnees)
@@ -30,33 +29,17 @@ class alumni
     /**
      * @return mixed
      */
-    public function getIdAlumni()
+    public function getRefUser()
     {
-        return $this->idAlumni;
+        return $this->ref_user;
     }
 
     /**
-     * @param mixed $idAlumni
+     * @param mixed $ref_user
      */
-    public function setIdAlumni($idAlumni)
+    public function setRefUser($ref_user): void
     {
-        $this->idAlumni = $idAlumni;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPromotion()
-    {
-        return $this->promotion;
-    }
-
-    /**
-     * @param mixed $promotion
-     */
-    public function setPromotion($promotion)
-    {
-        $this->promotion = $promotion;
+        $this->ref_user = $ref_user;
     }
 
     /**
@@ -64,31 +47,33 @@ class alumni
      */
     public function getEmploiActuel()
     {
-        return $this->emploiActuel;
+        return $this->emploi_actuel;
     }
 
     /**
-     * @param mixed $emploiActuel
+     * @param mixed $emploi_actuel
      */
-    public function setEmploiActuel($emploiActuel)
+    public function setEmploiActuel($emploi_actuel): void
     {
-        $this->emploiActuel = $emploiActuel;
+        $this->emploi_actuel = $emploi_actuel;
     }
 
     /**
      * @return mixed
      */
-    public function getEntrepriseActuel()
+    public function getRefEntreprise()
     {
-        return $this->entrepriseActuel;
+        return $this->ref_entreprise;
     }
 
     /**
-     * @param mixed $entrepriseActuel
+     * @param mixed $ref_entreprise
      */
-    public function setEntrepriseActuel($entrepriseActuel)
+    public function setRefEntreprise($ref_entreprise): void
     {
-        $this->entrepriseActuel = $entrepriseActuel;
+        $this->ref_entreprise = $ref_entreprise;
     }
+
+
 
 }

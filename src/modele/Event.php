@@ -9,10 +9,12 @@ class event
     private $titre;
     private $description;
     private $lieu;
-    private $elementRequis;
     private $nombrePlace;
     private $dateCreation;
+    private $dateEvent;
     private $etat;
+    private $ref_user;
+
 
 
     public function __construct(array $donnees)
@@ -45,7 +47,7 @@ class event
     /**
      * @param mixed $idEvent
      */
-    public function setIdEvent($idEvent)
+    public function setIdEvent($idEvent): void
     {
         $this->idEvent = $idEvent;
     }
@@ -61,7 +63,7 @@ class event
     /**
      * @param mixed $type
      */
-    public function setType($type)
+    public function setType($type): void
     {
         $this->type = $type;
     }
@@ -77,7 +79,7 @@ class event
     /**
      * @param mixed $titre
      */
-    public function setTitre($titre)
+    public function setTitre($titre): void
     {
         $this->titre = $titre;
     }
@@ -93,7 +95,7 @@ class event
     /**
      * @param mixed $description
      */
-    public function setDescription($description)
+    public function setDescription($description): void
     {
         $this->description = $description;
     }
@@ -109,25 +111,9 @@ class event
     /**
      * @param mixed $lieu
      */
-    public function setLieu($lieu)
+    public function setLieu($lieu): void
     {
         $this->lieu = $lieu;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getElementRequis()
-    {
-        return $this->elementRequis;
-    }
-
-    /**
-     * @param mixed $elementRequis
-     */
-    public function setElementRequis($elementRequis)
-    {
-        $this->elementRequis = $elementRequis;
     }
 
     /**
@@ -141,7 +127,7 @@ class event
     /**
      * @param mixed $nombrePlace
      */
-    public function setNombrePlace($nombrePlace)
+    public function setNombrePlace($nombrePlace): void
     {
         $this->nombrePlace = $nombrePlace;
     }
@@ -157,9 +143,25 @@ class event
     /**
      * @param mixed $dateCreation
      */
-    public function setDateCreation($dateCreation)
+    public function setDateCreation($dateCreation): void
     {
         $this->dateCreation = $dateCreation;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDateEvent()
+    {
+        return $this->dateEvent;
+    }
+
+    /**
+     * @param mixed $dateEvent
+     */
+    public function setDateEvent($dateEvent): void
+    {
+        $this->dateEvent = $dateEvent;
     }
 
     /**
@@ -173,9 +175,27 @@ class event
     /**
      * @param mixed $etat
      */
-    public function setEtat($etat)
+    public function setEtat($etat): void
     {
         $this->etat = $etat;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getRefUser()
+    {
+        return $this->ref_user;
+    }
+
+    /**
+     * @param mixed $ref_user
+     */
+    public function setRefUser($ref_user): void
+    {
+        $this->ref_user = $ref_user;
+    }
+
+
 
 }

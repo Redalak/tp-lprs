@@ -5,8 +5,13 @@ namespace modele;
 class entreprise
 {
     private $idEntreprise;
-    private $adresse;
-    private $siteWeb;
+private $nom;
+private $adresse;
+private $site_web;
+private $motifPartenariat;
+private $dateInscription;
+private $refOffre;
+
 
 
     public function __construct(array $donnees)
@@ -39,9 +44,25 @@ class entreprise
     /**
      * @param mixed $idEntreprise
      */
-    public function setIdEntreprise($idEntreprise)
+    public function setIdEntreprise($idEntreprise): void
     {
         $this->idEntreprise = $idEntreprise;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNom()
+    {
+        return $this->nom;
+    }
+
+    /**
+     * @param mixed $nom
+     */
+    public function setNom($nom): void
+    {
+        $this->nom = $nom;
     }
 
     /**
@@ -55,7 +76,7 @@ class entreprise
     /**
      * @param mixed $adresse
      */
-    public function setAdresse($adresse)
+    public function setAdresse($adresse): void
     {
         $this->adresse = $adresse;
     }
@@ -65,15 +86,64 @@ class entreprise
      */
     public function getSiteWeb()
     {
-        return $this->siteWeb;
+        return $this->site_web;
     }
 
     /**
-     * @param mixed $siteWeb
+     * @param mixed $site_web
      */
-    public function setSiteWeb($siteWeb)
+    public function setSiteWeb($site_web): void
     {
-        $this->siteWeb = $siteWeb;
+        $this->site_web = $site_web;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getMotifPartenariat()
+    {
+        return $this->motifPartenariat;
+    }
+
+    /**
+     * @param mixed $motifPartenariat
+     */
+    public function setMotifPartenariat($motifPartenariat): void
+    {
+        $this->motifPartenariat = $motifPartenariat;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDateInscription()
+    {
+        return $this->dateInscription;
+    }
+
+    /**
+     * @param mixed $dateInscription
+     */
+    public function setDateInscription($dateInscription): void
+    {
+        $this->dateInscription = $dateInscription;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefOffre()
+    {
+        return $this->refOffre;
+    }
+
+    /**
+     * @param mixed $refOffre
+     */
+    public function setRefOffre($refOffre): void
+    {
+        $this->refOffre = $refOffre;
+    }
+
 
 }

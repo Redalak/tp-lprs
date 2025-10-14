@@ -5,8 +5,10 @@ namespace modele;
 class eleve
 {
     private $idEleve;
+    private $anneePromo;
     private $dateInscription;
-    private $groupe;
+    private $classe;
+    private $ref_formation;
 
 
     public function __construct(array $donnees)
@@ -31,17 +33,33 @@ class eleve
     /**
      * @return mixed
      */
-    public function getIdeleve()
+    public function getIdEleve()
     {
-        return $this->ideleve;
+        return $this->idEleve;
     }
 
     /**
-     * @param mixed $ideleve
+     * @param mixed $idEleve
      */
-    public function setIdeleve($ideleve)
+    public function setIdEleve($idEleve): void
     {
-        $this->ideleve = $ideleve;
+        $this->idEleve = $idEleve;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAnneePromo()
+    {
+        return $this->anneePromo;
+    }
+
+    /**
+     * @param mixed $anneePromo
+     */
+    public function setAnneePromo($anneePromo): void
+    {
+        $this->anneePromo = $anneePromo;
     }
 
     /**
@@ -55,7 +73,7 @@ class eleve
     /**
      * @param mixed $dateInscription
      */
-    public function setDateInscription($dateInscription)
+    public function setDateInscription($dateInscription): void
     {
         $this->dateInscription = $dateInscription;
     }
@@ -63,17 +81,34 @@ class eleve
     /**
      * @return mixed
      */
-    public function getGroupe()
+    public function getClasse()
     {
-        return $this->groupe;
+        return $this->classe;
     }
 
     /**
-     * @param mixed $groupe
+     * @param mixed $classe
      */
-    public function setGroupe($groupe)
+    public function setClasse($classe): void
     {
-        $this->groupe = $groupe;
+        $this->classe = $classe;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getRefFormation()
+    {
+        return $this->ref_formation;
+    }
+
+    /**
+     * @param mixed $ref_formation
+     */
+    public function setRefFormation($ref_formation): void
+    {
+        $this->ref_formation = $ref_formation;
+    }
+
 
 }

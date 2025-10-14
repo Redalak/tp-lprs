@@ -5,8 +5,10 @@ namespace modele;
 class prof
 {
 
-    private $idProf;
-    private $domaine;
+   private $refUser;
+   private $matiere;
+   private $dateInscription;
+   private $refFormation;
 
     public function __construct(array $donnees)
     {
@@ -30,33 +32,67 @@ class prof
     /**
      * @return mixed
      */
-    public function getIdProf()
+    public function getRefUser()
     {
-        return $this->idProf;
+        return $this->refUser;
     }
 
     /**
-     * @param mixed $idProf
+     * @param mixed $refUser
      */
-    public function setIdProf($idProf)
+    public function setRefUser($refUser): void
     {
-        $this->idProf = $idProf;
+        $this->refUser = $refUser;
     }
 
     /**
      * @return mixed
      */
-    public function getDomaine()
+    public function getMatiere()
     {
-        return $this->domaine;
+        return $this->matiere;
     }
 
     /**
-     * @param mixed $domaine
+     * @param mixed $matiere
      */
-    public function setDomaine($domaine)
+    public function setMatiere($matiere): void
     {
-        $this->domaine = $domaine;
+        $this->matiere = $matiere;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getDateInscription()
+    {
+        return $this->dateInscription;
+    }
+
+    /**
+     * @param mixed $dateInscription
+     */
+    public function setDateInscription($dateInscription): void
+    {
+        $this->dateInscription = $dateInscription;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefFormation()
+    {
+        return $this->refFormation;
+    }
+
+    /**
+     * @param mixed $refFormation
+     */
+    public function setRefFormation($refFormation): void
+    {
+        $this->refFormation = $refFormation;
+    }
+
+
 
 }

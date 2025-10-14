@@ -6,7 +6,10 @@ class Candidature
 {
     private $idCandidature;
     private $motivation;
+    private $cv;
     private $dateCandidature;
+    private $ref_offre;
+    private $ref_user;
 
 
     public function __construct(array $donnees)
@@ -75,5 +78,55 @@ class Candidature
     {
         $this->dateCandidature = $dateCandidature;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getCv()
+    {
+        return $this->cv;
+    }
+
+    /**
+     * @param mixed $cv
+     */
+    public function setCv($cv): void
+    {
+        $this->cv = $cv;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefOffre()
+    {
+        return $this->ref_offre;
+    }
+
+    /**
+     * @param mixed $ref_offre
+     */
+    public function setRefOffre($ref_offre): void
+    {
+        $this->ref_offre = $ref_offre;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefUser()
+    {
+        return $this->ref_user;
+    }
+
+    /**
+     * @param mixed $ref_user
+     */
+    public function setRefUser($ref_user): void
+    {
+        $this->ref_user = $ref_user;
+    }
+
+
 
 }

@@ -4,14 +4,17 @@ namespace modele;
 
 class offre
 {
-    private $idOffre;
-    private $titre;
-    private $description;
-    private $mission;
-    private $salaire;
-    private $typeOffre;
-    private $dateCreation;
-    private $etat;
+private $idOffre;
+private $titre;
+private $rue;
+private $cp;
+private $ville;
+private $description;
+private $salaire;
+private $typeOffre;
+private $dateCreation;
+private $etat;
+private $ref_entreprise;
 
 
     public function __construct(array $donnees)
@@ -128,5 +131,69 @@ public function setEtat($etat)
 {
     $this->etat = $etat;
 }
+
+    /**
+     * @return mixed
+     */
+    public function getRue()
+    {
+        return $this->rue;
+    }
+
+    /**
+     * @param mixed $rue
+     */
+    public function setRue($rue): void
+    {
+        $this->rue = $rue;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCp()
+    {
+        return $this->cp;
+    }
+
+    /**
+     * @param mixed $cp
+     */
+    public function setCp($cp): void
+    {
+        $this->cp = $cp;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getVille()
+    {
+        return $this->ville;
+    }
+
+    /**
+     * @param mixed $ville
+     */
+    public function setVille($ville): void
+    {
+        $this->ville = $ville;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefEntreprise()
+    {
+        return $this->ref_entreprise;
+    }
+
+    /**
+     * @param mixed $ref_entreprise
+     */
+    public function setRefEntreprise($ref_entreprise): void
+    {
+        $this->ref_entreprise = $ref_entreprise;
+    }
 
 }
