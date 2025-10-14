@@ -354,9 +354,13 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
                 <li><a href="vue/formations.php">Formations</a></li>
                 <li><a href="#">Entreprises</a></li>
                 <li><a href="vue/supportContact.php">Contact</a></li>
-                <li><a href="vue/forum.php">Forum</a></li>
-                <li><a href="vue/connexion.php">Connexion</a></li>
-                <li><a href="vue/inscription.php">inscription</a></li>
+                <?php if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true): ?>
+                    <li><a href="vue/forum.php">Forum</a></li>
+                    <li><a href="?deco=true">Déconnexion</a></li>
+                <?php else: ?>
+                    <li><a href="vue/connexion.php">Connexion</a></li>
+                    <li><a href="vue/inscription.php">Inscription</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </div>
