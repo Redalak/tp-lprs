@@ -89,4 +89,30 @@ class EventRepo
         }
         return $events;
     }
+
+    // --- Nouvelle méthode : récupérer les derniers événements ---
+    public function getDerniersEvents(int $limit = 5) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $stmt = $database->prepare('SELECT * FROM event ORDER BY date_event DESC LIMIT :limit');
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $events = [];
+        foreach ($rows as $row) {
+            $events[] = new Event([
+                'idEvent'       => $row['id_evenement'],
+                'type'          => $row['type'],
+                'titre'         => $row['titre'],
+                'description'   => $row['description'],
+                'lieu'          => $row['lieu'],
+                'nombrePlace'   => $row['nombre_place'],
+                'dateEvent'     => $row['date_event'],
+                'etat'          => $row['etat'],
+                'ref_user'      => $row['ref_user']
+            ]);
+        }
+        return $events;
+    }
 }
