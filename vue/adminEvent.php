@@ -1,185 +1,110 @@
 <?php
-require_once __DIR__ . '/../src/repository/eventRepo.php';
-use repository\eventRepo;
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+use repository\EventRepo;
+use modele\Event; // Assurez-vous que votre classe Event est incluse
 
-$repo = new eventRepo();
-$rows = $repo->getAllRaw();
+$eventRepo = new EventRepo();
+$events = $eventRepo->listeEvent();
 
-function alertBox() {
-    if (!isset($_GET['msg'])) return '';
-    $cls = ''; $txt = '';
-    switch ($_GET['msg']) {
-        case 'added':   $cls='success'; $txt="Événement ajouté."; break;
-        case 'deleted': $cls='warning'; $txt="Événement supprimé."; break;
-        case 'updated': $cls='info';    $txt="Événement modifié."; break;
-        case 'error':   $cls='danger';  $txt="Veuillez remplir tous les champs requis."; break;
-        default: return '';
-    }
-    return '<div class="alert alert-'.$cls.'">'.$txt.'</div>';
+// Traitement du formulaire de création
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
+    $type = $_POST['type'];
+    $titre = $_POST['titre'];
+    $description = $_POST['description'];
+    $lieu = $_POST['lieu'];
+    $nombre_place = (int)$_POST['nombre_place'];
+    $date_event = $_POST['date_event'];
+    $etat = $_POST['etat'];
+    $ref_user = !empty($_POST['ref_user']) ? (int)$_POST['ref_user'] : null;
+
+    $newEvent = new Event([
+        'type' => $type,
+        'titre' => $titre,
+        'description' => $description,
+        'lieu' => $lieu,
+        'nombrePlace' => $nombre_place,
+        'dateEvent' => $date_event,
+        'etat' => $etat,
+        'ref_user' => $ref_user
+    ]);
+
+    $eventRepo->ajoutEvent($newEvent);
+
+    // Rafraîchir la liste
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestion des événements</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body{background:#f8f9fa}
-        th,td{vertical-align:top}
-        .w-desc{white-space:pre-line; word-break:break-word;}
-    </style>
-</head>
-<style>
-    header {
-        text-align: center;
-        font-size: 1.8em;
-        font-weight: 700;
-        color: #0A4D68;
-        padding: 20px 0;
-        font-family: 'Poppins', sans-serif;
-    }
 
-    nav.tabs {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 40px;
-    }
+<h2>Liste des événements</h2>
 
-    nav.tabs a {
-        text-decoration: none;
-        background: #fff;
-        border: 2px solid #0A4D68;
-        padding: 10px 25px;
-        font-weight: 600;
-        color: #0A4D68;
-        border-radius: 8px;
-        transition: background 0.3s, color 0.3s;
-        font-family: 'Poppins', sans-serif;
-    }
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Titre</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Lieu</th>
+        <th>Nombre de places</th>
+        <th>Date</th>
+        <th>Etat</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach($events as $event): ?>
+        <tr>
+            <td><?= $event->getIdEvent() ?></td>
+            <td><?= htmlspecialchars($event->getTitre()) ?></td>
+            <td><?= htmlspecialchars($event->getType()) ?></td>
+            <td><?= htmlspecialchars($event->getDescription()) ?></td>
+            <td><?= htmlspecialchars($event->getLieu()) ?></td>
+            <td><?= $event->getNombrePlace() ?></td>
+            <td><?= $event->getDateEvent() ?></td>
+            <td><?= htmlspecialchars($event->getEtat()) ?></td>
+            <td>
+                <a href="modifEvent.php?id=<?= $event->getIdEvent() ?>">Modifier</a> |
+                <a href="suppEvent.php?id=<?= $event->getIdEvent() ?>" onclick="return confirm('Voulez-vous vraiment supprimer cet événement ?')">Supprimer</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
 
-    nav.tabs a.active {
-        background: #0A4D68;
-        color: #f8f9fa;
-        box-shadow: 0 4px 10px rgba(0, 77, 104, 0.4);
-    }
 
-    nav.tabs a:hover:not(.active) {
-        background: #088395;
-        color: #f8f9fa;
-    }
-</style>
+<h2>Créer un nouvel événement</h2>
 
-<header>Admin - École</header>
+<form method="post" style="margin-bottom: 30px; border: 1px solid #ccc; padding: 10px;">
+    <input type="hidden" name="create_event" value="1">
 
-<nav class="tabs" role="navigation" aria-label="Navigation principale">
-    <a href="adminUser.php" class="">Utilisateurs</a>
-    <a href="adminOffre.php" class="">Offres d'emploi / stage</a>
-    <a href="adminEvent.php" class="active">Événements</a>
-</nav>
+    <label>Titre :</label><br>
+    <input type="text" name="titre" required><br><br>
 
-<body>
-<div class="container my-4">
-    <h1 class="mb-3">Gestion des événements</h1>
-    <?= alertBox(); ?>
+    <label>Type :</label><br>
+    <input type="text" name="type" required><br><br>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white"><strong>Liste des événements</strong></div>
-        <div class="card-body table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-secondary">
-                <tr>
-                    <th style="width:90px">ID</th>
-                    <th style="width:160px">Type</th>
-                    <th style="width:220px">Titre</th>
-                    <th>Description</th>
-                    <th style="width:220px">Lieu</th>
-                    <th style="width:240px">Éléments requis</th>
-                    <th style="width:120px">Places</th>
-                    <th style="width:150px">État</th>
-                    <th style="width:220px">Date création</th>
-                    <th style="width:170px">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (!$rows): ?>
-                    <tr><td colspan="10" class="text-center text-muted">Aucun événement</td></tr>
-                <?php else: foreach ($rows as $r): ?>
-                    <tr>
-                        <td><?= (int)$r['id_evenement'] ?></td>
-                        <td><?= htmlspecialchars($r['type']) ?></td>
-                        <td><?= htmlspecialchars($r['titre']) ?></td>
-                        <td class="w-desc"><?= htmlspecialchars($r['description']) ?></td>
-                        <td><?= htmlspecialchars($r['lieu']) ?></td>
-                        <td class="w-desc"><?= htmlspecialchars($r['element_requis']) ?></td>
-                        <td><?= (int)$r['nombre_place'] ?></td>
-                        <td>
-                            <?php
-                            $map = ['brouillon'=>'secondary','publie'=>'success','archive'=>'dark'];
-                            $color = isset($map[$r['etat']]) ? $map[$r['etat']] : 'secondary';
-                            ?>
-                            <span class="badge text-bg-<?= $color ?>"><?= htmlspecialchars($r['etat']) ?></span>
-                        </td>
-                        <td><?= htmlspecialchars($r['date_creation']) ?></td>
-                        <td class="text-nowrap">
-                            <a class="btn btn-sm btn-warning" href="modifEvent.php?id_evenement=<?= (int)$r['id_evenement'] ?>">Modifier</a>
-                            <a class="btn btn-sm btn-danger"
-                               href="../src/traitement/suppEvent.php?id_evenement=<?= (int)$r['id_evenement'] ?>"
-                               onclick="return confirm('Supprimer cet événement ?');">Supprimer</a>
-                        </td>
-                    </tr>
-                <?php endforeach; endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <label>Description :</label><br>
+    <textarea name="description" required></textarea><br><br>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white"><strong>Ajouter un événement</strong></div>
-        <div class="card-body">
-            <form method="post" action="../src/traitement/ajoutEvent.php">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Type *</label>
-                        <input type="text" name="type" class="form-control" required placeholder="portes-ouvertes / conférence / ...">
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Titre *</label>
-                        <input type="text" name="titre" class="form-control" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Description *</label>
-                        <textarea name="description" class="form-control" rows="5" required></textarea>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Lieu *</label>
-                        <input type="text" name="lieu" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Éléments requis</label>
-                        <textarea name="element_requis" class="form-control" rows="2"></textarea>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Nombre de places</label>
-                        <input type="number" name="nombre_place" class="form-control" min="0" value="0">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">État *</label>
-                        <select name="etat" class="form-select" required>
-                            <option value="brouillon">brouillon</option>
-                            <option value="publie">publie</option>
-                            <option value="archive">archive</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <button class="btn btn-success">Ajouter</button>
-                    </div>
-                </div>
-            </form>
-            <p class="text-muted mt-2">* requis — <em>date_creation</em> est remplie automatiquement par la BDD.</p>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+    <label>Lieu :</label><br>
+    <input type="text" name="lieu" required><br><br>
+
+    <label>Nombre de places :</label><br>
+    <input type="number" name="nombre_place" required><br><br>
+
+    <label>Date de l'événement :</label><br>
+    <input type="datetime-local" name="date_event" required><br><br>
+
+    <label>Etat :</label><br>
+    <select name="etat" required>
+        <option value="actif">Actif</option>
+        <option value="annulé">Annulé</option>
+    </select><br><br>
+
+    <label>ID utilisateur (optionnel) :</label><br>
+    <input type="number" name="ref_user"><br><br>
+
+    <button type="submit">Créer l'événement</button>
+</form>
+

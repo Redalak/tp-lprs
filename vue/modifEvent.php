@@ -1,84 +1,78 @@
 <?php
-require_once __DIR__ . '/../src/repository/eventRepo.php';
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+use repository\EventRepo;
 
-use repository\eventRepo;
+$eventRepo = new EventRepo();
 
-$repo = new eventRepo();
+if (!isset($_GET['id'])) {
+    die('ID de l’événement manquant');
+}
 
-$id = isset($_GET['id_evenement']) ? (int)$_GET['id_evenement'] : 0;
-if ($id<=0) die('ID manquant.');
+$idEvent = (int)$_GET['id'];
 
-$event = $repo->getModelById($id);
-if (!$event) die('Événement introuvable.');
+// Récupérer l'événement à modifier
+$event = null;
+foreach($eventRepo->listeEvent() as $e) {
+    if ($e->getIdEvent() === $idEvent) {
+        $event = $e;
+        break;
+    }
+}
 
-$ETATS = ['brouillon','publie','archive'];
+if (!$event) {
+    die('Événement introuvable');
+}
+
+// Traitement du formulaire
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $event->setType($_POST['type']);
+    $event->setTitre($_POST['titre']);
+    $event->setDescription($_POST['description']);
+    $event->setLieu($_POST['lieu']);
+    $event->setNombrePlace((int)$_POST['nombre_place']);
+    $event->setDateEvent($_POST['date_event']);
+    $event->setEtat($_POST['etat']);
+
+    // Vérifier si ref_user est rempli, sinon mettre null
+    $refUser = !empty($_POST['ref_user']) ? (int)$_POST['ref_user'] : null;
+    $event->setRefUser($refUser);
+
+    $eventRepo->modifEvent($event);
+
+    header('Location: listeEvents.php');
+    exit;
+}
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Modifier un événement</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container my-4" style="max-width: 900px;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h4 mb-0">Modification évènement #<?= (int)$event->getIdEvent() ?></h1>
-        <a href="adminEvent.php" class="btn btn-secondary">Retour</a>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <?php if (isset($_GET['err'])): ?>
-                <div class="alert alert-danger">Veuillez remplir les champs requis.</div>
-            <?php endif; ?>
+<h2>Modifier l'événement</h2>
 
-            <form action="../src/traitement/modifEvent.php" method="post">
-                <input type="hidden" name="id_evenement" value="<?= (int)$event->getIdEvent() ?>">
+<form method="post">
+    <label>Titre :</label><br>
+    <input type="text" name="titre" value="<?= htmlspecialchars($event->getTitre()) ?>" required><br><br>
 
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Type *</label>
-                        <input type="text" name="type" class="form-control" required value="<?= htmlspecialchars($event->getType()) ?>">
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Titre *</label>
-                        <input type="text" name="titre" class="form-control" required value="<?= htmlspecialchars($event->getTitre()) ?>">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Description *</label>
-                        <textarea name="description" class="form-control" rows="6" required><?= htmlspecialchars($event->getDescription()) ?></textarea>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Lieu *</label>
-                        <input type="text" name="lieu" class="form-control" required value="<?= htmlspecialchars($event->getLieu()) ?>">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Éléments requis</label>
-                        <textarea name="element_requis" class="form-control" rows="2"><?= htmlspecialchars($event->getElementRequis()) ?></textarea>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Nombre de places</label>
-                        <input type="number" name="nombre_place" class="form-control" min="0" value="<?= (int)$event->getNombrePlace() ?>">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">État *</label>
-                        <select name="etat" class="form-select" required>
-                            <?php foreach ($ETATS as $e): ?>
-                                <option value="<?= $e ?>" <?= $event->getEtat()===$e?'selected':''; ?>><?= $e ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
+    <label>Type :</label><br>
+    <input type="text" name="type" value="<?= htmlspecialchars($event->getType()) ?>" required><br><br>
 
-                <div class="mt-4 d-flex gap-2">
-                    <button class="btn btn-primary">Enregistrer</button>
-                    <a href="adminEvent.php" class="btn btn-outline-secondary">Annuler</a>
-                </div>
-            </form>
-            <p class="text-muted mt-3 mb-0"><em>date_creation</em> est gérée automatiquement par la base.</p>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+    <label>Description :</label><br>
+    <textarea name="description" required><?= htmlspecialchars($event->getDescription()) ?></textarea><br><br>
+
+    <label>Lieu :</label><br>
+    <input type="text" name="lieu" value="<?= htmlspecialchars($event->getLieu()) ?>" required><br><br>
+
+    <label>Nombre de places :</label><br>
+    <input type="number" name="nombre_place" value="<?= $event->getNombrePlace() ?>" required><br><br>
+
+    <label>Date de l'événement :</label><br>
+    <input type="datetime-local" name="date_event" value="<?= date('Y-m-d\TH:i', strtotime($event->getDateEvent())) ?>" required><br><br>
+
+    <label>Etat :</label><br>
+    <select name="etat" required>
+        <option value="actif" <?= $event->getEtat() === 'actif' ? 'selected' : '' ?>>Actif</option>
+        <option value="annulé" <?= $event->getEtat() === 'annulé' ? 'selected' : '' ?>>Annulé</option>
+    </select><br><br>
+
+    <label>ID utilisateur (optionnel) :</label><br>
+    <input type="number" name="ref_user" value="<?= $event->getRefUser() ?>"><br><br>
+
+    <button type="submit">Modifier</button>
+</form>

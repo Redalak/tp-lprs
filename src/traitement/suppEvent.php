@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../repository/eventRepo.php';
+require_once __DIR__ . '/../repository/EventRepo.php';
 
 use repository\eventRepo;
 

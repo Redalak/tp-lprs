@@ -161,8 +161,10 @@ class event
      */
     public function setDateEvent($dateEvent): void
     {
-        $this->dateEvent = $dateEvent;
+        $this->dateEvent = $dateEvent; // doit être 'YYYY-MM-DD HH:MM:SS'
     }
+
+
 
     /**
      * @return mixed

@@ -1,5 +1,8 @@
 <?php
+namespace bdd;
 
+use PDO;
+use PDOException;
 class Bdd {
     private $pdo = null;
     const DB_NAME = 'Tplprs';

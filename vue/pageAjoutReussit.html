@@ -1,10 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Ajout Réussi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f9f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .message-box {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 30px 50px;
+            border: 2px solid #c3e6cb;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .message-box h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+        .message-box p {
+            margin: 0;
+            font-size: 18px;
+        }
+        .btn-retour {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .btn-retour:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-
+<div class="message-box">
+    <h1>Ajout Réussi ! ✅</h1>
+    <p>L'élément a été ajouté avec succès.</p>
+    <a href="index.html" class="btn-retour">Retour à l'accueil</a>
+</div>
 </body>
 </html>

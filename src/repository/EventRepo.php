@@ -1,149 +1,92 @@
 <?php
+
 namespace repository;
 
-require_once __DIR__ . '/../bdd/bdd.php';
-require_once __DIR__ . '/../modele/event.php';
+require_once __DIR__ . '/../bdd/Bdd.php';
+require_once __DIR__ . '/../modele/Event.php'; // inclusion du modèle Event
 
-use modele\event;
-use PDO;
+use modele\Event;
+use bdd\Bdd;
 
-class eventRepo
+class EventRepo
 {
-    /** @var string */
-    private $table = '`event`'; // backticks car EVENT est un mot réservé MySQL
-
-    /** 🔹 Liste des événements sous forme d'objets pour affichage public */
-    public function getAll(): array {
-        $db = \bdd();
-        $sql = "
-            SELECT 
-                id_evenement   AS idEvent,
-                type           AS type,
-                titre          AS titre,
-                description    AS description,
-                lieu           AS lieu,
-                element_requis AS elementRequis,
-                nombre_place   AS nombrePlace,
-                date_creation  AS dateCreation,
-                etat           AS etat
-            FROM {$this->table}
-            ORDER BY date_creation DESC
-        ";
-        $req = $db->prepare($sql);
-        $req->execute();
-        $rows = $req->fetchAll(PDO::FETCH_ASSOC);
-
-        $events = [];
-        foreach ($rows as $row) {
-            $events[] = new event($row);
-        }
-        return $events;
-    }
-
-    /** 🔹 Récupérer les événements créés par un utilisateur spécifique */
-    public function getByUser(int $idUser): array {
-        $db = \bdd();
-        $sql = "
-            SELECT 
-                id_evenement   AS idEvent,
-                type           AS type,
-                titre          AS titre,
-                description    AS description,
-                lieu           AS lieu,
-                element_requis AS elementRequis,
-                nombre_place   AS nombrePlace,
-                date_creation  AS dateCreation,
-                etat           AS etat
-            FROM {$this->table}
-            WHERE id_utilisateur = :id
-            ORDER BY date_creation DESC
-        ";
-        $req = $db->prepare($sql);
-        $req->execute(['id' => $idUser]);
-        $rows = $req->fetchAll(PDO::FETCH_ASSOC);
-
-        $events = [];
-        foreach ($rows as $row) {
-            $events[] = new event($row);
-        }
-        return $events;
-    }
-
-    /** 🔹 Récupération d’un événement précis */
-    public function getModelById($id) {
-        $db  = \bdd();
-        $req = $db->prepare("
-            SELECT 
-                id_evenement   AS idEvent,
-                type           AS type,
-                titre          AS titre,
-                description    AS description,
-                lieu           AS lieu,
-                element_requis AS elementRequis,
-                nombre_place   AS nombrePlace,
-                date_creation  AS dateCreation,
-                etat           AS etat
-            FROM {$this->table}
-            WHERE id_evenement = :id
-        ");
-        $req->execute(['id' => (int)$id]);
-        $row = $req->fetch(PDO::FETCH_ASSOC);
-        return $row ? new event($row) : null;
-    }
-
-    /** 🔹 Ajout d’un événement */
-    public function ajoutEvent(event $e) {
-        $db  = \bdd();
-        $req = $db->prepare("
-            INSERT INTO {$this->table}
-                (type, titre, description, lieu, element_requis, nombre_place, etat)
-            VALUES
-                (:type, :titre, :description, :lieu, :element_requis, :nombre_place, :etat)
-        ");
+    // Ajout d'un événement
+    public function ajoutEvent(Event $event) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->prepare('INSERT INTO event (type, titre, description, lieu, nombre_place, date_event, etat, ref_user) VALUES (:type, :titre, :description, :lieu, :nombre_place, :date_event, :etat, :ref_user)');
         $req->execute([
-            'type'            => $e->getType(),
-            'titre'           => $e->getTitre(),
-            'description'     => $e->getDescription(),
-            'lieu'            => $e->getLieu(),
-            'element_requis'  => $e->getElementRequis(),
-            'nombre_place'    => $e->getNombrePlace(),
-            'etat'            => $e->getEtat(),
+            'type' => $event->getType(),
+            'titre' => $event->getTitre(),
+            'description' => $event->getDescription(),
+            'lieu' => $event->getLieu(),
+            'nombre_place' => $event->getNombrePlace(),
+            'date_event' => $event->getDateEvent(),
+            'etat' => $event->getEtat(),
+            'ref_user' => $event->getRefUser()
         ]);
-        $e->setIdEvent((int)$db->lastInsertId());
-        return $e;
+        return $event;
     }
 
-    /** 🔹 Modification d’un événement */
-    public function modifEvent(event $e) {
-        $db  = \bdd();
-        $req = $db->prepare("
-            UPDATE {$this->table}
-            SET type = :type,
+    // Modification d'un événement
+    public function modifEvent(Event $event) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->prepare('UPDATE event 
+            SET type = :type, 
                 titre = :titre,
                 description = :description,
                 lieu = :lieu,
-                element_requis = :element_requis,
                 nombre_place = :nombre_place,
-                etat = :etat
-            WHERE id_evenement = :id_evenement
-        ");
+                date_event = :date_event,
+                etat = :etat,
+                ref_user = :ref_user
+            WHERE id_evenement = :id_evenement');
+
         $req->execute([
-            'id_evenement'   => $e->getIdEvent(),
-            'type'           => $e->getType(),
-            'titre'          => $e->getTitre(),
-            'description'    => $e->getDescription(),
-            'lieu'           => $e->getLieu(),
-            'element_requis' => $e->getElementRequis(),
-            'nombre_place'   => $e->getNombrePlace(),
-            'etat'           => $e->getEtat(),
+            'id_evenement' => $event->getIdEvent(),
+            'type' => $event->getType(),
+            'titre' => $event->getTitre(),
+            'description' => $event->getDescription(),
+            'lieu' => $event->getLieu(),
+            'nombre_place' => $event->getNombrePlace(),
+            'date_event' => $event->getDateEvent(),
+            'etat' => $event->getEtat(),
+            'ref_user' => $event->getRefUser()
         ]);
-        return $e;
+
+        return $event;
     }
 
-    /** 🔹 Suppression d’un événement */
-    public function suppEvent($id) {
-        $db  = \bdd();
-        $req = $db->prepare("DELETE FROM {$this->table} WHERE id_evenement = :id");
-        $req->execute(['id' => (int)$id]);
+    // Suppression d'un événement
+    public function suppEvent(int $idEvent) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->prepare('DELETE FROM event WHERE id_evenement = :id_evenement');
+        $req->execute(['id_evenement' => $idEvent]);
+    }
+
+    // Liste des événements
+    public function listeEvent() {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->query('SELECT * FROM event ORDER BY date_event DESC');
+        $rows = $req->fetchAll(\PDO::FETCH_ASSOC);
+
+        $events = [];
+        foreach ($rows as $row) {
+            $events[] = new Event([
+                'idEvent'       => $row['id_evenement'],
+                'type'          => $row['type'],
+                'titre'         => $row['titre'],
+                'description'   => $row['description'],
+                'lieu'          => $row['lieu'],
+                'nombrePlace'   => $row['nombre_place'],
+                'dateEvent'     => $row['date_event'],
+                'etat'          => $row['etat'],
+                'ref_user'      => $row['ref_user']
+            ]);
+        }
+        return $events;
     }
 }
