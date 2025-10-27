@@ -3,248 +3,237 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Formations - École Exemple</title>
+    <title>Formations - École Sup.</title>
+
+    <!-- Police comme l’index -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: #f4f4f4;
+        :root{
+            --primary-color:#0A4D68;     /* Bleu profond */
+            --secondary-color:#088395;   /* Turquoise */
+            --background-color:#f8f9fa;
+            --surface-color:#ffffff;
+            --text-color:#343a40;
+            --light-text-color:#f8f9fa;
+            --shadow:0 4px 15px rgba(0,0,0,.07);
+            --radius:12px;
+            --chip:#eef6f8;
         }
 
-        /* HEADER */
-        header {
-            background: white;
-            border-bottom: 1px solid #ddd;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family:'Poppins',sans-serif;
+            background:var(--background-color);
+            color:var(--text-color);
+            line-height:1.7;
+        }
+        .container{max-width:1200px;margin:auto;padding:0 20px}
+
+        /* Header identique index */
+        header{
+            background:var(--surface-color);
+            box-shadow:var(--shadow);
+            position:sticky;top:0;z-index:1000;
+        }
+        header .container{
+            display:flex;justify-content:space-between;align-items:center;height:70px;
+        }
+        .logo{font-size:1.6rem;font-weight:700;color:var(--primary-color);margin:0}
+        nav ul{
+            list-style:none;display:flex;gap:30px;margin:0;padding:0;
+        }
+        nav a{
+            text-decoration:none;color:var(--text-color);font-weight:500;
+            position:relative;padding-bottom:5px;transition:color .3s ease;
+        }
+        nav a::after{
+            content:'';position:absolute;left:0;bottom:0;height:2px;width:0;
+            background:var(--secondary-color);transition:width .3s ease;
+        }
+        nav a:hover{color:var(--primary-color)}
+        nav a:hover::after{width:100%}
+        /* actif */
+        nav a.active{color:var(--primary-color)}
+        nav a.active::after{width:100%}
+
+        /* Titre page */
+        .page-head{
+            padding:40px 0 10px;
+        }
+        .page-head h1{
+            margin:0;text-align:center;color:var(--primary-color);
+            font-size:2rem;
+        }
+        .sub{
+            text-align:center;margin:6px 0 24px;color:#5c6b74;font-weight:500;
         }
 
-        header .container-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            max-width: 1100px;
-            margin: auto;
+        /* Grille des formations */
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:24px;
         }
+        @media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr)} }
+        @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
-        .logo {
-            font-size: 1.5em;
-            color: #005baa;
-            font-weight: bold;
+        .card{
+            background:var(--surface-color);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:22px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            transition:transform .18s ease, box-shadow .18s ease;
+            border:1px solid #e9eef0;
         }
+        .card:hover{ transform:translateY(-4px); box-shadow:0 10px 26px rgba(0,0,0,.08); }
 
-        nav ul {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-            margin: 0;
-            padding: 0;
+        .badge{
+            display:inline-block;
+            font-size:.78rem;
+            background:var(--chip);
+            color:#0b5d6b;
+            padding:6px 10px;
+            border-radius:999px;
+            font-weight:600;
         }
-
-        nav ul li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
+        .card h3{
+            margin:0;color:var(--primary-color);font-size:1.1rem;
         }
-
-        nav ul li a:hover {
-            color: #005baa;
+        .card p{
+            margin:0;color:#53626a;
+            min-height:56px;
         }
-
-        /* CONTENU FORMATIONS */
-        .formations-container {
-            max-width: 1200px;
-            margin: 50px auto;
-            padding: 0 20px;
+        .meta{
+            display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;
         }
-
-        h2 {
-            text-align: center;
-            color: #003a70;
-            margin-bottom: 40px;
+        .meta span{
+            font-size:.82rem;background:#f3f6f7;border:1px solid #e6ecee;color:#55636b;
+            padding:6px 10px;border-radius:8px;
         }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+        .actions{margin-top:10px}
+        .btn{
+            display:inline-block;
+            background:var(--primary-color);color:#fff;text-decoration:none;
+            padding:10px 14px;border-radius:8px;font-weight:600;
+            transition:transform .12s ease, opacity .2s ease, background .2s ease;
         }
+        .btn:hover{ background:#06364b; transform:translateY(-1px); opacity:.95; }
 
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card h3 {
-            color: #005baa;
-            margin-top: 0;
-        }
-
-        .card p {
-            flex: 1;
-            margin: 15px 0;
-            color: #555;
-        }
-
-        .card a {
-            align-self: flex-start;
-            padding: 10px 15px;
-            background: #005baa;
-            color: white;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
-
-        .card a:hover {
-            background: #004070;
-        }
-
-        /* FOOTER */
-        footer {
-            background: #003a70;
-            color: white;
-            padding: 40px 0 20px;
-            margin-top: 60px;
-        }
-
-        .footer-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-            text-align: center;
-        }
-
-        footer h4 {
-            margin-bottom: 10px;
-        }
-
-        footer ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        footer a {
-            color: #ddd;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer-bottom {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #666;
-            font-size: 0.9em;
+        /* Footer */
+        footer{
+            background:var(--primary-color);color:var(--light-text-color);
+            text-align:center;padding:40px 20px;margin-top:70px;
         }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
-    <div class="container-header">
-        <div class="logo">École Exemple</div>
+    <div class="container">
+        <h1 class="logo">École Sup.</h1>
         <nav>
             <ul>
-                <li><a href="index.html">Accueil</a></li>
-                <li><a href="formations.html">Formations</a></li>
-                <li><a href="#">Relations entreprises</a></li>
-                <li><a href="evenements.html">Événements</a></li>
-                <li><a href="#">Inscription</a></li>
-                <li><a href="#">Connexion</a></li>
+                <li><a href="../index.php">Accueil</a></li>
+                <li><a class="active" href="formations.php">Formations</a></li>
+                <li><a href="#">Entreprises</a></li>
+                <li><a href="supportContact.php">Contact</a></li>
+                <li><a href="forum.php">Forum</a></li>
+                <li><a href="connexion.php">Connexion</a></li>
+                <li><a href="inscription.php">Inscription</a></li>
             </ul>
         </nav>
     </div>
 </header>
 
-<!-- CONTENU FORMATIONS -->
-<div class="formations-container">
-    <h2>Nos Formations</h2>
+<div class="container page-head">
+    <h1>Nos Formations</h1>
+    <div class="sub">Des parcours concrets, pensés avec les entreprises.</div>
+</div>
 
-    <div class="cards">
-        <div class="card">
-            <h3>Bac professionnel TRPM</h3>
-            <p>Technicien de Réalisation de Produits Mécaniques : maîtrisez les techniques de fabrication industrielle.</p>
-            <a href="#">Voir détails</a>
-        </div>
+<div class="container">
+    <div class="grid">
+        <!-- Cartes formations -->
+        <article class="card">
+            <span class="badge">Bac pro</span>
+            <h3>TRPM — Technicien de Réalisation de Produits Mécaniques</h3>
+            <p>Maîtrisez l’usinage, l’assemblage et les procédés de fabrication industrielle.</p>
+            <div class="meta">
+                <span>2 ans</span><span>Ateliers</span><span>Stage</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>Bac professionnel MSPC</h3>
-            <p>Maintenance des Systèmes de Production Connectés, spécialisez-vous dans la maintenance industrielle moderne.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">Bac pro</span>
+            <h3>MSPC — Maintenance des Systèmes de Production Connectés</h3>
+            <p>Diagnostic, capteurs, GMAO : devenez le pilier de la disponibilité des lignes.</p>
+            <div class="meta">
+                <span>2 ans</span><span>TP</span><span>Alternance</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>Bac professionnel CIEL</h3>
-            <p>Conduite et Innovation en Équipement Logistique : devenez expert en gestion logistique et flux.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">Bac pro</span>
+            <h3>CIEL — Conduite et Innovation en Équipement Logistique</h3>
+            <p>Planification des flux, automatisation et gestion de stock avancée.</p>
+            <div class="meta">
+                <span>2 ans</span><span>Logistique</span><span>Stage</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>Bac technologique STI2D</h3>
-            <p>Sciences et Technologies de l’Industrie et du Développement Durable, orienté innovation technologique.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">Bac tech</span>
+            <h3>STI2D — Sciences & Technologies de l’Industrie et du DD</h3>
+            <p>Innovation, énergies, éco-conception : préparez les métiers de demain.</p>
+            <div class="meta">
+                <span>2 ans</span><span>Innovation</span><span>Projets</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>BTS CPRP</h3>
-            <p>Conception de Produits Industriels : développez vos compétences en conception et industrialisation.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">BTS</span>
+            <h3>CPRP — Conception des Processus de Réalisation de Produits</h3>
+            <p>Industrialisation, CAO/FAO et optimisation des process de production.</p>
+            <div class="meta">
+                <span>2 ans</span><span>CAO/FAO</span><span>Alternance</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>BTS MSPC</h3>
-            <p>Maintenance des Systèmes de Production Connectés, formation avancée en maintenance industrielle.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">BTS</span>
+            <h3>MSPC — Maintenance des Systèmes de Production Connectés</h3>
+            <p>Automates, IoT industriel, supervision : montez en expertise maintenance.</p>
+            <div class="meta">
+                <span>2 ans</span><span>Automates</span><span>TP</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
 
-        <div class="card">
-            <h3>BTS SIO</h3>
-            <p>Services Informatiques aux Organisations, spécialisation dans le développement et la gestion des systèmes.</p>
-            <a href="#">Voir détails</a>
-        </div>
+        <article class="card">
+            <span class="badge">BTS</span>
+            <h3>SIO — Services Informatiques aux Organisations</h3>
+            <p>Dév. (SLAM) ou Réseaux (SISR) : projets réels, sécurité et bonnes pratiques.</p>
+            <div class="meta">
+                <span>2 ans</span><span>SLAM/SISR</span><span>Projets</span>
+            </div>
+            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+        </article>
     </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
-    <div class="footer-grid">
-        <div>
-            <h4>Contact</h4>
-            <p>123 Rue de l'École<br>75000 Paris</p>
-        </div>
-        <div>
-            <h4>Liens utiles</h4>
-            <ul>
-                <li><a href="#">Inscription</a></li>
-                <li><a href="#">FAQ</a></li>
-                <li><a href="#">Mentions légales</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4>Suivez-nous</h4>
-            <p>Facebook | LinkedIn | X</p>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        &copy; 2025 École Exemple. Tous droits réservés.
-    </div>
+    &copy; 2025 École Supérieure — Tous droits réservés
 </footer>
 
 </body>
