@@ -134,18 +134,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
         <option value="">-- Sélectionner --</option>
         <option value="CDI">CDI</option>
         <option value="CDD">CDD</option>
-        <option value="Intérim">Intérim</option>
         <option value="Stage">Stage</option>
         <option value="Alternance">Alternance</option>
-        <option value="Saisonnier">Saisonnier</option>
-        <option value="Freelance">Freelance</option>
+        <option value="Autre">Saisonnier</option>
     </select><br><br>
 
     <label>État :</label><br>
     <select name="etat" required>
         <option value="">-- Sélectionner --</option>
-        <option value="actif">Actif</option>
-        <option value="clos">Clos</option>
+        <option value="ouvert">Ouvert</option>
+        <option value="ferme">Ferme</option>
         <option value="brouillon">Brouillon</option>
     </select><br><br>
 

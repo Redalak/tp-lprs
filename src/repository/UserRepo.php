@@ -82,26 +82,97 @@ class UserRepo {
         }
         return $listeUser;
     }
-    public function modifUser(User $user){
+
+    public function modifUser(User $user) {
         $bdd = new Bdd();
-        $database=$bdd->getBdd();
-        $req = $database->prepare("UPDATE user SET role = :role WHERE id_user = :id_user");
-        $req->execute(array(
-            "role"=>$user->getRole(),
-            "id_user"=> $user->getIdUser()
-        ));
-        return $user;
+        $database = $bdd->getBdd();
+
+        // Récupérer les valeurs des références, et les mettre à NULL si elles sont vides ou invalides
+        $refEntreprise = $user->getRefEntreprise();
+        $refFormation = $user->getRefFormation();
+
+        // Vérifier que l'ID de l'entreprise existe dans la table 'entreprise' (si ref_entreprise n'est pas NULL)
+        if (!empty($refEntreprise)) {
+            $req = $database->prepare("SELECT id_entreprise FROM entreprise WHERE id_entreprise = :id_entreprise LIMIT 1");
+            $req->execute(['id_entreprise' => $refEntreprise]);
+            $entrepriseExist = $req->fetch();
+
+            if (!$entrepriseExist) {
+                // Si l'entreprise n'existe pas, on met ref_entreprise à NULL
+                $refEntreprise = null;
+            }
+        }
+
+        // Vérifier que l'ID de la formation existe dans la table 'formation' (si ref_formation n'est pas NULL)
+        if (!empty($refFormation)) {
+            $req = $database->prepare("SELECT id_formation FROM formation WHERE id_formation = :id_formation LIMIT 1");
+            $req->execute(['id_formation' => $refFormation]);
+            $formationExist = $req->fetch();
+
+            if (!$formationExist) {
+                // Si la formation n'existe pas, on met ref_formation à NULL
+                $refFormation = null;
+            }
+        }
+
+        // Préparer la requête de mise à jour
+        $req = $database->prepare("
+        UPDATE user 
+        SET nom = :nom, prenom = :prenom, email = :email, role = :role, ref_entreprise = :ref_entreprise, ref_formation = :ref_formation
+        WHERE id_user = :id_user
+    ");
+
+        // Exécuter la requête avec les données de l'utilisateur
+        $result = $req->execute([
+            "nom"           => $user->getNom(),
+            "prenom"        => $user->getPrenom(),
+            "email"         => $user->getEmail(),
+            "role"          => $user->getRole(),
+            "ref_entreprise"=> $refEntreprise,  // Peut être NULL si l'entreprise est invalide
+            "ref_formation" => $refFormation,   // Peut être NULL si la formation est invalide
+            "id_user"       => $user->getIdUser()
+        ]);
+
+        // Vérifier si la mise à jour a réussi
+        if ($result) {
+            return $user;  // Retourne l'utilisateur si la mise à jour a réussi
+        } else {
+            // Si la requête échoue, tu peux afficher un message d'erreur ou loguer
+            echo "Erreur lors de la mise à jour de l'utilisateur.";
+            return null;
+        }
     }
-    public function deleteUser(User $user){
+
+
+    public function suppUser(User $user) {
         $bdd = new Bdd();
-        $database=$bdd->getBdd();
+        $database = $bdd->getBdd();
+
+        // Vérifier si l'utilisateur existe d'abord
+        $req = $database->prepare("SELECT id_user FROM user WHERE id_user = :id_user LIMIT 1");
+        $req->execute(['id_user' => $user->getIdUser()]);
+        $row = $req->fetch();
+
+        if (!$row) {
+            echo "L'utilisateur n'existe pas.";
+            return null;  // Si l'utilisateur n'existe pas dans la BDD, on ne fait rien.
+        }
+
+        // Supprimer l'utilisateur
         $req = $database->prepare("DELETE FROM user WHERE id_user = :id_user");
-        $req->execute(array(
-            "id_user"=>$user->getIdUser()
-        ));
-        return $user;
+        $req->execute(['id_user' => $user->getIdUser()]);
+
+        // Vérifier si la suppression a réussi
+        if ($req->rowCount() > 0) {
+            echo "L'utilisateur a été supprimé avec succès.";
+            return $user;  // Retourne l'utilisateur supprimé
+        } else {
+            echo "Erreur lors de la suppression de l'utilisateur.";
+            return null;
+        }
     }
-// AJOUTEZ CETTE FONCTION DANS VOTRE CLASSE UserRepo
+
+
     public function getUserById($id) {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
@@ -125,5 +196,47 @@ class UserRepo {
             'role'   => $row['role'],
         ]);
     }
+    public function ajoutUser(User $user) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+
+        // Récupérer les valeurs des références, et les mettre à NULL si elles sont vides
+        $refEntreprise = $user->getRefEntreprise();
+        $refFormation = $user->getRefFormation();
+
+        if (empty($refEntreprise)) {
+            $refEntreprise = null;
+        }
+
+        if (empty($refFormation)) {
+            $refFormation = null;
+        }
+
+        // Préparer la requête d'insertion
+        $req = $database->prepare("
+        INSERT INTO user (nom, prenom, email, mdp, role, ref_entreprise, ref_formation) 
+        VALUES (:nom, :prenom, :email, :mdp, :role, :ref_entreprise, :ref_formation)
+    ");
+
+        // Exécuter la requête avec les données de l'utilisateur
+        $req->execute([
+            "nom"            => $user->getNom(),
+            "prenom"         => $user->getPrenom(),
+            "email"          => $user->getEmail(),
+            "mdp"            => $user->getMdp(),
+            "role"           => $user->getRole(),
+            "ref_entreprise" => $refEntreprise,  // Peut être NULL
+            "ref_formation"  => $refFormation,   // Peut être NULL
+        ]);
+
+        // Récupérer l'ID de l'utilisateur ajouté
+        $userId = $database->lastInsertId();
+
+        // Récupérer l'utilisateur ajouté (avec l'ID)
+        $user->setIdUser($userId);
+
+        return $user;
+    }
+
 
 }

@@ -1,208 +1,114 @@
 <?php
-require_once __DIR__ . '/../src/repository/userRepo.php';
-use repository\userRepo;
+require_once __DIR__ . '/../src/repository/UserRepo.php';
+use repository\UserRepo;
+use modele\User; // Assurez-vous que votre classe User est incluse
 
-$repo = new userRepo();
-$rows = $repo->getAllRaw();
+$userRepo = new UserRepo();
+$users = $userRepo->listeUser();
 
-function alertBox() {
-    if (!isset($_GET['msg'])) return '';
-    $cls=''; $txt='';
-    switch ($_GET['msg']) {
-        case 'added':   $cls='success'; $txt='Utilisateur ajouté.'; break;
-        case 'deleted': $cls='warning'; $txt='Utilisateur supprimé.'; break;
-        case 'updated': $cls='info';    $txt='Utilisateur modifié.'; break;
-        case 'error':   $cls='danger';  $txt='Veuillez remplir les champs requis.'; break;
-        default: return '';
-    }
-    return '<div class="alert alert-'.$cls.'">'.$txt.'</div>';
+// Traitement du formulaire de création
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
+    $nom = $_POST['nom'];
+    $prenom = $_POST['prenom'];
+    $email = $_POST['email'];
+    $mdp = $_POST['mdp'];
+    $role = $_POST['role'];
+    $ref_entreprise = $_POST['ref_entreprise'];
+    $ref_formation = $_POST['ref_formation'];
+
+    // Hachage du mot de passe
+    $hashedPassword = password_hash($mdp, PASSWORD_BCRYPT);
+
+    $newUser = new User([
+        'nom' => $nom,
+        'prenom' => $prenom,
+        'email' => $email,
+        'mdp' => $hashedPassword,
+        'role' => $role,
+        'ref_entreprise' => $ref_entreprise,
+        'ref_formation' => $ref_formation,
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ]);
+
+    $userRepo->ajoutUser($newUser);
+
+    // Rafraîchir la liste
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
-$roles = ['admin','prof','eleve','alumni','entreprise'];
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestion des utilisateurs</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>body{background:#f8f9fa} th,td{vertical-align:top}</style>
-</head>
-<style>
-    header {
-        text-align: center;
-        font-size: 1.8em;
-        font-weight: 700;
-        color: #0A4D68;
-        padding: 20px 0;
-        font-family: 'Poppins', sans-serif;
-    }
 
-    nav.tabs {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 40px;
-    }
+<h2>Liste des utilisateurs</h2>
 
-    nav.tabs a {
-        text-decoration: none;
-        background: #fff;
-        border: 2px solid #0A4D68;
-        padding: 10px 25px;
-        font-weight: 600;
-        color: #0A4D68;
-        border-radius: 8px;
-        transition: background 0.3s, color 0.3s;
-        font-family: 'Poppins', sans-serif;
-    }
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Email</th>
+        <th>Rôle</th>
+        <th>Entreprise</th>
+        <th>Formation</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach($users as $user): ?>
+        <tr>
+            <td><?= $user->getIdUser() ?></td>
+            <td><?= htmlspecialchars($user->getNom()) ?></td>
+            <td><?= htmlspecialchars($user->getPrenom()) ?></td>
+            <td><?= htmlspecialchars($user->getEmail()) ?></td>
+            <td><?= htmlspecialchars($user->getRole()) ?></td>
+            <td>
+                <?= !empty($user->getRefEntreprise()) ? htmlspecialchars($user->getRefEntreprise()) : 'Non spécifié' ?>
+            </td>
+            <td>
+                <?= !empty($user->getRefFormation()) ? htmlspecialchars($user->getRefFormation()) : 'Non spécifié' ?>
+            </td>
+            <td>
+                <a href="modifUser.php?id=<?= $user->getIdUser() ?>">Modifier</a> |
+                <a href="suppUser.php?id_user=<?= $user->getIdUser() ?>" onclick="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?')">Supprimer</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
 
-    nav.tabs a.active {
-        background: #0A4D68;
-        color: #f8f9fa;
-        box-shadow: 0 4px 10px rgba(0, 77, 104, 0.4);
-    }
 
-    nav.tabs a:hover:not(.active) {
-        background: #088395;
-        color: #f8f9fa;
-    }
-</style>
+<h2>Créer un nouvel utilisateur</h2>
 
-<header>Admin - École</header>
+<form method="post" style="margin-bottom: 30px; border: 1px solid #ccc; padding: 10px;">
+    <input type="hidden" name="create_user" value="1">
 
-<nav class="tabs" role="navigation" aria-label="Navigation principale">
-    <a href="adminUser.php" class="active">Utilisateurs</a>
-    <a href="adminOffre.php" class="">Offres d'emploi / stage</a>
-    <a href="adminEvent.php" class="">Événements</a>
-</nav>
+    <label>Nom :</label><br>
+    <input type="text" name="nom" required><br><br>
 
-<body>
-<div class="container my-4">
-    <h1 class="mb-3">Gestion des utilisateurs</h1>
-    <?= alertBox(); ?>
+    <label>Prénom :</label><br>
+    <input type="text" name="prenom" required><br><br>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white"><strong>Liste des utilisateurs</strong></div>
-        <div class="card-body table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-secondary">
-                <tr>
-                    <th style="width:80px">ID</th>
-                    <th style="width:160px">Nom</th>
-                    <th style="width:160px">Prénom</th>
-                    <th style="width:240px">Email</th>
-                    <th style="width:140px">Rôle</th>
-                    <th style="width:110px">Vérifié</th>
-                    <th style="width:190px">Créé le</th>
-                    <th style="width:170px">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (!$rows): ?>
-                    <tr><td colspan="8" class="text-center text-muted">Aucun utilisateur</td></tr>
-                <?php else: foreach ($rows as $r): ?>
-                    <tr>
-                        <td><?= (int)$r['id_user'] ?></td>
-                        <td><?= htmlspecialchars($r['nom']) ?></td>
-                        <td><?= htmlspecialchars($r['prenom']) ?></td>
-                        <td><?= htmlspecialchars($r['email']) ?></td>
-                        <td><span class="badge text-bg-secondary"><?= htmlspecialchars($r['role']) ?></span></td>
-                        <td><?= ((int)$r['est_verifie']===1)?'<span class="badge text-bg-success">oui</span>':'<span class="badge text-bg-secondary">non</span>' ?></td>
-                        <td><?= htmlspecialchars($r['created_at']) ?></td>
-                        <td class="text-nowrap">
-                            <a class="btn btn-sm btn-warning" href="modifUser.php?id_user=<?= (int)$r['id_user'] ?>">Modifier</a>
-                            <a class="btn btn-sm btn-danger"
-                               href="../src/traitement/suppUser.php?id_user=<?= (int)$r['id_user'] ?>"
-                               onclick="return confirm('Supprimer cet utilisateur ?');">Supprimer</a>
-                        </td>
-                    </tr>
-                <?php endforeach; endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <label>Email :</label><br>
+    <input type="email" name="email" required><br><br>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white"><strong>Ajouter un utilisateur</strong></div>
-        <div class="card-body">
-            <form method="post" action="../src/traitement/ajoutUser.php">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Nom *</label>
-                        <input type="text" name="nom" class="form-control" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Prénom *</label>
-                        <input type="text" name="prenom" class="form-control" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Email *</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Mot de passe *</label>
-                        <input type="password" name="mdp" class="form-control" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Rôle *</label>
-                        <select name="role" class="form-select" required>
-                            <?php foreach ($roles as $r): ?>
-                                <option value="<?= $r ?>"><?= $r ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Vérifié</label><br>
-                        <input type="checkbox" name="est_verifie" value="1"> Compte vérifié
-                    </div>
+    <label>Mot de passe :</label><br>
+    <input type="password" name="mdp" required><br><br>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Spécialité</label>
-                        <input type="text" name="specialite" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Matière</label>
-                        <input type="text" name="matiere" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Poste</label>
-                        <input type="text" name="poste" class="form-control">
-                    </div>
+    <label>Rôle :</label><br>
+    <select name="role" required>
+        <option value="admin">Admin</option>
+        <option value="prof">Prof</option>
+        <option value="alumni">Alumni</option>
+        <option value="entreprise">Entreprise</option>
+        <option value="etudiant">Etudiant</option>
+    </select><br><br>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Année promo</label>
-                        <input type="number" name="annee_promo" class="form-control" min="0">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Promo</label>
-                        <input type="text" name="promo" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">CV (lien/nom de fichier)</label>
-                        <input type="text" name="cv" class="form-control">
-                    </div>
+    <label>Référence Entreprise (optionnel) :</label><br>
+    <input type="text" name="ref_entreprise"><br><br>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Motif partenariat</label>
-                        <input type="text" name="motif_partenariat" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Ref. entreprise</label>
-                        <input type="number" name="ref_entreprise" class="form-control" min="0">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Ref. formation</label>
-                        <input type="number" name="ref_formation" class="form-control" min="0">
-                    </div>
+    <label>Référence Formation (optionnel) :</label><br>
+    <input type="text" name="ref_formation"><br><br>
 
-                    <div class="col-12">
-                        <button class="btn btn-success">Ajouter</button>
-                    </div>
-                </div>
-            </form>
-            <p class="text-muted mt-2">* requis — <em>created_at/updated_at</em> gérés par la BDD.</p>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+    <button type="submit">Créer l'utilisateur</button>
+</form>
