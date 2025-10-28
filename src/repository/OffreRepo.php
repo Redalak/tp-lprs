@@ -54,26 +54,32 @@ class OffreRepo
         return $offre;
     }
 
+
     public function listeOffre() {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
         $req = $database->query('
-            SELECT *
-            FROM offre
-            ORDER BY date_creation DESC
-        ');
+        SELECT *
+        FROM offre
+        ORDER BY date_creation DESC
+    ');
         $rows = $req->fetchAll(\PDO::FETCH_ASSOC);
 
         $offres = [];
         foreach ($rows as $row) {
-            // on recrée un objet offre à partir de la ligne SQL
-            $o = new offre($row);
-            $offres[] = $o;
+            // Adapter la clé SQL vers la propriété du modèle
+            if (isset($row['id_offre'])) {
+                $row['idOffre'] = $row['id_offre'];
+                unset($row['id_offre']);
+            }
+
+            $offres[] = new offre($row);
         }
 
         return $offres;
     }
+
 
     public function suppOffre(int $idOffre) {
         $bdd = new Bdd();

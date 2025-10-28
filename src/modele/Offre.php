@@ -4,196 +4,78 @@ namespace modele;
 
 class offre
 {
-private $idOffre;
-private $titre;
-private $rue;
-private $cp;
-private $ville;
-private $description;
-private $salaire;
-private $typeOffre;
-private $dateCreation;
-private $etat;
-private $ref_entreprise;
+    // --- Propriétés ---
+    private $idOffre;
+    private $titre;
+    private $rue;
+    private $cp;
+    private $ville;
+    private $description;
+    private $salaire;
+    private $typeOffre;
+    private $etat;
+    private $dateCreation;
+    private $refEntreprise;
 
-
-    public function __construct(array $donnees)
+    // --- Constructeur ---
+    public function __construct(array $data = [])
     {
-        $this->hydrate($donnees);
+        if (!empty($data)) {
+            $this->hydrate($data);
+        }
     }
 
-    private function hydrate(array $donnees)
+    // --- Hydratation automatique ---
+    public function hydrate(array $data)
     {
-        foreach ($donnees as $key => $value) {
-            // On récupère le nom du setter correspondant à l'attribut
-            $method = 'set' . ucfirst($key);
+        foreach ($data as $key => $value) {
+            // Adapter les clés de la BDD vers le format camelCase de la classe
+            switch ($key) {
+                case 'id_offre':       $key = 'idOffre'; break;
+                case 'type_offre':     $key = 'typeOffre'; break;
+                case 'date_creation':  $key = 'dateCreation'; break;
+                case 'ref_entreprise': $key = 'refEntreprise'; break;
+            }
 
-            // Si le setter correspondant existe.
+            $method = 'set' . ucfirst($key);
             if (method_exists($this, $method)) {
-                // On appelle le setter
                 $this->$method($value);
             }
         }
-    }/**
- * @return mixed
- */
-public function getIdOffre()
-{
-    return $this->idOffre;
-}/**
- * @param mixed $idOffre
- */
-public function setIdOffre($idOffre)
-{
-    $this->idOffre = $idOffre;
-}/**
- * @return mixed
- */
-public function getTitre()
-{
-    return $this->titre;
-}/**
- * @param mixed $titre
- */
-public function setTitre($titre)
-{
-    $this->titre = $titre;
-}/**
- * @return mixed
- */
-public function getDescription()
-{
-    return $this->description;
-}/**
- * @param mixed $description
- */
-public function setDescription($description)
-{
-    $this->description = $description;
-}/**
- * @return mixed
- */
-public function getMission()
-{
-    return $this->mission;
-}/**
- * @param mixed $mission
- */
-public function setMission($mission)
-{
-    $this->mission = $mission;
-}/**
- * @return mixed
- */
-public function getSalaire()
-{
-    return $this->salaire;
-}/**
- * @param mixed $salaire
- */
-public function setSalaire($salaire)
-{
-    $this->salaire = $salaire;
-}/**
- * @return mixed
- */
-public function getTypeOffre()
-{
-    return $this->typeOffre;
-}/**
- * @param mixed $typeOffre
- */
-public function setTypeOffre($typeOffre)
-{
-    $this->typeOffre = $typeOffre;
-}/**
- * @return mixed
- */
-public function getDateCreation()
-{
-    return $this->dateCreation;
-}/**
- * @param mixed $dateCreation
- */
-public function setDateCreation($dateCreation)
-{
-    $this->dateCreation = $dateCreation;
-}/**
- * @return mixed
- */
-public function getEtat()
-{
-    return $this->etat;
-}/**
- * @param mixed $etat
- */
-public function setEtat($etat)
-{
-    $this->etat = $etat;
-}
-
-    /**
-     * @return mixed
-     */
-    public function getRue()
-    {
-        return $this->rue;
     }
 
-    /**
-     * @param mixed $rue
-     */
-    public function setRue($rue): void
-    {
-        $this->rue = $rue;
-    }
+    // --- Getters / Setters ---
 
-    /**
-     * @return mixed
-     */
-    public function getCp()
-    {
-        return $this->cp;
-    }
+    public function getIdOffre()        { return $this->idOffre; }
+    public function setIdOffre($id)     { $this->idOffre = (int)$id; }
 
-    /**
-     * @param mixed $cp
-     */
-    public function setCp($cp): void
-    {
-        $this->cp = $cp;
-    }
+    public function getTitre()          { return $this->titre; }
+    public function setTitre($titre)    { $this->titre = $titre; }
 
-    /**
-     * @return mixed
-     */
-    public function getVille()
-    {
-        return $this->ville;
-    }
+    public function getRue()            { return $this->rue; }
+    public function setRue($rue)        { $this->rue = $rue; }
 
-    /**
-     * @param mixed $ville
-     */
-    public function setVille($ville): void
-    {
-        $this->ville = $ville;
-    }
+    public function getCp()             { return $this->cp; }
+    public function setCp($cp)          { $this->cp = $cp; }
 
-    /**
-     * @return mixed
-     */
-    public function getRefEntreprise()
-    {
-        return $this->ref_entreprise;
-    }
+    public function getVille()          { return $this->ville; }
+    public function setVille($ville)    { $this->ville = $ville; }
 
-    /**
-     * @param mixed $ref_entreprise
-     */
-    public function setRefEntreprise($ref_entreprise): void
-    {
-        $this->ref_entreprise = $ref_entreprise;
-    }
+    public function getDescription()    { return $this->description; }
+    public function setDescription($desc) { $this->description = $desc; }
 
+    public function getSalaire()        { return $this->salaire; }
+    public function setSalaire($salaire) { $this->salaire = $salaire; }
+
+    public function getTypeOffre()      { return $this->typeOffre; }
+    public function setTypeOffre($type) { $this->typeOffre = $type; }
+
+    public function getEtat()           { return $this->etat; }
+    public function setEtat($etat)      { $this->etat = $etat; }
+
+    public function getDateCreation()   { return $this->dateCreation; }
+    public function setDateCreation($date) { $this->dateCreation = $date; }
+
+    public function getRefEntreprise()  { return $this->refEntreprise; }
+    public function setRefEntreprise($ref) { $this->refEntreprise = $ref; }
 }

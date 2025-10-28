@@ -17,8 +17,7 @@ if (!isset($_SESSION['id_user'])) {
 $userRepo = new UserRepo();
 $user = $userRepo->getUserById($_SESSION['id_user']);
 
-// Récupère les réservations de l'utilisateur
-$reservations = $userRepo->getReservationsByUserId($_SESSION['id_user']);
+
 
 // Traitement de la modification du profil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -93,20 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     </form>
 
     <!-- Affichage des réservations -->
-    <h2>Mes Réservations</h2>
-    <?php if (count($reservations) > 0): ?>
-        <ul>
-            <?php foreach ($reservations as $reservation): ?>
-                <li>
-                    <strong><?= htmlspecialchars($reservation['titre']) ?></strong><br>
-                    Date : <?= htmlspecialchars($reservation['date_event']) ?><br>
-                    Lieu : <?= htmlspecialchars($reservation['lieu']) ?><br><br>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php else: ?>
-        <p>Aucune réservation trouvée.</p>
-    <?php endif; ?>
+
 
     <div style="text-align:center;margin-top:15px;">
         <a href="../index.php" style="color: var(--primary-color); text-decoration:none;">⬅ Retour Accueil</a>

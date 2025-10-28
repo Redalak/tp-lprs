@@ -116,12 +116,6 @@ class EventRepo
         return $events;
     }
 
-    public function decrementerPlaces($eventId) {
-        $bdd = new Bdd();
-        $db = $bdd->getBdd();
-        $stmt = $db->prepare("UPDATE event SET nombre_place = nombre_place - 1 WHERE id_evenement = ?");
-        return $stmt->execute([$eventId]);
-    }
 
 
 }
