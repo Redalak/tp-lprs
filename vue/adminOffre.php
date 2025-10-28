@@ -139,6 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
         <option value="Autre">Saisonnier</option>
     </select><br><br>
 
+
     <label>État :</label><br>
     <select name="etat" required>
         <option value="">-- Sélectionner --</option>

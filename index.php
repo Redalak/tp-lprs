@@ -197,10 +197,10 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                     <li><a href="vue/forum.php">Forum</a></li>
 
                     <li class="profile-dropdown">
-                        <a href="#" class="profile-icon">👤</a> <div class="dropdown-content">
+                        <a href="vue/profilUser.php" class="profile-icon">👤</a> <div class="dropdown-content">
                             <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
 
-                            <a href="vue/profil.php" class="profile-button">Mon Profil</a>
+                            <a href="vue/profilUser.php" class="profile-button">Mon Profil</a>
 
                             <a href="?deco=true" class="logout-button">Déconnexion</a>
                         </div>
