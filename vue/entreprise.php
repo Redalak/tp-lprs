@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 // Inclure les fichiers nécessaires
 require_once __DIR__ . "/../src/bdd/Bdd.php";
 require_once __DIR__ . "/../src/repository/EntrepriseRepo.php";
@@ -7,8 +8,13 @@ require_once __DIR__ . "/../src/repository/UserRepo.php";
 require_once __DIR__ . "/../src/modele/Entreprise.php";
 require_once __DIR__ . "/../src/modele/User.php";
 
+// On inclut aussi les offres
+require_once __DIR__ . "/../src/repository/OffreRepo.php";
+require_once __DIR__ . "/../src/modele/offre.php";
+
 use repository\EntrepriseRepo;
 use repository\UserRepo;
+use repository\OffreRepo;
 
 // Déconnexion (copié de votre index.php)
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
@@ -27,6 +33,10 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
 // Récupérer la liste des entreprises
 $entrepriseRepo = new EntrepriseRepo();
 $entreprises = $entrepriseRepo->listeEntreprise();
+
+// Récupérer les 3 dernières offres publiées
+$offreRepo = new OffreRepo();
+$dernieresOffres = $offreRepo->getDernieresOffres(3);
 ?>
 
 <!DOCTYPE html>
@@ -38,7 +48,7 @@ $entreprises = $entrepriseRepo->listeEntreprise();
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family:Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root{
@@ -170,11 +180,73 @@ $entreprises = $entrepriseRepo->listeEntreprise();
         }
         .btn:hover{ background:#06364b; transform:translateY(-1px); opacity:.95; }
 
+        /* Section jobs */
+        .jobs-section {
+            padding:50px 0 60px;
+        }
+
+        .jobs-headline {
+            text-align:center;
+            color:var(--primary-color);
+            font-size:1.6rem;
+            font-weight:600;
+            margin:0 0 8px;
+        }
+
+        .jobs-sub {
+            text-align:center;
+            color:#5c6b74;
+            font-weight:500;
+            margin:0 0 30px;
+        }
+
+        .job-card .row-line{
+            font-size:.9rem;
+            color:#53626a;
+            line-height:1.5;
+        }
+
+        .job-meta{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            font-size:.8rem;
+            color:#53626a;
+        }
+        .chip{
+            background:var(--chip);
+            border-radius:999px;
+            padding:4px 8px;
+            font-weight:600;
+            color:#0b5d6b;
+        }
+
+        /* wrapper bouton "Voir plus" */
+        .more-wrapper{
+            text-align:center;
+            margin-top:30px;
+        }
+        .btn-more{
+            display:inline-block;
+            background:var(--secondary-color);
+            color:#fff;
+            text-decoration:none;
+            padding:10px 16px;
+            border-radius:8px;
+            font-weight:600;
+            box-shadow:var(--shadow);
+            transition:transform .12s ease, opacity .2s ease, background .2s ease;
+        }
+        .btn-more:hover{
+            background:var(--primary-color);
+            transform:translateY(-1px);
+            opacity:.95;
+        }
+
         /* Footer */
         footer{
             background:var(--primary-color);color:var(--light-text-color);
             text-align:center;padding:40px 20px;
-            /* margin-top:70px; (Le flexbox gère l'espacement) */
         }
 
         /* Styles pour le dropdown profil */
@@ -236,6 +308,8 @@ $entreprises = $entrepriseRepo->listeEntreprise();
 </header>
 
 <main>
+
+    <!-- Section entreprises partenaires -->
     <div class="container page-head">
         <h1>Nos Entreprises Partenaires</h1>
         <div class="sub">Ils nous font confiance pour former leurs futurs talents.</div>
@@ -243,7 +317,6 @@ $entreprises = $entrepriseRepo->listeEntreprise();
 
     <div class="container">
         <div class="grid">
-
             <?php foreach($entreprises as $entreprise): ?>
                 <article class="card">
                     <span class="badge"><?= htmlspecialchars($entreprise->getMotifPartenariat()) ?></span>
@@ -266,10 +339,73 @@ $entreprises = $entrepriseRepo->listeEntreprise();
             <?php if (empty($entreprises)): ?>
                 <p>Aucune entreprise partenaire à afficher pour le moment.</p>
             <?php endif; ?>
-
         </div>
     </div>
+
+    <!-- Section dernières offres -->
+    <section class="jobs-section">
+        <div class="container">
+            <h2 class="jobs-headline">Dernières offres publiées</h2>
+            <p class="jobs-sub">Les 3 opportunités les plus récentes proposées par nos partenaires.</p>
+
+            <div class="grid">
+                <?php foreach ($dernieresOffres as $offre): ?>
+                    <article class="card job-card">
+                        <!-- type_offre en badge -->
+                        <span class="badge">
+                            <?= htmlspecialchars($offre->getTypeOffre()) ?>
+                        </span>
+
+                        <!-- titre -->
+                        <h3><?= htmlspecialchars($offre->getTitre()) ?></h3>
+
+                        <!-- lieu -->
+                        <div class="row-line">
+                            📍
+                            <?= htmlspecialchars($offre->getRue()) ?>,
+                            <?= htmlspecialchars($offre->getCp()) ?> <?= htmlspecialchars($offre->getVille()) ?>
+                        </div>
+
+                        <!-- description courte -->
+                        <p>
+                            <?= nl2br(htmlspecialchars($offre->getDescription())) ?>
+                        </p>
+
+                        <!-- meta salaire + état + date -->
+                        <div class="job-meta">
+                            <?php if ($offre->getSalaire() !== null && $offre->getSalaire() !== ''): ?>
+                                <span class="chip">💶 <?= htmlspecialchars($offre->getSalaire()) ?></span>
+                            <?php endif; ?>
+
+                            <?php if ($offre->getEtat() !== ''): ?>
+                                <span class="chip">Statut : <?= htmlspecialchars($offre->getEtat()) ?></span>
+                            <?php endif; ?>
+
+                            <?php if ($offre->getDateCreation() !== null && $offre->getDateCreation() !== ''): ?>
+                                <span class="chip">
+                                    Publié le :
+                                    <?= htmlspecialchars($offre->getDateCreation()) ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+
+                <?php if (empty($dernieresOffres)): ?>
+                    <p>Aucune offre de poste pour le moment.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- bouton Voir plus -->
+            <div class="more-wrapper">
+                <a class="btn-more" href="offres.php">Voir plus</a>
+            </div>
+
+        </div>
+    </section>
+
 </main>
+
 <footer>
     &copy; 2025 École Supérieure — Tous droits réservés
 </footer>

@@ -115,4 +115,34 @@ class OffreRepo
 
         return $offre;
     }
+    public function getDernieresOffres(int $limit = 3) {
+        $bdd = new \bdd\Bdd();
+        $database = $bdd->getBdd();
+
+        // On prend les dernières offres créées
+        $stmt = $database->prepare('
+        SELECT *
+        FROM offre
+        ORDER BY date_creation DESC
+        LIMIT :limite
+    ');
+
+        // LIMIT doit être bindé en entier sinon MySQL râle
+        $stmt->bindValue(':limite', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $offres = [];
+
+        foreach ($rows as $row) {
+            // On crée l'objet offre à partir de la ligne BDD
+            // Ton modèle `offre` sait hydrater avec les clés de la BDD
+            $o = new \modele\offre($row);
+            $offres[] = $o;
+        }
+
+        return $offres;
+    }
+
 }
