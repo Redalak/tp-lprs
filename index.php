@@ -190,7 +190,7 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
             <ul>
                 <li><a href="index.php">Accueil</a></li>
                 <li><a href="vue/formations.php">Formations</a></li>
-                <li><a href="#">Entreprises</a></li>
+                <li><a href="vue/entreprise.php">Entreprises</a></li>
                 <li><a href="vue/supportContact.php">Contact</a></li>
 
                 <?php if ($userLoggedIn): // Utilise la variable définie en haut ?>

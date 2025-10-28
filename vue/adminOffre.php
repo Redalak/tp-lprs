@@ -3,7 +3,7 @@ require_once __DIR__ . '/../src/repository/OffreRepo.php';
 require_once __DIR__ . '/../src/modele/offre.php';
 
 use repository\OffreRepo;
-use modele\offre;
+use modele\offre; // Assurez-vous que votre classe offre est incluse
 
 $offreRepo = new OffreRepo();
 $offres = $offreRepo->listeOffre();
@@ -11,52 +11,37 @@ $offres = $offreRepo->listeOffre();
 // Traitement du formulaire de création
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
 
-    $titre        = $_POST['titre'] ?? '';
-    $rue          = $_POST['rue'] ?? '';
-    $cp           = $_POST['cp'] ?? '';
-    $ville        = $_POST['ville'] ?? '';
-    $description  = $_POST['description'] ?? '';
+    $titre        = $_POST['titre'];
+    $rue          = $_POST['rue'];
+    $cp           = $_POST['cp'];
+    $ville        = $_POST['ville'];
+    $description  = $_POST['description'];
     $salaire      = $_POST['salaire'] ?? ''; // facultatif
-    $type_offre   = $_POST['type_offre'] ?? '';
-    $etat         = $_POST['etat'] ?? '';
+    $type_offre   = $_POST['type_offre'];
+    $etat         = $_POST['etat'];
 
-    if (
-        $titre !== '' &&
-        $rue !== '' &&
-        $cp !== '' &&
-        $ville !== '' &&
-        $description !== '' &&
-        $type_offre !== '' &&
-        $etat !== ''
-    ) {
-        // 1) On construit l'objet avec les mêmes noms que ta BDD
-        $newOffre = new offre([
-            'titre'        => $titre,
-            'rue'          => $rue,
-            'cp'           => $cp,
-            'ville'        => $ville,
-            'description'  => $description,
-            'salaire'      => $salaire,
-            'type_offre'   => $type_offre, // IMPORTANT: snake_case
-            'etat'         => $etat,       // IMPORTANT: on le passe bien
-            // 'date_creation' => gérée par la BDD
-        ]);
+    // On construit l'objet offre à partir des données du formulaire
+    // (grâce à ton constructeur + hydrate, ça va appeler les bons setters)
+    $newOffre = new offre([
+        'titre'        => $titre,
+        'rue'          => $rue,
+        'cp'           => $cp,
+        'ville'        => $ville,
+        'description'  => $description,
+        'salaire'      => $salaire,
+        'type_offre'   => $type_offre,
+        'etat'         => $etat,
+        // 'date_creation' est géré par la BDD en auto
+        // 'ref_entreprise' on ne l'utilise pas ici
+    ]);
 
-        // 2) On force aussi avec les setters (ceinture + bretelles)
-        //    comme ça même si le constructeur de ta classe `offre`
-        //    n'attend pas les bons index, ça remplit quand même.
-        $newOffre->setTypeOffre($type_offre);
-        $newOffre->setEtat($etat);
+    // Insertion en base
+    $offreRepo->ajoutOffre($newOffre);
 
-        $offreRepo->ajoutOffre($newOffre);
-
-        header('Location: ' . $_SERVER['PHP_SELF']);
-        exit;
-    } else {
-        echo "<p style='color:red;'>Veuillez remplir tous les champs obligatoires.</p>";
-    }
+    // Rafraîchir la liste (éviter le resubmit)
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
-
 ?>
 
 <h2>Liste des offres d'emploi</h2>
@@ -92,7 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
             </td>
 
             <td>
-                <?= $offre->getSalaire() !== '' ? htmlspecialchars($offre->getSalaire()) : '-' ?>
+                <?php
+                $sal = $offre->getSalaire();
+                echo ($sal !== null && $sal !== '' ? htmlspecialchars($sal) : '-');
+                ?>
             </td>
 
             <td><?= htmlspecialchars($offre->getTypeOffre()) ?></td>
@@ -116,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
 
 <h2>Créer une nouvelle offre</h2>
 
-<form method="post" style="margin-bottom:30px; border:1px solid #ccc; padding:10px;">
+<form method="post" style="margin-bottom: 30px; border: 1px solid #ccc; padding: 10px;">
     <input type="hidden" name="create_offre" value="1">
 
     <label>Titre du poste :</label><br>
@@ -132,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
     <input type="text" name="ville" required><br><br>
 
     <label>Description du poste :</label><br>
-    <textarea name="description" required rows="4" cols="50"></textarea><br><br>
+    <textarea name="description" required></textarea><br><br>
 
     <label>Salaire (facultatif) :</label><br>
     <input
@@ -151,16 +139,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
         <option value="Alternance">Alternance</option>
         <option value="Saisonnier">Saisonnier</option>
         <option value="Freelance">Freelance</option>
-    </select>
-    <br><br>
+    </select><br><br>
 
     <label>État :</label><br>
     <select name="etat" required>
+        <option value="">-- Sélectionner --</option>
         <option value="actif">Actif</option>
         <option value="clos">Clos</option>
         <option value="brouillon">Brouillon</option>
-    </select>
-    <br><br>
+    </select><br><br>
 
     <button type="submit">Créer l'offre</button>
 </form>
