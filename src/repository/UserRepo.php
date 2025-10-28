@@ -2,6 +2,8 @@
 use modele\User;
 require_once __DIR__ . '/../bdd/Bdd.php';
 require_once __DIR__ . '/../modele/User.php';
+use bdd\Bdd;
+
 
 class UserRepo {
     public function connexion(User $user){
