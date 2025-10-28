@@ -1,6 +1,7 @@
 <?php
 // src/traitement/gestionConnexion.php
-
+use modele\User;
+use repository\UserRepo;
 require_once __DIR__ . '/../bdd/Bdd.php';
 require_once __DIR__ . '/../modele/User.php';
 require_once __DIR__ . '/../repository/UserRepo.php';

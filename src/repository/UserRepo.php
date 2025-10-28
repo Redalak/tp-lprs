@@ -1,4 +1,5 @@
 <?php
+namespace repository;
 use modele\User;
 require_once __DIR__ . '/../bdd/Bdd.php';
 require_once __DIR__ . '/../modele/User.php';
@@ -100,6 +101,29 @@ class UserRepo {
         ));
         return $user;
     }
+// AJOUTEZ CETTE FONCTION DANS VOTRE CLASSE UserRepo
+    public function getUserById($id) {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
 
+        $req = $database->prepare('SELECT * FROM user WHERE id_user = :id LIMIT 1');
+        $req->execute(['id' => $id]);
+        $row = $req->fetch();
+
+        if(!$row){
+            return null; // Si l'utilisateur n'est pas trouvé
+        }
+
+        // Assurez-vous que le namespace 'modele' est bien utilisé en haut
+        // de UserRepo.php (ex: use modele\User;)
+        return new User([
+            'idUser' => $row['id_user'],
+            'email'  => $row['email'],
+            'nom'    => $row['nom'],
+            'prenom' => $row['prenom'],
+            'mdp'    => $row['mdp'],
+            'role'   => $row['role'],
+        ]);
+    }
 
 }

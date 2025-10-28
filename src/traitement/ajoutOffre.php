@@ -1,60 +1,71 @@
 <?php
-// Pour voir les erreurs (en dev)
+// Active l'affichage des erreurs
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../repository/OffreRepo.php';
-require_once __DIR__ . '/../modele/Offre.php';
-
-use repository\offreRepo;
 use modele\offre;
+use repository\OffreRepo;
 
-// Vérifie les champs requis
+require_once __DIR__ . '/../bdd/Bdd.php';
+require_once __DIR__ . '/../modele/offre.php';
+require_once __DIR__ . '/../repository/OffreRepo.php';
+
+// Vérif champs obligatoires
 if (
-    empty($_POST['titre']) ||
-    empty($_POST['description']) ||
-    empty($_POST['type_offre']) ||
-    empty($_POST['etat'])
+    !empty($_POST["titre"]) &&
+    !empty($_POST["rue"]) &&
+    !empty($_POST["cp"]) &&
+    !empty($_POST["ville"]) &&
+    !empty($_POST["description"]) &&
+    !empty($_POST["type_offre"]) &&
+    !empty($_POST["etat"])
 ) {
-    header('Location: ../../vue/OffreAdmin.php?msg=error');
-    exit;
-}
+    $titre        = $_POST["titre"];
+    $rue          = $_POST["rue"];
+    $cp           = $_POST["cp"];
+    $ville        = $_POST["ville"];
+    $description  = $_POST["description"];
+    $salaire      = $_POST["salaire"] ?? ''; // peut être vide
+    $type_offre   = $_POST["type_offre"];
+    $etat         = $_POST["etat"];
 
-// Récupération et nettoyage des données
-$titre = trim($_POST['titre']);
-$description = trim($_POST['description']);
-$mission = trim($_POST['mission'] ?? '');
-$salaire = $_POST['salaire'] ?? null;
-$typeOffre = $_POST['type_offre'];
-$etat = $_POST['etat'];
+    // Construire l'objet offre
+    $nouvelleOffre = new offre([
+        'titre'        => $titre,
+        'rue'          => $rue,
+        'cp'           => $cp,
+        'ville'        => $ville,
+        'description'  => $description,
+        'salaire'      => $salaire,
+        'type_offre'   => $type_offre,
+        'etat'         => $etat,
+        // date_creation auto par la BDD
+        // ref_entreprise retiré si tu ne l'utilises plus
+    ]);
 
-// Convertir salaire en float ou null
-$salaire = ($salaire === '' || $salaire === null) ? null : (float)$salaire;
+    // CEINTURE + BRETELLES : on force les setters pour remplir les propriétés internes
+    $nouvelleOffre->setTitre($titre);
+    $nouvelleOffre->setRue($rue);
+    $nouvelleOffre->setCp($cp);
+    $nouvelleOffre->setVille($ville);
+    $nouvelleOffre->setDescription($description);
+    $nouvelleOffre->setSalaire($salaire);
+    $nouvelleOffre->setTypeOffre($type_offre);
+    $nouvelleOffre->setEtat($etat);
 
-// Création de l'objet Offre
-$o = new offre([
-    'titre' => $titre,
-    'description' => $description,
-    'mission' => $mission,
-    'salaire' => $salaire,
-    'typeOffre' => $typeOffre,
-    'etat' => $etat,
-]);
+    $offreRepository = new OffreRepo();
 
-$repo = new offreRepo();
+    try {
+        $offreRepository->ajoutOffre($nouvelleOffre);
 
-try {
-    $repo->ajoutOffre($o);
-    // Redirection vers la page admin avec message de succès
-    header('Location: ../../vue/adminOffre.php?msg=added');
-    exit;
-} catch (Exception $e) {
-    // En dev, affiche l’erreur sinon redirige avec msg d’erreur
-    if (ini_get('display_errors')) {
-        echo "Erreur : " . $e->getMessage();
-    } else {
-        header('Location: ../../vue/adminOffre.php?msg=error');
+        header("Location: ../../vue/pageAjoutReussit.html");
+        exit;
+    } catch (Exception $e) {
+        die('Erreur lors de l\'insertion en BDD : ' . $e->getMessage());
     }
+
+} else {
+    header("Location: ../../vue/ajoutOffre.php?error=champs_vides");
     exit;
 }

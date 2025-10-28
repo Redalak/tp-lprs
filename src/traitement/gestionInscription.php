@@ -5,6 +5,8 @@ require_once __DIR__ . "/../repository/UserRepo.php";
 
 use modele\User; // <— IMPORTANT
 
+use repository\UserRepo;
+
 session_start();
 
 if (
@@ -47,7 +49,7 @@ if (
     $_SESSION["prenom"] = $user->getPrenom();
     $_SESSION["nom"]    = $user->getNom();
 
-    header("Location: ../../index.php?msg=inscrit");
+    header("Location: ../../vue/inscriptionReussite.html");
     exit;
 } else {
     header("Location: ../../vue/inscription.php?msg=champsVides");

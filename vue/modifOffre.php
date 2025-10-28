@@ -1,86 +1,141 @@
 <?php
-require_once __DIR__ . '/../src/repository/offreRepo.php';
-use repository\offreRepo;
+require_once __DIR__ . '/../src/repository/OffreRepo.php';
 
-$repo = new offreRepo();
+use repository\OffreRepo;
 
-$id = isset($_GET['id_offre']) ? (int)$_GET['id_offre'] : 0;
-if ($id<=0) die('ID manquant.');
+$offreRepo = new OffreRepo();
 
-$o = $repo->getModelById($id);
-if (!$o) die('Offre introuvable.');
+if (!isset($_GET['id'])) {
+    die('ID de l’offre manquant');
+}
 
-$types = ['CDI','CDD','Stage','Alternance','Autre'];
-$etats = ['ouvert','ferme','brouillon'];
+$idOffre = (int)$_GET['id'];
+
+// Récupérer l'offre à modifier
+$offre = null;
+foreach($offreRepo->listeOffre() as $o) {
+    if ($o->getIdOffre() === $idOffre) {
+        $offre = $o;
+        break;
+    }
+}
+
+if (!$offre) {
+    die('Offre introuvable');
+}
+
+// Traitement du formulaire
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $offre->setTitre($_POST['titre']);
+    $offre->setRue($_POST['rue']);
+    $offre->setCp($_POST['cp']);
+    $offre->setVille($_POST['ville']);
+    $offre->setDescription($_POST['description']);
+    $offre->setSalaire($_POST['salaire']);
+    $offre->setTypeOffre($_POST['type_offre']);
+    $offre->setEtat($_POST['etat']);
+
+    // ref_entreprise : si vide -> null
+    $refEntreprise = !empty($_POST['ref_entreprise']) ? (int)$_POST['ref_entreprise'] : null;
+    $offre->setRefEntreprise($refEntreprise);
+
+    // Sauvegarde en base
+    $offreRepo->modifOffre($offre);
+
+    // Redirection après modification
+    header('Location: adminOffre.php');
+    exit;
+}
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Modifier une offre</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container my-4" style="max-width: 1000px;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h4 mb-0">Modification offre #<?= (int)$o->getIdOffre() ?></h1>
-        <a href="adminOffre.php" class="btn btn-secondary">Retour</a>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <?php if (isset($_GET['err'])): ?>
-                <div class="alert alert-danger">Veuillez remplir les champs requis.</div>
-            <?php endif; ?>
+<h2>Modifier l'offre</h2>
 
-            <form action="../src/traitement/modifOffre.php" method="post">
-                <input type="hidden" name="id_offre" value="<?= (int)$o->getIdOffre() ?>">
+<form method="post">
 
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="form-label">Titre *</label>
-                        <input type="text" name="titre" class="form-control" required value="<?= htmlspecialchars($o->getTitre()) ?>">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Type *</label>
-                        <select name="type_offre" class="form-select" required>
-                            <?php foreach ($types as $t): ?>
-                                <option value="<?= $t ?>" <?= $o->getTypeOffre()===$t?'selected':''; ?>><?= $t ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+    <label>Titre du poste :</label><br>
+    <input
+            type="text"
+            name="titre"
+            value="<?= htmlspecialchars($offre->getTitre()) ?>"
+            required
+    ><br><br>
 
-                    <div class="col-12">
-                        <label class="form-label">Description *</label>
-                        <textarea name="description" class="form-control" rows="4" required><?= htmlspecialchars($o->getDescription()) ?></textarea>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Mission</label>
-                        <textarea name="mission" class="form-control" rows="4"><?= htmlspecialchars($o->getMission()) ?></textarea>
-                    </div>
+    <label>Adresse (rue) :</label><br>
+    <input
+            type="text"
+            name="rue"
+            value="<?= htmlspecialchars($offre->getRue()) ?>"
+            required
+    ><br><br>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Salaire (€/mois)</label>
-                        <input type="number" step="0.01" min="0" name="salaire" class="form-control" value="<?= htmlspecialchars($o->getSalaire()) ?>">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">État *</label>
-                        <select name="etat" class="form-select" required>
-                            <?php foreach ($etats as $e): ?>
-                                <option value="<?= $e ?>" <?= $o->getEtat()===$e?'selected':''; ?>><?= $e ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
+    <label>Code postal :</label><br>
+    <input
+            type="text"
+            name="cp"
+            value="<?= htmlspecialchars($offre->getCp()) ?>"
+            required
+    ><br><br>
 
-                <div class="mt-4 d-flex gap-2">
-                    <button class="btn btn-primary">Enregistrer</button>
-                    <a href="adminOffre.php" class="btn btn-outline-secondary">Annuler</a>
-                </div>
-            </form>
-            <p class="text-muted mt-3 mb-0"><em>date_creation</em> est gérée automatiquement par la base.</p>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+    <label>Ville :</label><br>
+    <input
+            type="text"
+            name="ville"
+            value="<?= htmlspecialchars($offre->getVille()) ?>"
+            required
+    ><br><br>
+
+    <label>Description du poste :</label><br>
+    <textarea
+            name="description"
+            required
+            rows="4"
+            cols="50"
+    ><?= htmlspecialchars($offre->getDescription()) ?></textarea><br><br>
+
+    <label>Salaire (facultatif) :</label><br>
+    <input
+            type="text"
+            name="salaire"
+            value="<?= htmlspecialchars($offre->getSalaire()) ?>"
+            placeholder="ex: 1900€ brut / mois"
+    ><br><br>
+
+    <label>Type d'offre :</label><br>
+    <select name="type_offre" required>
+        <?php
+        $types = ["CDI","CDD","Intérim","Stage","Alternance","Saisonnier","Freelance"];
+        foreach ($types as $t):
+            ?>
+            <option value="<?= $t ?>" <?= ($offre->getTypeOffre() === $t ? 'selected' : '') ?>>
+                <?= $t ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <br><br>
+
+    <label>État :</label><br>
+    <select name="etat" required>
+        <option value="actif" <?= $offre->getEtat() === 'actif' ? 'selected' : '' ?>>Actif</option>
+        <option value="clos" <?= $offre->getEtat() === 'clos' ? 'selected' : '' ?>>Clos</option>
+        <option value="brouillon" <?= $offre->getEtat() === 'brouillon' ? 'selected' : '' ?>>Brouillon</option>
+    </select>
+    <br><br>
+
+    <label>Entreprise (ref_entreprise) :</label><br>
+    <input
+            type="number"
+            name="ref_entreprise"
+            value="<?= htmlspecialchars($offre->getRefEntreprise()) ?>"
+            placeholder="ID entreprise"
+    ><br><br>
+
+    <label>Date de création :</label><br>
+    <input
+            type="text"
+            value="<?= htmlspecialchars($offre->getDateCreation()) ?>"
+            disabled
+    ><br><br>
+
+    <button type="submit">Modifier</button>
+</form>

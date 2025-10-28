@@ -2,8 +2,12 @@
 session_start();
 require_once __DIR__ . "/src/bdd/Bdd.php";
 require_once __DIR__ . "/src/repository/EventRepo.php";
+// NOUVEAU: Inclure le UserRepo et l'entité User (chemins à adapter si besoin)
+require_once __DIR__ . "/src/repository/UserRepo.php";
+require_once __DIR__ . "/src/modele/User.php"; // Ou votre classe User
 
 use repository\EventRepo;
+use repository\UserRepo; // NOUVEAU
 
 // Déconnexion simple via ?deco=true
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
@@ -15,6 +19,14 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
 // Récupération des 5 derniers événements
 $eventRepo = new EventRepo();
 $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans EventRepo
+
+// NOUVEAU: Récupérer l'utilisateur connecté
+$userLoggedIn = null; // Initialiser
+if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty($_SESSION['id_user'])) {
+    $userRepo = new UserRepo();
+    // On suppose que vous avez une méthode getUserById()
+    $userLoggedIn = $userRepo->getUserById($_SESSION['id_user']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -46,12 +58,13 @@ $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans Eve
         header { background: var(--surface-color); box-shadow: var(--shadow); position: sticky; top: 0; z-index: 1000; }
         header .container { display: flex; justify-content: space-between; align-items: center; height: 70px; }
         .logo { font-size: 1.6rem; font-weight: 700; color: var(--primary-color); }
-        nav ul { list-style: none; display: flex; gap: 30px; padding-left: 0; margin: 0; }
+        nav ul { list-style: none; display: flex; align-items: center; gap: 30px; padding-left: 0; margin: 0; }
         nav ul li a { text-decoration: none; color: var(--text-color); font-weight: 500; position: relative; padding-bottom: 5px; transition: color 0.3s ease; }
         nav ul li a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 0; background-color: var(--secondary-color); transition: width 0.3s ease; }
         nav ul li a:hover { color: var(--primary-color); }
         nav ul li a:hover::after { width: 100%; }
 
+        /* ... (Styles hero, actus, presentation, footer...) ... */
         .hero { background: url('https://source.unsplash.com/1600x900/?university,modern,architecture') no-repeat center center/cover; height: 500px; position: relative; display: flex; align-items: center; justify-content: center; }
         .hero-overlay { background: linear-gradient(45deg, rgba(10, 77, 104, 0.8), rgba(8, 131, 149, 0.6)); position: absolute; top: 0; left: 0; height: 100%; width: 100%; }
         .hero-content { color: var(--light-text-color); text-align: center; position: relative; z-index: 2; }
@@ -59,10 +72,8 @@ $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans Eve
         .hero-content p { font-size: 1.3rem; margin-bottom: 30px; }
         .cta-button { background-color: var(--surface-color); color: var(--primary-color); padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .cta-button:hover { background-color: #f1f1f1; transform: translateY(-2px); }
-
         section { padding: 80px 0; }
         .section-title { text-align: center; font-size: 2.5rem; color: var(--primary-color); margin-bottom: 50px; }
-
         .actus-events { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
         .card { background: var(--surface-color); padding: 30px; border-radius: var(--border-radius); box-shadow: var(--shadow); flex: 1 1 320px; max-width: 450px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
         .card:hover { transform: translateY(-8px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
@@ -72,13 +83,11 @@ $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans Eve
         .card ul li::before { content: '→'; margin-right: 10px; color: var(--secondary-color); }
         .card a { color: var(--text-color); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
         .card a:hover { color: var(--secondary-color); }
-
         .presentation { background: var(--surface-color); }
         .presentation-content { max-width: 800px; margin: 0 auto 40px auto; text-align: center; }
         .mv { display: flex; justify-content: center; flex-wrap: wrap; gap: 30px; }
         .mv > div { flex: 1 1 300px; background: var(--background-color); padding: 30px; border-radius: var(--border-radius); border-left: 4px solid var(--primary-color); }
         .mv h4 { color: var(--primary-color); margin-top: 0; margin-bottom: 10px; font-size: 1.3rem; }
-
         footer { background: var(--primary-color); color: var(--light-text-color); padding: 60px 0 20px; text-align: center; }
         .footer-grid { display: flex; flex-wrap: wrap; gap: 40px; justify-content: space-around; margin-bottom: 40px; }
         .footer-grid > div { flex: 1 1 200px; }
@@ -90,6 +99,86 @@ $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans Eve
         .footer-socials { display: flex; justify-content: center; gap: 15px; }
         .footer-socials a { font-size: 1.2rem; }
         .footer-bottom { padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.9em; color: rgba(255, 255, 255, 0.7); }
+
+        /* NOUVEAU: Styles pour le dropdown profil */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            font-size: 1.5rem; /* Rendre l'icône (emoji) plus grande */
+            cursor: pointer;
+            padding: 5px; /* Ajuster la zone cliquable */
+        }
+        /* Ne pas souligner l'icône au survol */
+        .profile-icon::after {
+            display: none !important;
+        }
+
+        .dropdown-content {
+            display: none; /* Caché par défaut */
+            position: absolute;
+            background-color: var(--surface-color);
+            min-width: 220px;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            right: 0; /* Aligner à droite de l'élément li */
+            top: 100%; /* S'affiche juste en dessous */
+            z-index: 1001;
+            text-align: center;
+        }
+
+        /* Affichage au survol du parent (li) */
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content span {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            white-space: nowrap; /* Empêche le nom de couper */
+        }
+
+        /* Styles pour les liens/boutons dans le dropdown */
+        .dropdown-content a {
+            display: block;
+            width: auto;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            color: var(--light-text-color) !important; /* Couleur de texte claire */
+        }
+        /* S'assurer qu'ils n'ont pas le soulignement de la nav */
+        .dropdown-content a::after {
+            display: none;
+        }
+
+        /* Bouton "Mon Profil" */
+        .profile-button {
+            background-color: var(--secondary-color);
+        }
+        .profile-button:hover {
+            background-color: var(--primary-color);
+            color: var(--light-text-color) !important; /* Garder le texte clair */
+        }
+
+        /* Bouton "Déconnexion" */
+        .logout-button {
+            background-color: #e74c3c; /* Rouge pour déconnexion/danger */
+        }
+        .logout-button:hover {
+            background-color: #c0392b; /* Rouge plus foncé */
+            color: var(--light-text-color) !important; /* Garder le texte clair */
+        }
+
     </style>
 </head>
 <body>
@@ -103,9 +192,19 @@ $latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans Eve
                 <li><a href="vue/formations.php">Formations</a></li>
                 <li><a href="#">Entreprises</a></li>
                 <li><a href="vue/supportContact.php">Contact</a></li>
-                <?php if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true): ?>
+
+                <?php if ($userLoggedIn): // Utilise la variable définie en haut ?>
                     <li><a href="vue/forum.php">Forum</a></li>
-                    <li><a href="?deco=true">Déconnexion</a></li>
+
+                    <li class="profile-dropdown">
+                        <a href="#" class="profile-icon">👤</a> <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
+
+                            <a href="vue/profil.php" class="profile-button">Mon Profil</a>
+
+                            <a href="?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
                 <?php else: ?>
                     <li><a href="vue/connexion.php">Connexion</a></li>
                     <li><a href="vue/inscription.php">Inscription</a></li>
