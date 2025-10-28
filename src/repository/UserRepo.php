@@ -6,8 +6,10 @@ require_once __DIR__ . '/../modele/User.php';
 use bdd\Bdd;
 
 
-class UserRepo {
-    public function connexion(User $user){
+class UserRepo
+{
+    public function connexion(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -15,19 +17,22 @@ class UserRepo {
         $req->execute(['email' => $user->getEmail()]);
         $row = $req->fetch();
 
-        if(!$row){ return null; }
+        if (!$row) {
+            return null;
+        }
 
         return new User([
             'idUser' => $row['id_user'],
-            'email'  => $row['email'],
-            'nom'    => $row['nom'],
+            'email' => $row['email'],
+            'nom' => $row['nom'],
             'prenom' => $row['prenom'],
-            'mdp'    => $row['mdp'],
-            'role'   => $row['role'],
+            'mdp' => $row['mdp'],
+            'role' => $row['role'],
         ]);
     }
 
-    public function inscription(User $user){
+    public function inscription(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -36,16 +41,17 @@ class UserRepo {
 
 
         $req->execute([
-            "nom"    => $user->getNom(),
+            "nom" => $user->getNom(),
             "prenom" => $user->getPrenom(),
-            "email"  => $user->getEmail(),
-            "mdp"    => $user->getMdp(),
-            "role"   => $user->getRole(), // doit être 'admin' ou 'etudiant' etc.
+            "email" => $user->getEmail(),
+            "mdp" => $user->getMdp(),
+            "role" => $user->getRole(), // doit être 'admin' ou 'etudiant' etc.
         ]);
         return $user;
     }
 
-    public function nombreUtilisateur(){
+    public function nombreUtilisateur()
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
         $req = $database->prepare('SELECT COUNT(id_user) AS n FROM user');
@@ -54,7 +60,8 @@ class UserRepo {
         return (int)$row['n'];
     }
 
-    public function verifDoublonEmail(User $user){
+    public function verifDoublonEmail(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
         $req = $database->prepare('SELECT 1 FROM user WHERE email = :email LIMIT 1');
@@ -63,14 +70,15 @@ class UserRepo {
     }
 
 
-    public function listeUser(){
+    public function listeUser()
+    {
         $listeUser = [];
         $bdd = new Bdd();
-        $datebase = $bdd ->getBdd();
+        $datebase = $bdd->getBdd();
         $req = $datebase->prepare('SELECT * FROM user');
         $req->execute();
         $listeUsersBdd = $req->fetchAll();
-        foreach($listeUsersBdd as $listeUserBdd){
+        foreach ($listeUsersBdd as $listeUserBdd) {
             $listeUser[] = new User([
                 'idUser' => $listeUserBdd['id_user'],
                 'nom' => $listeUserBdd['nom'],
@@ -83,7 +91,8 @@ class UserRepo {
         return $listeUser;
     }
 
-    public function modifUser(User $user) {
+    public function modifUser(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -124,13 +133,13 @@ class UserRepo {
 
         // Exécuter la requête avec les données de l'utilisateur
         $result = $req->execute([
-            "nom"           => $user->getNom(),
-            "prenom"        => $user->getPrenom(),
-            "email"         => $user->getEmail(),
-            "role"          => $user->getRole(),
-            "ref_entreprise"=> $refEntreprise,  // Peut être NULL si l'entreprise est invalide
+            "nom" => $user->getNom(),
+            "prenom" => $user->getPrenom(),
+            "email" => $user->getEmail(),
+            "role" => $user->getRole(),
+            "ref_entreprise" => $refEntreprise,  // Peut être NULL si l'entreprise est invalide
             "ref_formation" => $refFormation,   // Peut être NULL si la formation est invalide
-            "id_user"       => $user->getIdUser()
+            "id_user" => $user->getIdUser()
         ]);
 
         // Vérifier si la mise à jour a réussi
@@ -144,7 +153,8 @@ class UserRepo {
     }
 
 
-    public function suppUser(User $user) {
+    public function suppUser(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -173,7 +183,8 @@ class UserRepo {
     }
 
 
-    public function getUserById($id) {
+    public function getUserById($id)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -181,7 +192,7 @@ class UserRepo {
         $req->execute(['id' => $id]);
         $row = $req->fetch();
 
-        if(!$row){
+        if (!$row) {
             return null; // Si l'utilisateur n'est pas trouvé
         }
 
@@ -189,14 +200,16 @@ class UserRepo {
         // de UserRepo.php (ex: use modele\User;)
         return new User([
             'idUser' => $row['id_user'],
-            'email'  => $row['email'],
-            'nom'    => $row['nom'],
+            'email' => $row['email'],
+            'nom' => $row['nom'],
             'prenom' => $row['prenom'],
-            'mdp'    => $row['mdp'],
-            'role'   => $row['role'],
+            'mdp' => $row['mdp'],
+            'role' => $row['role'],
         ]);
     }
-    public function ajoutUser(User $user) {
+
+    public function ajoutUser(User $user)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
@@ -220,13 +233,13 @@ class UserRepo {
 
         // Exécuter la requête avec les données de l'utilisateur
         $req->execute([
-            "nom"            => $user->getNom(),
-            "prenom"         => $user->getPrenom(),
-            "email"          => $user->getEmail(),
-            "mdp"            => $user->getMdp(),
-            "role"           => $user->getRole(),
+            "nom" => $user->getNom(),
+            "prenom" => $user->getPrenom(),
+            "email" => $user->getEmail(),
+            "mdp" => $user->getMdp(),
+            "role" => $user->getRole(),
             "ref_entreprise" => $refEntreprise,  // Peut être NULL
-            "ref_formation"  => $refFormation,   // Peut être NULL
+            "ref_formation" => $refFormation,   // Peut être NULL
         ]);
 
         // Récupérer l'ID de l'utilisateur ajouté
@@ -238,5 +251,21 @@ class UserRepo {
         return $user;
     }
 
+    public function getReservationsByUserId($userId) {
+        // Connexion à la base de données
+        $pdo = Database::getConnection();
+
+        // Requête SQL pour récupérer les réservations de l'utilisateur
+        $sql = "SELECT events.titre, events.date_event, events.lieu
+                FROM reservations
+                JOIN events ON reservations.id_event = events.id_event
+                WHERE reservations.id_user = :id_user";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['id_user' => $userId]);
+
+        // Retourne les résultats sous forme de tableau
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
 }

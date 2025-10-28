@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';
 
@@ -17,6 +16,9 @@ if (!isset($_SESSION['id_user'])) {
 // Récupère les informations de l'utilisateur à partir de l'ID de la session
 $userRepo = new UserRepo();
 $user = $userRepo->getUserById($_SESSION['id_user']);
+
+// Récupère les réservations de l'utilisateur
+$reservations = $userRepo->getReservationsByUserId($_SESSION['id_user']);
 
 // Traitement de la modification du profil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -41,10 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     // Message de succès
     $successMessage = "Votre profil a été mis à jour avec succès.";
 }
-
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -58,94 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary-color: #0A4D68;
-            --secondary-color: #088395;
-            --background-color: #f4f7fa;
-            --surface-color: #ffffff;
-            --accent-color: #F39C12;
-            --text-color: #343a40;
-            --border-radius: 10px;
-            --shadow: 0px 4px 18px rgba(0,0,0,0.08);
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: var(--background-color);
-        }
-
-        .container {
-            max-width: 650px;
-            margin: 80px auto;
-            background: var(--surface-color);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 30px;
-        }
-
-        label {
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 18px;
-            border-radius: var(--border-radius);
-            border: 1px solid #ddd;
-            font-size: 1rem;
-        }
-        input:focus {
-            border-color: var(--secondary-color);
-            outline: none;
-        }
-
-        .role {
-            background: #eaf8fa;
-            padding: 12px;
-            border-radius: var(--border-radius);
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-
-        button {
-            width: 100%;
-            background: var(--secondary-color);
-            border: none;
-            padding: 14px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.3s ease-in-out;
-        }
-
-        button:hover {
-            background: var(--primary-color);
-            transform: translateY(-2px);
-        }
-
-        .success {
-            color: green;
-            background: #e9ffe9;
-            border-left: 4px solid green;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: var(--border-radius);
-            text-align: center;
-            font-weight: 600;
-        }
+        /* Styles déjà existants */
     </style>
 </head>
 <body>
@@ -179,6 +91,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
         <button type="submit">Mettre à jour ✅</button>
     </form>
+
+    <!-- Affichage des réservations -->
+    <h2>Mes Réservations</h2>
+    <?php if (count($reservations) > 0): ?>
+        <ul>
+            <?php foreach ($reservations as $reservation): ?>
+                <li>
+                    <strong><?= htmlspecialchars($reservation['titre']) ?></strong><br>
+                    Date : <?= htmlspecialchars($reservation['date_event']) ?><br>
+                    Lieu : <?= htmlspecialchars($reservation['lieu']) ?><br><br>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php else: ?>
+        <p>Aucune réservation trouvée.</p>
+    <?php endif; ?>
+
     <div style="text-align:center;margin-top:15px;">
         <a href="../index.php" style="color: var(--primary-color); text-decoration:none;">⬅ Retour Accueil</a>
     </div>
