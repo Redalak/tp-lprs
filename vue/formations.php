@@ -142,7 +142,7 @@
             <ul>
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a class="active" href="formations.php">Formations</a></li>
-                <li><a href="#">Entreprises</a></li>
+                <li><a href="entreprise.php">Entreprises</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <li><a href="forum.php">Forum</a></li>
                 <li><a href="connexion.php">Connexion</a></li>
