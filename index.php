@@ -179,6 +179,7 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
             color: var(--light-text-color) !important; /* Garder le texte clair */
         }
 
+
     </style>
 </head>
 <body>
@@ -220,7 +221,7 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
     <div class="hero-content">
         <h2>Construire les mondes de demain</h2>
         <p>Formation. Recherche. Innovation.</p>
-        <a href="#" class="cta-button">Découvrir nos formations</a>
+        <a href="vue/formations.php" class="cta-button">Découvrir nos formations</a>
     </div>
 </section>
 
@@ -241,6 +242,9 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                     <li><?= htmlspecialchars($event->getTitre()) ?> — <?= date('d/m/Y H:i', strtotime($event->getDateEvent())) ?></li>
                 <?php endforeach; ?>
             </ul>
+            <div class="more-wrapper">
+                <a class="btn-more" href="vue/evenement.php">Voir plus</a>
+            </div>
         </div>
     </section>
 </div>
