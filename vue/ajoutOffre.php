@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="CDD">CDD</option>
                             <option value="Stage">Stage</option>
                             <option value="Alternance">Alternance</option>
-                            <option value="Freelance">Freelance</option>
+                            <option value="Autre">Autre</option>
                         </select>
                     </div>
 
