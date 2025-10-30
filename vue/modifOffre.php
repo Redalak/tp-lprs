@@ -1,12 +1,14 @@
 <?php
-require_once __DIR__ . '/../src/repository/OffreRepo.php';
 
+
+require_once __DIR__ . '/../src/repository/OffreRepo.php';
 use repository\OffreRepo;
 
 $offreRepo = new OffreRepo();
 
 if (!isset($_GET['id'])) {
-    die('ID de l’offre manquant');
+    header('Location: adminOffre.php');
+    exit;
 }
 
 $idOffre = (int)$_GET['id'];
@@ -21,12 +23,12 @@ foreach($offreRepo->listeOffre() as $o) {
 }
 
 if (!$offre) {
-    die('Offre introuvable');
+    header('Location: adminOffre.php');
+    exit;
 }
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $offre->setTitre($_POST['titre']);
     $offre->setRue($_POST['rue']);
     $offre->setCp($_POST['cp']);
@@ -41,101 +43,181 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $offre->setRefEntreprise($refEntreprise);
 
     // Sauvegarde en base
-    $offreRepo->modifOffre($offre);
+    $success = $offreRepo->modifOffre($offre);
+    
+    if ($success) {
+        $_SESSION['success_message'] = 'L\'offre a été modifiée avec succès.';
+    } else {
+        $_SESSION['error_message'] = 'Une erreur est survenue lors de la modification de l\'offre.';
+    }
 
     // Redirection après modification
     header('Location: adminOffre.php');
     exit;
 }
+
+// Types d'offre disponibles
+$types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freelance"];
 ?>
 
-<h2>Modifier l'offre</h2>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier une offre - Administration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/admin-style.css">
+    <style>
+        .etat-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .etat-actif { background-color: #e8f5e9; color: #388e3c; }
+        .etat-clos { background-color: #ffebee; color: #d32f2f; }
+        .etat-brouillon { background-color: #fff3e0; color: #f57c00; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="#" class="logo">Administration</a>
+        <nav>
+            <ul>
+                <li><a href="adminEntreprise.php">Entreprises</a></li>
+                <li><a class="active" href="adminOffre.php">Offres</a></li>
+                <li><a href="adminEvent.php">Événements</a></li>
+                <li><a href="adminUser.php">Utilisateurs</a></li>
+                <li><a href="?deconnexion=1">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
-<form method="post">
+<main class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1><i class="bi bi-briefcase"></i> Modifier l'offre</h1>
+            <a href="adminOffre.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="post" class="form-container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="titre">Titre du poste :</label>
+                                <input type="text" id="titre" name="titre" class="form-control" 
+                                       value="<?= htmlspecialchars($offre->getTitre()) ?>" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="type_offre">Type d'offre :</label>
+                                <select id="type_offre" name="type_offre" class="form-control" required>
+                                    <?php foreach ($types as $t): ?>
+                                        <option value="<?= $t ?>" <?= $offre->getTypeOffre() === $t ? 'selected' : '' ?>>
+                                            <?= $t ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="salaire">Salaire (facultatif) :</label>
+                                <div class="input-group">
+                                    <input type="text" id="salaire" name="salaire" class="form-control" 
+                                           value="<?= htmlspecialchars($offre->getSalaire()) ?>" 
+                                           placeholder="ex: 1900€ brut / mois">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="etat">État :</label>
+                                <select id="etat" name="etat" class="form-control" required>
+                                    <option value="actif" <?= $offre->getEtat() === 'actif' ? 'selected' : '' ?>>
+                                        <span class="etat-badge etat-actif">Actif</span>
+                                    </option>
+                                    <option value="clos" <?= $offre->getEtat() === 'clos' ? 'selected' : '' ?>>
+                                        <span class="etat-badge etat-clos">Clos</span>
+                                    </option>
+                                    <option value="brouillon" <?= $offre->getEtat() === 'brouillon' ? 'selected' : '' ?>>
+                                        <span class="etat-badge etat-brouillon">Brouillon</span>
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="ref_entreprise">Référence entreprise :</label>
+                                <input type="number" id="ref_entreprise" name="ref_entreprise" class="form-control" 
+                                       value="<?= $offre->getRefEntreprise() ?>">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Date de création :</label>
+                                <input type="text" class="form-control" 
+                                       value="<?= htmlspecialchars($offre->getDateCreation()) ?>" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rue">Adresse :</label>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <input type="text" id="rue" name="rue" class="form-control mb-2" 
+                                       value="<?= htmlspecialchars($offre->getRue()) ?>" 
+                                       placeholder="N° et nom de la rue" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="cp" name="cp" class="form-control mb-2" 
+                                       value="<?= htmlspecialchars($offre->getCp()) ?>" 
+                                       placeholder="Code postal" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="ville" name="ville" class="form-control mb-2" 
+                                       value="<?= htmlspecialchars($offre->getVille()) ?>" 
+                                       placeholder="Ville" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description du poste :</label>
+                        <textarea id="description" name="description" class="form-control" rows="5" required><?= 
+                            htmlspecialchars($offre->getDescription()) 
+                        ?></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                        </button>
+                        <a href="adminOffre.php" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
 
-    <label>Titre du poste :</label><br>
-    <input
-            type="text"
-            name="titre"
-            value="<?= htmlspecialchars($offre->getTitre()) ?>"
-            required
-    ><br><br>
+<footer>
+    <div class="container">
+        <p>&copy; <?= date('Y') ?> École Supérieure. Tous droits réservés.</p>
+    </div>
+</footer>
 
-    <label>Adresse (rue) :</label><br>
-    <input
-            type="text"
-            name="rue"
-            value="<?= htmlspecialchars($offre->getRue()) ?>"
-            required
-    ><br><br>
-
-    <label>Code postal :</label><br>
-    <input
-            type="text"
-            name="cp"
-            value="<?= htmlspecialchars($offre->getCp()) ?>"
-            required
-    ><br><br>
-
-    <label>Ville :</label><br>
-    <input
-            type="text"
-            name="ville"
-            value="<?= htmlspecialchars($offre->getVille()) ?>"
-            required
-    ><br><br>
-
-    <label>Description du poste :</label><br>
-    <textarea
-            name="description"
-            required
-            rows="4"
-            cols="50"
-    ><?= htmlspecialchars($offre->getDescription()) ?></textarea><br><br>
-
-    <label>Salaire (facultatif) :</label><br>
-    <input
-            type="text"
-            name="salaire"
-            value="<?= htmlspecialchars($offre->getSalaire()) ?>"
-            placeholder="ex: 1900€ brut / mois"
-    ><br><br>
-
-    <label>Type d'offre :</label><br>
-    <select name="type_offre" required>
-        <?php
-        $types = ["CDI","CDD","Intérim","Stage","Alternance","Saisonnier","Freelance"];
-        foreach ($types as $t):
-            ?>
-            <option value="<?= $t ?>" <?= ($offre->getTypeOffre() === $t ? 'selected' : '') ?>>
-                <?= $t ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-    <br><br>
-
-    <label>État :</label><br>
-    <select name="etat" required>
-        <option value="actif" <?= $offre->getEtat() === 'actif' ? 'selected' : '' ?>>Actif</option>
-        <option value="clos" <?= $offre->getEtat() === 'clos' ? 'selected' : '' ?>>Clos</option>
-        <option value="brouillon" <?= $offre->getEtat() === 'brouillon' ? 'selected' : '' ?>>Brouillon</option>
-    </select>
-    <br><br>
-
-    <label>Entreprise (ref_entreprise) :</label><br>
-    <input
-            type="number"
-            name="ref_entreprise"
-            value="<?= htmlspecialchars($offre->getRefEntreprise()) ?>"
-            placeholder="ID entreprise"
-    ><br><br>
-
-    <label>Date de création :</label><br>
-    <input
-            type="text"
-            value="<?= htmlspecialchars($offre->getDateCreation()) ?>"
-            disabled
-    ><br><br>
-
-    <button type="submit">Modifier</button>
-</form>
+</body>
+</html>

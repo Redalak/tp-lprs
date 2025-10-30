@@ -193,8 +193,14 @@ $offres = $offreRepo->listeOffre();
                     <span class="badge"><?= htmlspecialchars($offre->getTypeOffre() ?? 'Non spécifié') ?></span>
 
                     <h3><?= htmlspecialchars($offre->getTitre()) ?></h3>
+                    
+                    <?php if (!empty($offre->entreprise_nom)): ?>
+                    <div class="company-name" style="color: #0A4D68; font-weight: 600; margin-bottom: 8px;">
+                        🏢 <?= htmlspecialchars($offre->entreprise_nom) ?>
+                    </div>
+                    <?php endif; ?>
 
-                    <div class="row-line">
+                    <div class="row-line" style="margin-bottom: 12px;">
                         📍 <?= htmlspecialchars($offre->getRue()) ?>,
                         <?= htmlspecialchars($offre->getCp()) ?> <?= htmlspecialchars($offre->getVille()) ?>
                     </div>
