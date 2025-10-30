@@ -147,6 +147,23 @@ $offres = $offreRepo->listeOffre();
             font-weight:600;
             color:#0b5d6b;
         }
+        
+        .btn-postuler {
+            display: block;
+            background: #0A4D68;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-postuler:hover {
+            background: #088395;
+        }
 
         footer {
             background:var(--primary-color);
@@ -203,26 +220,26 @@ $offres = $offreRepo->listeOffre();
                     <div class="row-line" style="margin-bottom: 12px;">
                         📍 <?= htmlspecialchars($offre->getRue()) ?>,
                         <?= htmlspecialchars($offre->getCp()) ?> <?= htmlspecialchars($offre->getVille()) ?>
-                    </div>
-
                     <p><?= nl2br(htmlspecialchars($offre->getDescription())) ?></p>
 
                     <div class="job-meta">
+                        <?php if ($offre->getVille()): ?>
+                            <span class="chip">📍 <?= htmlspecialchars($offre->getVille()) ?></span>
+                        <?php endif; ?>
                         <?php if ($offre->getSalaire()): ?>
-                            <span class="chip">💶 <?= htmlspecialchars($offre->getSalaire()) ?></span>
+                            <span class="chip">💰 <?= htmlspecialchars($offre->getSalaire()) ?></span>
                         <?php endif; ?>
-
-                        <?php if ($offre->getEtat()): ?>
-                            <span class="chip">Statut : <?= htmlspecialchars($offre->getEtat()) ?></span>
-                        <?php endif; ?>
-
                         <?php if ($offre->getDateCreation()): ?>
-                            <span class="chip">Publié le <?= htmlspecialchars($offre->getDateCreation()) ?></span>
+                            <span class="chip">📅 Publié le <?= htmlspecialchars($offre->getDateCreation()) ?></span>
                         <?php endif; ?>
                     </div>
+                    
+                    <a href="postuler.php?id=<?= $offre->getIdOffre() ?>" class="btn-postuler">
+                        Postuler à cette offre
+                    </a>
+                </article>
                 </article>
             <?php endforeach; ?>
-
             <?php if (empty($offres)): ?>
                 <p>Aucune offre disponible pour le moment.</p>
             <?php endif; ?>

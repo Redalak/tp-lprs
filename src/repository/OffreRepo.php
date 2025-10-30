@@ -56,8 +56,6 @@ class OffreRepo
 
         return $offre;
     }
-
-
     public function listeOffre() {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
@@ -66,6 +64,7 @@ class OffreRepo
             SELECT o.*, e.nom as entreprise_nom 
             FROM offre o
             LEFT JOIN entreprise e ON o.ref_entreprise = e.id_entreprise
+            WHERE o.etat NOT IN ("ferme", "brouillon")
             ORDER BY o.date_creation DESC
         ');
         $rows = $req->fetchAll(\PDO::FETCH_ASSOC);
