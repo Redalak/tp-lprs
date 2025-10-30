@@ -3,9 +3,11 @@
 namespace repository;
 
 require_once __DIR__ . '/../bdd/Bdd.php';
-require_once __DIR__ . '/../modele/Entreprise.php'; // inclusion du modèle Entreprise
+require_once __DIR__ . '/../modele/Entreprise.php';
+require_once __DIR__ . '/../modele/offre.php';
 
 use modele\Entreprise;
+use modele\offre;
 use bdd\Bdd;
 
 class EntrepriseRepo
@@ -13,7 +15,8 @@ class EntrepriseRepo
     /**
      * Ajout d'une entreprise
      */
-    public function ajoutEntreprise(Entreprise $entreprise) {
+    public function ajoutEntreprise(Entreprise $entreprise)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
         $req = $database->prepare('
@@ -26,12 +29,12 @@ class EntrepriseRepo
             'adresse' => $entreprise->getAdresse(),
             'site_web' => $entreprise->getSiteWeb(),
             'motif_partenariat' => $entreprise->getMotifPartenariat(),
-            'date_inscription' => $entreprise->getDateInscription(), // S'assurer que c'est une date valide (ex: Y-m-d H:i:s)
+            'date_inscription' => $entreprise->getDateInscription(),
             'ref_offre' => $entreprise->getRefOffre()
         ]);
 
-        // Optionnel : récupérer l'ID inséré et le setter sur l'objet
-        // $entreprise->setIdEntreprise($database->lastInsertId());
+        // Récupérer l'ID inséré
+        $entreprise->setIdEntreprise($database->lastInsertId());
 
         return $entreprise;
     }
@@ -39,7 +42,8 @@ class EntrepriseRepo
     /**
      * Modification d'une entreprise
      */
-    public function modifEntreprise(Entreprise $entreprise) {
+    public function modifEntreprise(Entreprise $entreprise)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
         $req = $database->prepare('
@@ -69,61 +73,91 @@ class EntrepriseRepo
     /**
      * Suppression d'une entreprise par son ID
      */
-    public function suppEntreprise(int $idEntreprise) {
+    public function suppEntreprise(int $idEntreprise)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
         $req = $database->prepare('DELETE FROM entreprise WHERE id_entreprise = :id_entreprise');
-        $req->execute(['id_entreprise' => $idEntreprise]);
+        return $req->execute(['id_entreprise' => $idEntreprise]);
     }
 
     /**
-     * Liste de toutes les entreprises
+     * Récupère la liste de toutes les entreprises avec le nombre d'offres
      */
-    public function listeEntreprise() {
+    public function listeEntreprise()
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
-        $req = $database->query('SELECT * FROM entreprise ORDER BY date_inscription DESC');
-        $rows = $req->fetchAll(\PDO::FETCH_ASSOC);
+
+        $req = $database->query('
+            SELECT e.*, 
+                   (SELECT COUNT(*) FROM offre WHERE ref_entreprise = e.id_entreprise) as nombre_offres
+            FROM entreprise e 
+            ORDER BY e.nom
+        ');
 
         $entreprises = [];
-        foreach ($rows as $row) {
-            // Correspondance entre les colonnes BDD (snake_case)
-            // et les clés attendues par le constructeur du modèle (camelCase, comme dans l'exemple EventRepo)
-            $entreprises[] = new Entreprise([
-                'idEntreprise'      => $row['id_entreprise'],
-                'nom'               => $row['nom'],
-                'adresse'           => $row['adresse'],
-                'siteWeb'           => $row['site_web'],
-                'motifPartenariat'  => $row['motif_partenariat'],
-                'dateInscription'   => $row['date_inscription'],
-                'refOffre'          => $row['ref_offre']
+        while ($row = $req->fetch(\PDO::FETCH_ASSOC)) {
+            $entreprise = new Entreprise([
+                'idEntreprise' => $row['id_entreprise'],
+                'nom' => $row['nom'],
+                'adresse' => $row['adresse'],
+                'siteWeb' => $row['site_web'],
+                'motifPartenariat' => $row['motif_partenariat'],
+                'dateInscription' => $row['date_inscription'],
+                'refOffre' => $row['ref_offre']
             ]);
+            $entreprise->nombre_offres = (int)$row['nombre_offres'];
+            $entreprises[] = $entreprise;
         }
+
         return $entreprises;
     }
 
     /**
-     * Récupérer une entreprise par son ID
+     * Récupère une entreprise par son ID
      */
-    public function getEntrepriseById(int $idEntreprise) {
+    public function getEntrepriseById(int $id)
+    {
         $bdd = new Bdd();
         $database = $bdd->getBdd();
-        $req = $database->prepare('SELECT * FROM entreprise WHERE id_entreprise = :id_entreprise LIMIT 1');
-        $req->execute(['id_entreprise' => $idEntreprise]);
+
+        $req = $database->prepare('SELECT * FROM entreprise WHERE id_entreprise = :id');
+        $req->execute(['id' => $id]);
+
         $row = $req->fetch(\PDO::FETCH_ASSOC);
 
         if (!$row) {
-            return null; // Si non trouvée
+            return null;
         }
 
         return new Entreprise([
-            'idEntreprise'      => $row['id_entreprise'],
-            'nom'               => $row['nom'],
-            'adresse'           => $row['adresse'],
-            'siteWeb'           => $row['site_web'],
-            'motifPartenariat'  => $row['motif_partenariat'],
-            'dateInscription'   => $row['date_inscription'],
-            'refOffre'          => $row['ref_offre']
+            'idEntreprise' => $row['id_entreprise'],
+            'nom' => $row['nom'],
+            'adresse' => $row['adresse'],
+            'siteWeb' => $row['site_web'],
+            'motifPartenariat' => $row['motif_partenariat'],
+            'dateInscription' => $row['date_inscription'],
+            'refOffre' => $row['ref_offre']
         ]);
+    }
+
+    /**
+     * Récupère toutes les offres d'une entreprise
+     */
+    public function getOffresParEntreprise($id_entreprise)
+    {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+
+        $req = $database->prepare('SELECT * FROM offre WHERE ref_entreprise = :id_entreprise ORDER BY date_creation DESC');
+        $req->execute(['id_entreprise' => $id_entreprise]);
+
+        $offres = [];
+        while ($row = $req->fetch(\PDO::FETCH_ASSOC)) {
+            $offres[] = new offre($row);
+        }
+
+        return $offres;
     }
 }

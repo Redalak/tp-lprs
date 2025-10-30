@@ -58,6 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Types d'offre disponibles
 $types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freelance"];
+
+// Récupérer la liste des entreprises
+require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
+use repository\EntrepriseRepo;
+$entrepriseRepo = new EntrepriseRepo();
+$entreprises = $entrepriseRepo->listeEntreprise();
 ?>
 
 <!DOCTYPE html>
@@ -82,6 +88,38 @@ $types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freela
         .etat-actif { background-color: #e8f5e9; color: #388e3c; }
         .etat-clos { background-color: #ffebee; color: #d32f2f; }
         .etat-brouillon { background-color: #fff3e0; color: #f57c00; }
+        
+        /* Styles pour les champs de formulaire */
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus {
+            color: #212529;
+            background-color: #fff;
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Correction pour les champs dans les options d'état */
+        .form-select option {
+            padding: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -117,7 +155,9 @@ $types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freela
                             <div class="form-group">
                                 <label for="titre">Titre du poste :</label>
                                 <input type="text" id="titre" name="titre" class="form-control" 
-                                       value="<?= htmlspecialchars($offre->getTitre()) ?>" required>
+                                       value="<?= htmlspecialchars($offre->getTitre()) ?>" 
+                                       style="background: #fff; border: 1px solid #ced4da;" 
+                                       required autofocus>
                             </div>
                             
                             <div class="form-group">
@@ -158,9 +198,16 @@ $types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freela
                         
                         <div class="col">
                             <div class="form-group">
-                                <label for="ref_entreprise">Référence entreprise :</label>
-                                <input type="number" id="ref_entreprise" name="ref_entreprise" class="form-control" 
-                                       value="<?= $offre->getRefEntreprise() ?>">
+                                <label for="ref_entreprise">Entreprise :</label>
+                                <select id="ref_entreprise" name="ref_entreprise" class="form-control">
+                                    <option value="">Sélectionnez une entreprise (optionnel)</option>
+                                    <?php foreach ($entreprises as $entreprise): ?>
+                                        <option value="<?= $entreprise->getIdEntreprise() ?>"
+                                            <?= $offre->getRefEntreprise() == $entreprise->getIdEntreprise() ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($entreprise->getNom()) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             
                             <div class="form-group">
@@ -199,12 +246,12 @@ $types = ["CDI", "CDD", "Intérim", "Stage", "Alternance", "Saisonnier", "Freela
                         ?></textarea>
                     </div>
                     
-                    <div class="form-actions">
+                    <div class="form-actions" style="margin-top: 1rem; display: flex; gap: 1rem;">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                            <i class="bi bi-save"></i> Enregistrer les modifications
                         </button>
-                        <a href="adminOffre.php" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-lg"></i> Annuler
+                        <a href="adminOffre.php" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
                         </a>
                     </div>
                 </form>

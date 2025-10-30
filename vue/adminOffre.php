@@ -17,9 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
     $cp           = $_POST['cp'];
     $ville        = $_POST['ville'];
     $description  = $_POST['description'];
-    $salaire      = !empty($_POST['salaire']) ? $_POST['salaire'] : null;
-    $type_offre   = $_POST['type_offre'];
-    $etat         = $_POST['etat'];
+    $salaire         = !empty($_POST['salaire']) ? $_POST['salaire'] : null;
+    $type_offre      = $_POST['type_offre'];
+    $etat            = $_POST['etat'];
+    $ref_entreprise  = !empty($_POST['ref_entreprise']) ? $_POST['ref_entreprise'] : null;
 
     $newOffre = new offre([
         'titre'        => $titre,
@@ -29,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
         'description'  => $description,
         'salaire'      => $salaire,
         'type_offre'   => $type_offre,
-        'etat'         => $etat
+        'etat'         => $etat,
+        'ref_entreprise' => $ref_entreprise
     ]);
 
     $offreRepo->ajoutOffre($newOffre);
@@ -135,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
                     <th>ID</th>
                     <th>Titre</th>
                     <th>Localisation</th>
+                    <th>Entreprise</th>
                     <th>Description</th>
                     <th>Salaire</th>
                     <th>Type</th>
@@ -169,6 +172,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
                             <div><?= htmlspecialchars($offre->getVille()) ?></div>
                             <small class="text-muted"><?= htmlspecialchars($offre->getCp()) ?></small>
                         </td>
+                        <td>
+                            <?php if (!empty($offre->entreprise_nom)): ?>
+                                <?= htmlspecialchars($offre->entreprise_nom) ?>
+                            <?php else: ?>
+                                <span class="text-muted">Non spécifiée</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="description-cell" title="<?= htmlspecialchars($offre->getDescription()) ?>">
                             <?= htmlspecialchars(substr($offre->getDescription(), 0, 50)) ?>...
                         </td>
@@ -202,19 +212,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
                 <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
-
         <section class="mt-5">
             <h2>Créer une nouvelle offre</h2>
             
-            <form method="post" class="form-container">
-                <input type="hidden" name="create_offre" value="1">
-                
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="titre">Titre du poste :</label>
-                            <input type="text" id="titre" name="titre" class="form-control" required>
+            <?php
+        // Récupérer la liste des entreprises
+        require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
+        use repository\EntrepriseRepo;
+        $entrepriseRepo = new EntrepriseRepo();
+        $entreprises = $entrepriseRepo->listeEntreprise();
+        ?>
+        
+        <form method="post" class="form-container">
+            <input type="hidden" name="create_offre" value="1">
+            
+            <div class="form-group">
+                <label for="ref_entreprise">Entreprise *</label>
+                <select id="ref_entreprise" name="ref_entreprise" class="form-control" required>
+                    <option value="">Sélectionnez une entreprise</option>
+                    <?php foreach ($entreprises as $entreprise): ?>
+                        <option value="<?= $entreprise->getIdEntreprise() ?>">
+                            <?= htmlspecialchars($entreprise->getNom()) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="titre">Titre du poste :</label>
+                        <input type="text" id="titre" name="titre" class="form-control" required>
                         </div>
                         
                         <div class="form-group">

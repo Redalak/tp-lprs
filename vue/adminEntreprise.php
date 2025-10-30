@@ -92,37 +92,49 @@ $entreprises = $entrepriseRepo->listeEntreprise();
                     <th>Site Web</th>
                     <th>Motif Partenariat</th>
                     <th>Date Inscription</th>
-                    <th>Ref. Offre</th>
-                    <th>Actions</th>
+                    <th class="text-center">Offres</th>
+                    <th class="text-center">Actions</th>
                 </tr>
                 </thead>
-        <tbody>
         <?php foreach($entreprises as $entreprise): ?>
             <tr>
                 <td><?= $entreprise->getIdEntreprise() ?></td>
                 <td><?= htmlspecialchars($entreprise->getNom()) ?></td>
                 <td><?= htmlspecialchars($entreprise->getAdresse()) ?></td>
-                <td><?= htmlspecialchars($entreprise->getSiteWeb()) ?></td>
-                <td><?= htmlspecialchars($entreprise->getMotifPartenariat()) ?></td>
-                <td><?= $entreprise->getDateInscription() ?></td>
-                <td><?= $entreprise->getRefOffre() ?></td>
+                <td>
+                    <?php if ($entreprise->getSiteWeb()): ?>
+                        <a href="<?= htmlspecialchars($entreprise->getSiteWeb()) ?>" target="_blank">
+                            <?= htmlspecialchars($entreprise->getSiteWeb()) ?>
+                        </a>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars($entreprise->getMotifPartenariat() ?: '-') ?></td>
+                <td><?= date('d/m/Y', strtotime($entreprise->getDateInscription())) ?></td>
+                <td class="text-center">
+                    <a href="detailEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="badge">
+                        <?= $entreprise->nombre_offres ?? '0' ?> offre(s)
+                    </a>
+                </td>
                 <td class="actions">
-                    <a href="modifEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="btn btn-sm btn-primary" title="Modifier">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    <a href="suppEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" 
-                       class="btn btn-sm btn-danger" 
-                       title="Supprimer"
-                       onclick="return confirm('Voulez-vous vraiment supprimer cette entreprise ?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="modifEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="btn-edit" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="detailEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="btn-view" title="Voir les détails">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="suppEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="btn-delete" 
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')" title="Supprimer">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table>
-
-
     <section class="mt-5">
         <h2>Ajouter une nouvelle entreprise</h2>
         

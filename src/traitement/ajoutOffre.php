@@ -19,7 +19,8 @@ if (
     !empty($_POST["ville"]) &&
     !empty($_POST["description"]) &&
     !empty($_POST["type_offre"]) &&
-    !empty($_POST["etat"])
+    !empty($_POST["etat"]) &&
+    !empty($_POST["ref_entreprise"])
 ) {
     $titre        = $_POST["titre"];
     $rue          = $_POST["rue"];
@@ -29,6 +30,7 @@ if (
     $salaire      = $_POST["salaire"] ?? ''; // peut être vide
     $type_offre   = $_POST["type_offre"];
     $etat         = $_POST["etat"];
+    $ref_entreprise = $_POST["ref_entreprise"];
 
     // Construire l'objet offre
     $nouvelleOffre = new offre([
@@ -40,6 +42,7 @@ if (
         'salaire'      => $salaire,
         'type_offre'   => $type_offre,
         'etat'         => $etat,
+        'ref_entreprise' => $ref_entreprise
         // date_creation auto par la BDD
         // ref_entreprise retiré si tu ne l'utilises plus
     ]);
@@ -53,6 +56,7 @@ if (
     $nouvelleOffre->setSalaire($salaire);
     $nouvelleOffre->setTypeOffre($type_offre);
     $nouvelleOffre->setEtat($etat);
+    $nouvelleOffre->setRefEntreprise($ref_entreprise);
 
     $offreRepository = new OffreRepo();
 

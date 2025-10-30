@@ -23,7 +23,8 @@ class OffreRepo
                 description,
                 salaire,
                 type_offre,
-                etat
+                etat,
+                ref_entreprise
             ) VALUES (
                 :titre,
                 :rue,
@@ -32,7 +33,8 @@ class OffreRepo
                 :description,
                 :salaire,
                 :type_offre,
-                :etat
+                :etat,
+                :ref_entreprise
             )
         ');
 
@@ -43,8 +45,9 @@ class OffreRepo
             'ville'        => $offre->getVille(),
             'description'  => $offre->getDescription(),
             'salaire'      => ($offre->getSalaire() === '' ? null : $offre->getSalaire()),
-            'type_offre'   => $offre->getTypeOffre(), // <-- DOIT être là
-            'etat'         => $offre->getEtat(),      // <-- DOIT être là
+            'type_offre'     => $offre->getTypeOffre(),
+            'etat'           => $offre->getEtat(),
+            'ref_entreprise' => $offre->getRefEntreprise()
         ]);
 
         if (method_exists($offre, 'setIdOffre')) {
