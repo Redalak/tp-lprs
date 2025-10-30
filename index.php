@@ -27,6 +27,23 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
     // On suppose que vous avez une méthode getUserById()
     $userLoggedIn = $userRepo->getUserById($_SESSION['id_user']);
 }
+// Déterminer si l'utilisateur est admin (robuste selon ton modèle)
+$isAdmin = false;
+
+if ($userLoggedIn) {
+    if (method_exists($userLoggedIn, 'isAdmin')) {
+        $isAdmin = (bool) $userLoggedIn->isAdmin();
+    } elseif (method_exists($userLoggedIn, 'getRole')) {
+        $role = strtolower((string) $userLoggedIn->getRole());
+        $isAdmin = in_array($role, ['admin', 'role_admin'], true);
+    } elseif (property_exists($userLoggedIn, 'role')) {
+        $role = strtolower((string) $userLoggedIn->role);
+        $isAdmin = in_array($role, ['admin', 'role_admin'], true);
+    } elseif (!empty($_SESSION['role'])) {
+        $role = strtolower((string) $_SESSION['role']);
+        $isAdmin = in_array($role, ['admin', 'role_admin'], true);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -195,15 +212,27 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                 <li><a href="vue/evenement.php">Evenement</a></li>
                 <li><a href="vue/supportContact.php">Contact</a></li>
 
-                <?php if ($userLoggedIn): // Utilise la variable définie en haut ?>
+                <?php if ($userLoggedIn): ?>
                     <li><a href="vue/forum.php">Forum</a></li>
 
+                    <?php if ($isAdmin): ?>
+                        <li class="admin-dropdown">
+                            <a href="vue/admin.php">Admin ▾</a>
+                            <div class="admin-menu">
+                                <a href="vue/admin.php">Tableau de bord</a>
+                                <a href="vue/adminEntreprise.php">Entreprises</a>
+                                <a href="vue/adminEvent.php">Événements</a>
+                                <a href="vue/adminOffre.php">Offres</a>
+                                <a href="vue/adminUser.php">Utilisateurs</a>
+                            </div>
+                        </li>
+                    <?php endif; ?>
+
                     <li class="profile-dropdown">
-                        <a href="vue/profilUser.php" class="profile-icon">👤</a> <div class="dropdown-content">
+                        <a href="vue/profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
                             <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
-
                             <a href="vue/profilUser.php" class="profile-button">Mon Profil</a>
-
                             <a href="?deco=true" class="logout-button">Déconnexion</a>
                         </div>
                     </li>
