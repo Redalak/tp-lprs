@@ -44,21 +44,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_entreprise']))
 $entreprises = $entrepriseRepo->listeEntreprise();
 ?>
 
-    <h2>Liste des Entreprises</h2>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Gestion des Entreprises</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/admin-style.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="#" class="logo">Administration</a>
+        <nav>
+            <ul>
+                <li><a href="adminEntreprise.php">Entreprises</a></li>
+                <li><a href="adminOffre.php">Offres</a></li>
+                <li><a href="adminEvent.php">Événements</a></li>
+                <li><a href="adminUser.php">Utilisateurs</a></li>
+                <li><a href="?deconnexion=1">Déconnexion</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
-    <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nom</th>
-            <th>Adresse</th>
-            <th>Site Web</th>
-            <th>Motif Partenariat</th>
-            <th>Date Inscription</th>
-            <th>Ref. Offre</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
+<main class="main-content">
+    <div class="container">
+        <h1>Gestion des Entreprises</h1>
+        
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Gestion des entreprises partenaires de l'école.
+        </div>
+
+        <h2>Liste des Entreprises</h2>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Adresse</th>
+                    <th>Site Web</th>
+                    <th>Motif Partenariat</th>
+                    <th>Date Inscription</th>
+                    <th>Ref. Offre</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
         <tbody>
         <?php foreach($entreprises as $entreprise): ?>
             <tr>
@@ -69,9 +106,16 @@ $entreprises = $entrepriseRepo->listeEntreprise();
                 <td><?= htmlspecialchars($entreprise->getMotifPartenariat()) ?></td>
                 <td><?= $entreprise->getDateInscription() ?></td>
                 <td><?= $entreprise->getRefOffre() ?></td>
-                <td>
-                    <a href="modifEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>">Modifier</a> |
-                    <a href="suppEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" onclick="return confirm('Voulez-vous vraiment supprimer cette entreprise ?')">Supprimer</a>
+                <td class="actions">
+                    <a href="modifEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="btn btn-sm btn-primary" title="Modifier">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="suppEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" 
+                       class="btn btn-sm btn-danger" 
+                       title="Supprimer"
+                       onclick="return confirm('Voulez-vous vraiment supprimer cette entreprise ?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -79,28 +123,74 @@ $entreprises = $entrepriseRepo->listeEntreprise();
     </table>
 
 
-    <h2>Ajouter une nouvelle entreprise</h2>
+    <section class="mt-5">
+        <h2>Ajouter une nouvelle entreprise</h2>
+        
+        <form method="post" class="form-container">
+            <input type="hidden" name="create_entreprise" value="1">
+            
+            <div class="form-group">
+                <label for="nom">Nom :</label>
+                <input type="text" id="nom" name="nom" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="adresse">Adresse :</label>
+                <textarea id="adresse" name="adresse" class="form-control" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="site_web">Site Web :</label>
+                <input type="url" id="site_web" name="site_web" class="form-control" placeholder="https://www.exemple.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="motif_partenariat">Motif du partenariat :</label>
+                <textarea id="motif_partenariat" name="motif_partenariat" class="form-control" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="date_inscription">Date d'inscription :</label>
+                <input type="datetime-local" id="date_inscription" name="date_inscription" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="ref_offre">Référence Offre (optionnel) :</label>
+                <input type="number" id="ref_offre" name="ref_offre" class="form-control">
+            </div>
+            
+            <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Ajouter l'entreprise
+                </button>
+                <button type="reset" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Réinitialiser
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
 
-    <form method="post" style="margin-top: 30px; border: 1px solid #ccc; padding: 10px;">
-        <input type="hidden" name="create_entreprise" value="1">
+<footer>
+    <div class="container">
+        <p>&copy; <?= date('Y') ?> École Supérieure. Tous droits réservés.</p>
+    </div>
+</footer>
 
-        <label>Nom :</label><br>
-        <input type="text" name="nom" required><br><br>
+<script>
+    // Script pour confirmer la suppression
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteLinks = document.querySelectorAll('a[onclick*="confirm"]');
+        
+        deleteLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ? Cette action est irréversible.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
 
-        <label>Adresse :</label><br>
-        <textarea name="adresse" required></textarea><br><br>
-
-        <label>Site Web :</label><br>
-        <input type="url" name="site_web" placeholder="https://www.exemple.com" required><br><br>
-
-        <label>Motif du partenariat :</label><br>
-        <textarea name="motif_partenariat" required></textarea><br><br>
-
-        <label>Date d'inscription :</label><br>
-        <input type="datetime-local" name="date_inscription" required><br><br>
-
-        <label>ID Offre (optionnel) :</label><br>
-        <input type="number" name="ref_offre"><br><br>
-
-        <button type="submit">Ajouter l'entreprise</button>
-    </form><?php
+</body>
+</html>

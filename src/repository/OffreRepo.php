@@ -60,10 +60,11 @@ class OffreRepo
         $database = $bdd->getBdd();
 
         $req = $database->query('
-        SELECT *
-        FROM offre
-        ORDER BY date_creation DESC
-    ');
+            SELECT o.*, e.nom as entreprise_nom 
+            FROM offre o
+            LEFT JOIN entreprise e ON o.ref_entreprise = e.id_entreprise
+            ORDER BY o.date_creation DESC
+        ');
         $rows = $req->fetchAll(\PDO::FETCH_ASSOC);
 
         $offres = [];
@@ -73,8 +74,14 @@ class OffreRepo
                 $row['idOffre'] = $row['id_offre'];
                 unset($row['id_offre']);
             }
-
-            $offres[] = new offre($row);
+            
+            // Ajouter le nom de l'entreprise comme propriété dynamique
+            $offre = new offre($row);
+            if (isset($row['entreprise_nom'])) {
+                $offre->entreprise_nom = $row['entreprise_nom'];
+            }
+            
+            $offres[] = $offre;
         }
 
         return $offres;
