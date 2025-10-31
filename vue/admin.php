@@ -49,7 +49,7 @@ $nowLabel = date('d/m/Y H:i');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Administration — École Sup.</title>
+    <title>Administration.</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,21 +94,13 @@ $nowLabel = date('d/m/Y H:i');
         .profile-button:hover{background:var(--primary-color)}
         .logout-button{background:var(--danger)}
         .logout-button:hover{background:#c0392b}
-        /* Dropdown Admin */
-        .admin-dropdown{position:relative;display:inline-block}
-        .admin-dropdown > a::after{display:none} /* pas de soulignement animé */
-        .admin-menu{
-            display:none; position:absolute; right:0; top:100%;
-            background:var(--surface-color); min-width:220px;
-            box-shadow:var(--shadow); border-radius:var(--border-radius);
-            padding:10px; z-index:1001
-        }
-        .admin-menu a{
-            display:block; padding:10px 12px; border-radius:6px;
-            text-decoration:none; color:var(--text-color)
-        }
-        .admin-menu a:hover{background:var(--background-color); color:var(--primary-color)}
-        .admin-dropdown:hover .admin-menu{display:block}
+        /* Admin top nav (green pills) */
+        nav.admin-nav ul{list-style:none;display:flex;gap:14px;align-items:center;padding-left:0;margin:0}
+        nav.admin-nav a.btn-admin{display:inline-block;background:var(--secondary-color);color:#fff;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:600}
+        nav.admin-nav a.btn-admin:hover{background:var(--primary-color);color:#fff}
+        nav.admin-nav a.btn-admin.active{background:var(--primary-color);color:#fff}
+        /* disable underline animation for admin buttons */
+        nav.admin-nav ul li a::after{display:none}
         /* Hero admin */
         .hero{background:linear-gradient(45deg, rgba(10,77,104,.9), rgba(8,131,149,.75)), url('https://source.unsplash.com/1600x600/?campus,building') center/cover no-repeat;height:280px;display:flex;align-items:center;justify-content:center;position:relative}
         .hero .content{color:#fff;text-align:center}
@@ -144,21 +136,23 @@ $nowLabel = date('d/m/Y H:i');
 
 <header>
     <div class="container">
-        <h1 class="logo">École Sup.</h1>
-        <nav>
+        <h1 class="logo"> Administration</h1>
+        <nav class="admin-nav">
             <ul>
-                <?php if (!empty($isAdmin) && $isAdmin): ?>
-                    <li class="admin-dropdown">
-                        <a href="admin.php" class="active">Admin ▾</a>
-                        <div class="admin-menu">
-                            <a href="admin.php">Tableau de bord</a>
-                            <a href="adminEntreprise.php">Entreprises</a>
-                            <a href="adminEvent.php">Événements</a>
-                            <a href="adminOffre.php">Offres</a>
-                            <a href="adminUser.php">Utilisateurs</a>
-                        </div>
-                    </li>
-                <?php endif; ?>
+                <li><a href="../index.php" class="btn-admin active">Accueil</a></li>
+                <li><a href="admin.php" class="btn-admin active">Tableau de bord</a></li>
+                <li><a href="adminEntreprise.php" class="btn-admin">Entreprises</a></li>
+                <li><a href="adminEvent.php" class="btn-admin">Événements</a></li>
+                <li><a href="adminOffre.php" class="btn-admin">Offres</a></li>
+                <li><a href="adminUser.php" class="btn-admin">Utilisateurs</a></li>
+                <li class="profile-dropdown" style="margin-left:auto">
+                    <a href="profilUser.php" class="profile-icon">👤</a>
+                    <div class="dropdown-content">
+                        <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
+                        <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                        <a href="?deco=true" class="logout-button">Déconnexion</a>
+                    </div>
+                </li>
             </ul>
         </nav>
     </div>
@@ -236,14 +230,7 @@ $nowLabel = date('d/m/Y H:i');
             <p>contact@ecolesup.fr</p>
             <p>+33 1 23 45 67 89</p>
         </div>
-        <div>
-            <h4>Liens rapides</h4>
-            <ul style="list-style:none;padding-left:0">
-                <li><a href="../index.php">Accueil</a></li>
-                <li><a href="formations.php">Formations</a></li>
-                <li><a href="supportContact.php">Contact</a></li>
-            </ul>
-        </div>
+
         <div>
             <h4>Réseaux sociaux</h4>
             <div class="footer-socials" style="display:flex;gap:15px;justify-content:center">

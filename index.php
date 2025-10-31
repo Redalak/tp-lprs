@@ -75,7 +75,7 @@ if ($userLoggedIn) {
         header { background: var(--surface-color); box-shadow: var(--shadow); position: sticky; top: 0; z-index: 1000; }
         header .container { display: flex; justify-content: space-between; align-items: center; height: 70px; }
         .logo { font-size: 1.6rem; font-weight: 700; color: var(--primary-color); }
-        nav ul { list-style: none; display: flex; align-items: center; gap: 30px; padding-left: 0; margin: 0; }
+        nav ul { list-style: none; display: flex; align-items: center; gap: 30px; padding-left: 0; margin: 0; overflow: visible; }
         nav ul li a { text-decoration: none; color: var(--text-color); font-weight: 500; position: relative; padding-bottom: 5px; transition: color 0.3s ease; }
         nav ul li a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 0; background-color: var(--secondary-color); transition: width 0.3s ease; }
         nav ul li a:hover { color: var(--primary-color); }
@@ -197,6 +197,7 @@ if ($userLoggedIn) {
         }
 
 
+
     </style>
 </head>
 <body>
@@ -216,16 +217,7 @@ if ($userLoggedIn) {
                     <li><a href="vue/forum.php">Forum</a></li>
 
                     <?php if ($isAdmin): ?>
-                        <li class="admin-dropdown">
-                            <a href="vue/admin.php">Admin ▾</a>
-                            <div class="admin-menu">
-                                <a href="vue/admin.php">Tableau de bord</a>
-                                <a href="vue/adminEntreprise.php">Entreprises</a>
-                                <a href="vue/adminEvent.php">Événements</a>
-                                <a href="vue/adminOffre.php">Offres</a>
-                                <a href="vue/adminUser.php">Utilisateurs</a>
-                            </div>
-                        </li>
+                        <li><a href="vue/admin.php">Admin</a></li>
                     <?php endif; ?>
 
                     <li class="profile-dropdown">
