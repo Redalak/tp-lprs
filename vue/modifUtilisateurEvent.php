@@ -1,71 +1,98 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../src/repository/UserRepo.php';
-require_once __DIR__ . '/../src/repository/EventRepo.php';
-use repository\UserRepo;
-use repository\EventRepo;
-
 // Vérification de l'authentification
 if (!isset($_SESSION['id_user'])) {
     header('Location: connexion.php');
     exit;
 }
 
-$userRepo = new UserRepo();
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+use repository\EventRepo;
+
+$userId = (int)$_SESSION['id_user'];
 $eventRepo = new EventRepo();
-
-// Récupération de l'ID de l'utilisateur à partir de l'URL
-if (!isset($_GET['id'])) {
-    header('Location: profilUser.php');
-    exit;
-}
-
-$userId = (int)$_GET['id'];
-
-// Vérifier que l'utilisateur connecté est bien celui dont on veut modifier le profil
-if ($_SESSION['id_user'] !== $userId) {
-    $_SESSION['message'] = "Vous n'êtes pas autorisé à modifier ce profil.";
-    $_SESSION['messageClass'] = "danger";
-    header('Location: profilUser.php');
-    exit;
-}
-
-// Récupérer l'utilisateur à modifier
-$user = $userRepo->getUserById($userId);
-
-if (!$user) {
-    $_SESSION['message'] = "Utilisateur non trouvé.";
-    $_SESSION['messageClass'] = "danger";
-    header('Location: profilUser.php');
-    exit;
-}
+$message = '';
+$messageClass = '';
+$event = null;
+$editionMode = false;
 
 // Récupérer les événements créés par l'utilisateur
 $evenementsUtilisateur = $eventRepo->getEvenementsParUtilisateur($userId);
 
-// Traitement du formulaire
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user->setNom(htmlspecialchars(trim($_POST['nom'])));
-    $user->setPrenom(htmlspecialchars(trim($_POST['prenom'])));
-    $user->setEmail(htmlspecialchars(trim($_POST['email'])));
+// Vérifier si on est en mode édition d'un événement
+// Vérifier si on est en mode édition d'un événement spécifique
+if (isset($_GET['id'])) {
+    $eventId = (int)$_GET['id'];
+    $event = $eventRepo->getEvenementById($eventId);
     
-    // Mise à jour du mot de passe si fourni
-    if (!empty($_POST['password'])) {
-        $user->setPassword(password_hash($_POST['password'], PASSWORD_DEFAULT));
-    }
-
-    $success = $userRepo->updateUser($user);
-    
-    if ($success) {
-        $_SESSION['message'] = 'Votre profil a été mis à jour avec succès.';
-        $_SESSION['messageClass'] = 'success';
-        header('Location: profilUser.php');
-        exit;
+    // Vérifier que l'événement existe et appartient à l'utilisateur
+    if ($event) {
+        if ($event->getRefUser() === $userId) {
+            $editionMode = true;
+        } else {
+            // L'événement n'appartient pas à l'utilisateur
+            $event = null;
+            
+            $messageClass = 'danger';
+        }
     } else {
-        $error = 'Une erreur est survenue lors de la mise à jour du profil.';
+        // L'événement n'existe pas
+        $message = 'L\'événement demandé n\'existe pas.';
+        $messageClass = 'danger';
     }
 }
+
+// Traitement du formulaire de modification
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['supprimer_evenement']) && isset($_POST['event_id'])) {
+        // Traitement de la suppression
+        $eventId = (int)$_POST['event_id'];
+        $eventToDelete = $eventRepo->getEvenementById($eventId);
+        
+        if ($eventToDelete && $eventToDelete->getRefUser() === $userId) {
+            $success = $eventRepo->supprimerEvent($eventId);
+            if ($success) {
+                $message = 'L\'événement a été supprimé avec succès.';
+                $messageClass = 'success';
+                $evenementsUtilisateur = $eventRepo->getEvenementsParUtilisateur($userId);
+            } else {
+                $message = 'Une erreur est survenue lors de la suppression de l\'événement.';
+                $messageClass = 'danger';
+            }
+        }
+    } else if (isset($_POST['mettre_a_jour'])) {
+        // Traitement de la mise à jour
+        $eventId = (int)$_POST['event_id'];
+        $event = $eventRepo->getEvenementById($eventId);
+        
+        if ($event && $event->getRefUser() === $userId) {
+            $event->setTitre(htmlspecialchars(trim($_POST['titre'])));
+            $event->setType(htmlspecialchars(trim($_POST['type'])));
+            $event->setDescription(htmlspecialchars(trim($_POST['description'])));
+            $event->setLieu(htmlspecialchars(trim($_POST['lieu'])));
+            $event->setNombrePlace((int)$_POST['nombre_place']);
+            $event->setDateEvent($_POST['date_event']);
+            $event->setEtat(htmlspecialchars(trim($_POST['etat'])));
+            
+            $success = $eventRepo->modifEvent($event);
+            
+            if ($success) {
+                $message = 'L\'événement a été mis à jour avec succès.';
+                $messageClass = 'success';
+                $evenementsUtilisateur = $eventRepo->getEvenementsParUtilisateur($userId);
+            } else {
+                $message = 'Une erreur est survenue lors de la mise à jour de l\'événement.';
+                $messageClass = 'danger';
+            }
+        }
+    } else if (isset($_POST['annuler_edition'])) {
+        // Annulation de l'édition
+        $editionMode = false;
+        $event = null;
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier mon profil - École Sup.</title>
+    <title><?= $editionMode ? 'Modifier un événement' : 'Mes événements' ?> - Mon Compte</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
@@ -85,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             background-color: var(--background-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 56px;
         }
         .main-content {
             padding: 2rem 0;
@@ -93,11 +121,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: none;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
         }
         .card-header {
             background-color: var(--primary-color);
             color: white;
             border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
         }
         .btn-primary {
             background-color: var(--primary-color);
@@ -107,113 +137,208 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
         }
+        .etat-badge {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+        }
+        .etat-actif { background-color: #e8f5e9; color: #2e7d32; }
+        .etat-annule { background-color: #ffebee; color: #c62828; }
+        .etat-termine { background-color: #e3f2fd; color: #1565c0; }
+        .table th { font-weight: 600; }
         .form-container {
-            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
-    <?php include 'includes/header.php'; ?>
+    <?php include __DIR__ . '/includes/header.php'; ?>
 
     <main class="main-content">
         <div class="container">
-            <div class="page-header mb-4">
-                <h1><i class="bi bi-person-gear"></i> Modifier mon profil</h1>
-                <a href="profilUser.php" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Retour à mon profil
-                </a>
-            </div>
-
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+            <?php if ($message): ?>
+                <div class="alert alert-<?= $messageClass ?> alert-dismissible fade show">
+                    <?= $message ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             <?php endif; ?>
 
+            <?php if ($editionMode && $event): ?>
+                <!-- Formulaire d'édition -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Modifier l'événement</h5>
+                        <a href="modifUtilisateurEvent.php" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="form-container">
+                            <input type="hidden" name="event_id" value="<?= $event->getIdEvent() ?>">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="titre" class="form-label">Titre de l'événement</label>
+                                        <input type="text" class="form-control" id="titre" name="titre" 
+                                               value="<?= htmlspecialchars($event->getTitre()) ?>" required>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="type" class="form-label">Type d'événement</label>
+                                        <select id="type" name="type" class="form-select" required>
+                                            <option value="conférence" <?= $event->getType() === 'conférence' ? 'selected' : '' ?>>Conférence</option>
+                                            <option value="atelier" <?= $event->getType() === 'atelier' ? 'selected' : '' ?>>Atelier</option>
+                                            <option value="séminaire" <?= $event->getType() === 'séminaire' ? 'selected' : '' ?>>Séminaire</option>
+                                            <option value="autre" <?= $event->getType() === 'autre' ? 'selected' : '' ?>>Autre</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="lieu" class="form-label">Lieu</label>
+                                        <input type="text" class="form-control" id="lieu" name="lieu" 
+                                               value="<?= htmlspecialchars($event->getLieu()) ?>" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="date_event" class="form-label">Date et heure</label>
+                                        <input type="datetime-local" class="form-control" id="date_event" name="date_event" 
+                                               value="<?= date('Y-m-d\TH:i', strtotime($event->getDateEvent())) ?>" required>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="nombre_place" class="form-label">Nombre de places</label>
+                                        <input type="number" class="form-control" id="nombre_place" name="nombre_place" 
+                                               value="<?= $event->getNombrePlace() ?>" min="1" required>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="etat" class="form-label">État</label>
+                                        <select id="etat" name="etat" class="form-select" required>
+                                            <option value="actif" <?= $event->getEtat() === 'actif' ? 'selected' : '' ?>>Actif</option>
+                                            <option value="annulé" <?= $event->getEtat() === 'annulé' ? 'selected' : '' ?>>Annulé</option>
+                                            <option value="complet" <?= $event->getEtat() === 'complet' ? 'selected' : '' ?>>Complet</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="5" required><?= htmlspecialchars($event->getDescription()) ?></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="submit" name="mettre_a_jour" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Mettre à jour
+                                </button>
+                                <a href="modifUtilisateurEvent.php" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg"></i> Annuler
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Liste des événements -->
             <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Mes événements</h5>
+                    <a href="profilUser.php" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-arrow-left"></i> Retour au profil
+                    </a>
+                </div>
                 <div class="card-body">
-                    <form method="post" class="form-container">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="nom" class="form-label">Nom</label>
-                                    <input type="text" class="form-control" id="nom" name="nom" 
-                                           value="<?= htmlspecialchars($user->getNom()) ?>" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="prenom" class="form-label">Prénom</label>
-                                    <input type="text" class="form-control" id="prenom" name="prenom" 
-                                           value="<?= htmlspecialchars($user->getPrenom()) ?>" required>
-                                </div>
-                            </div>
+                    <?php if (empty($evenementsUtilisateur)): ?>
+                        <div class="alert alert-info mb-0">
+                            Vous n'avez pas encore créé d'événement.
                         </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Adresse email</label>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                   value="<?= htmlspecialchars($user->getEmail()) ?>" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                            <div class="form-text">Laissez ce champ vide si vous ne souhaitez pas modifier votre mot de passe.</div>
-                        </div>
-
-                        <hr class="my-4">
-                        
-                        <h4 class="mb-3">Mes événements créés</h4>
-                        <?php if (empty($evenementsUtilisateur)): ?>
-                            <div class="alert alert-info">
-                                Vous n'avez pas encore créé d'événement.
-                            </div>
-                        <?php else: ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Titre</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Lieu</th>
+                                        <th>Places</th>
+                                        <th>État</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($evenementsUtilisateur as $evt): 
+                                        $dateEvent = new DateTime($evt->getDateEvent());
+                                        $etatClass = '';
+                                        switch($evt->getEtat()) {
+                                            case 'actif': $etatClass = 'etat-actif'; break;
+                                            case 'annulé': $etatClass = 'etat-annule'; break;
+                                            case 'complet': $etatClass = 'etat-termine'; break;
+                                        }
+                                    ?>
                                         <tr>
-                                            <th>Titre</th>
-                                            <th>Date</th>
-                                            <th>Lieu</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($evenementsUtilisateur as $event): 
-                                            $dateEvent = new DateTime($event->getDateEvent());
-                                        ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($event->getTitre()) ?></td>
-                                                <td><?= $dateEvent->format('d/m/Y H:i') ?></td>
-                                                <td><?= htmlspecialchars($event->getLieu()) ?></td>
-                                                <td>
-                                                    <a href="modifEvent.php?id=<?= $event->getIdEvent() ?>" 
-                                                       class="btn btn-sm btn-outline-primary"
+                                            <td><?= htmlspecialchars($evt->getTitre()) ?></td>
+                                            <td><?= ucfirst(htmlspecialchars($evt->getType())) ?></td>
+                                            <td><?= $dateEvent->format('d/m/Y H:i') ?></td>
+                                            <td><?= htmlspecialchars($evt->getLieu()) ?></td>
+                                            <td><?= $evt->getNombrePlace() ?></td>
+                                            <td><span class="etat-badge <?= $etatClass ?>"><?= $evt->getEtat() ?></span></td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="?id=<?= $evt->getIdEvent() ?>" 
+                                                       class="btn btn-outline-primary"
                                                        title="Modifier l'événement">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="profilUser.php" class="btn btn-outline-secondary me-md-2">Annuler</a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Enregistrer les modifications
-                            </button>
+                                                    <form method="post" class="d-inline" 
+                                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
+                                                        <input type="hidden" name="event_id" value="<?= $evt->getIdEvent() ?>">
+                                                        <button type="submit" name="supprimer_evenement" class="btn btn-outline-danger"
+                                                                title="Supprimer l'événement">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                    </form>
+                    <?php endif; ?>
                 </div>
+            </div>
+            
+            <div class="text-end mt-3">
+                <a href="ajoutEvent.php" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Créer un nouvel événement
+                </a>
             </div>
         </div>
     </main>
 
-    <?php include 'includes/footer.php'; ?>
-
+    <?php include __DIR__ . '/includes/footer.php'; ?>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Script pour gérer les tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </body>
 </html>

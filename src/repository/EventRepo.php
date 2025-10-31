@@ -28,32 +28,41 @@ class EventRepo
         return $event;
     }
 
-    // Modification d'un événement
-    public function modifEvent(Event $event) {
-        $bdd = new Bdd();
-        $database = $bdd->getBdd();
-        $req = $database->prepare('UPDATE event 
-            SET type = :type, 
-                titre = :titre,
-                description = :description,
-                lieu = :lieu,
-                nombre_place = :nombre_place,
-                date_event = :date_event,
-                etat = :etat,
-                ref_user = :ref_user
-            WHERE id_evenement = :id_evenement');
+    /**
+     * Modifie un événement existant
+     * @param Event $event L'événement à mettre à jour
+     * @return bool True si la mise à jour a réussi, false sinon
+     */
+    public function modifEvent(Event $event): bool {
+        try {
+            $bdd = new Bdd();
+            $database = $bdd->getBdd();
+            $req = $database->prepare('UPDATE event 
+                SET type = :type, 
+                    titre = :titre,
+                    description = :description,
+                    lieu = :lieu,
+                    nombre_place = :nombre_place,
+                    date_event = :date_event,
+                    etat = :etat,
+                    ref_user = :ref_user
+                WHERE id_evenement = :id_evenement');
 
-        $req->execute([
-            'id_evenement' => $event->getIdEvent(),
-            'type' => $event->getType(),
-            'titre' => $event->getTitre(),
-            'description' => $event->getDescription(),
-            'lieu' => $event->getLieu(),
-            'nombre_place' => $event->getNombrePlace(),
-            'date_event' => $event->getDateEvent(),
-            'etat' => $event->getEtat(),
-            'ref_user' => $event->getRefUser()
-        ]);
+            return $req->execute([
+                'id_evenement' => $event->getIdEvent(),
+                'type' => $event->getType(),
+                'titre' => $event->getTitre(),
+                'description' => $event->getDescription(),
+                'lieu' => $event->getLieu(),
+                'nombre_place' => $event->getNombrePlace(),
+                'date_event' => $event->getDateEvent(),
+                'etat' => $event->getEtat(),
+                'ref_user' => $event->getRefUser()
+            ]);
+        } catch (\PDOException $e) {
+            error_log('Erreur lors de la modification de l\'événement : ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
