@@ -62,8 +62,8 @@ $entreprises = $entrepriseRepo->listeEntreprise();
         <a href="#" class="logo">Administration</a>
         <nav>
             <ul>
-                <li><a href="adminEntreprise.php">Entreprises</a></li>
                 <li><a href="admin.php">admin</a></li>
+                <li><a href="adminEntreprise.php">Entreprises</a></li>
                 <li><a href="adminOffre.php">Offres</a></li>
                 <li><a href="adminEvent.php">Événements</a></li>
                 <li><a href="adminUser.php">Utilisateurs</a></li>

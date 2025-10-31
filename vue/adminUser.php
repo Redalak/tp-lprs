@@ -73,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         <a href="#" class="logo">Administration</a>
         <nav>
             <ul>
+                <li><a href="admin.php">admin</a></li>
                 <li><a href="adminEntreprise.php">Entreprises</a></li>
                 <li><a href="adminOffre.php">Offres</a></li>
                 <li><a href="adminEvent.php">Événements</a></li>

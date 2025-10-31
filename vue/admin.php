@@ -12,8 +12,8 @@ use repository\UserRepo;
 // --- Récup utilisateur connecté
 $userLoggedIn = null;
 if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty($_SESSION['id_user'])) {
-    $userRepo      = new UserRepo();
-    $userLoggedIn  = $userRepo->getUserById((int)$_SESSION['id_user']);
+    $userRepo     = new UserRepo();
+    $userLoggedIn = $userRepo->getUserById((int)$_SESSION['id_user']);
 }
 
 // --- Déterminer si admin (robuste)
@@ -49,7 +49,7 @@ $nowLabel = date('d/m/Y H:i');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Administration.</title>
+    <title>École | Administration</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,21 +66,23 @@ $nowLabel = date('d/m/Y H:i');
             --light-text-color:#f8f9fa;
             --shadow:0 4px 15px rgba(0,0,0,.07);
             --border-radius:8px;
-            --ok:#2ecc71; --warn:#e67e22; --danger:#e74c3c;
+            --danger:#e74c3c;
         }
         *{box-sizing:border-box}
         body{margin:0;font-family:'Poppins',sans-serif;background:var(--background-color);color:var(--text-color);line-height:1.7}
         .container{max-width:1200px;margin:auto;padding:0 20px}
+
+        /* NAV identique à index.php */
         header{background:var(--surface-color);box-shadow:var(--shadow);position:sticky;top:0;z-index:1000}
         header .container{display:flex;justify-content:space-between;align-items:center;height:70px}
         .logo{font-size:1.6rem;font-weight:700;color:var(--primary-color)}
-        nav ul{list-style:none;display:flex;align-items:center;gap:30px;padding-left:0;margin:0}
+        nav ul{list-style:none;display:flex;align-items:center;gap:30px;padding-left:0;margin:0;overflow:visible}
         nav ul li a{position:relative;text-decoration:none;color:var(--text-color);font-weight:500;padding-bottom:5px;transition:color .3s}
         nav ul li a::after{content:'';position:absolute;width:0;height:2px;left:0;bottom:0;background:var(--secondary-color);transition:width .3s}
         nav ul li a:hover{color:var(--primary-color)}
         nav ul li a:hover::after{width:100%}
-        nav .active{color:var(--primary-color)}
-        nav .active::after{width:100%}
+        nav ul li a.active{color:var(--primary-color)}
+        nav ul li a.active::after{width:100%}
 
         /* Dropdown profil */
         .profile-dropdown{position:relative;display:inline-block}
@@ -89,32 +91,28 @@ $nowLabel = date('d/m/Y H:i');
         .dropdown-content{display:none;position:absolute;background:var(--surface-color);min-width:220px;box-shadow:var(--shadow);border-radius:var(--border-radius);padding:20px;right:0;top:100%;z-index:1001;text-align:center}
         .profile-dropdown:hover .dropdown-content{display:block}
         .dropdown-content span{display:block;font-size:1.1rem;font-weight:600;color:var(--primary-color);margin-bottom:15px;white-space:nowrap}
-        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;transition:background .3s,color .3s;color:#fff!important}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
         .profile-button{background:var(--secondary-color)}
         .profile-button:hover{background:var(--primary-color)}
         .logout-button{background:var(--danger)}
         .logout-button:hover{background:#c0392b}
-        /* Admin top nav (green pills) */
-        nav.admin-nav ul{list-style:none;display:flex;gap:14px;align-items:center;padding-left:0;margin:0}
-        nav.admin-nav a.btn-admin{display:inline-block;background:var(--secondary-color);color:#fff;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:600}
-        nav.admin-nav a.btn-admin:hover{background:var(--primary-color);color:#fff}
-        nav.admin-nav a.btn-admin.active{background:var(--primary-color);color:#fff}
-        /* disable underline animation for admin buttons */
-        nav.admin-nav ul li a::after{display:none}
-        /* Hero admin */
-        .hero{background:linear-gradient(45deg, rgba(10,77,104,.9), rgba(8,131,149,.75)), url('https://source.unsplash.com/1600x600/?campus,building') center/cover no-repeat;height:280px;display:flex;align-items:center;justify-content:center;position:relative}
-        .hero .content{color:#fff;text-align:center}
-        .hero h2{margin:0 0 10px 0;font-size:2.4rem}
-        .hero p{margin:0;opacity:.95}
 
-        /* Bandeau infos */
-        .info-bar{background:var(--surface-color);box-shadow:var(--shadow);border-radius:var(--border-radius);padding:18px;margin-top:-40px}
+        /* Hero réduit (plus de dépassement) */
+        .hero{
+            background:linear-gradient(45deg, rgba(10,77,104,.90), rgba(8,131,149,.75));
+            height:120px;            /* ← était 220px */
+            display:flex;align-items:center;justify-content:center
+        }
+        .hero h2{margin:0 0 6px 0;color:#fff}
+        .hero p{margin:0;color:#fff;opacity:.95}
+
+        /* Bandeau infos – plus de marge négative */
+        .info-bar{background:var(--surface-color);box-shadow:var(--shadow);border-radius:var(--border-radius);padding:18px;margin-top:16px}
         .info-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
         .info-card{background:var(--background-color);border-left:4px solid var(--secondary-color);border-radius:6px;padding:14px}
         .info-card h4{margin:0 0 6px 0;color:var(--primary-color)}
         .info-card p{margin:0;font-size:.95rem}
 
-        /* Raccourcis */
         .section-title{text-align:center;font-size:1.8rem;color:var(--primary-color);margin:40px 0 20px}
         .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;margin-bottom:40px}
         .quick-card{background:var(--surface-color);border-radius:var(--border-radius);box-shadow:var(--shadow);padding:22px;transition:transform .2s, box-shadow .2s}
@@ -136,23 +134,35 @@ $nowLabel = date('d/m/Y H:i');
 
 <header>
     <div class="container">
-        <h1 class="logo"> Administration</h1>
-        <nav class="admin-nav">
+        <h1 class="logo">École Sup.</h1>
+        <nav>
             <ul>
-                <li><a href="../index.php" class="btn-admin active">Accueil</a></li>
-                <li><a href="admin.php" class="btn-admin active">Tableau de bord</a></li>
-                <li><a href="adminEntreprise.php" class="btn-admin">Entreprises</a></li>
-                <li><a href="adminEvent.php" class="btn-admin">Événements</a></li>
-                <li><a href="adminOffre.php" class="btn-admin">Offres</a></li>
-                <li><a href="adminUser.php" class="btn-admin">Utilisateurs</a></li>
-                <li class="profile-dropdown" style="margin-left:auto">
-                    <a href="profilUser.php" class="profile-icon">👤</a>
-                    <div class="dropdown-content">
-                        <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
-                        <a href="profilUser.php" class="profile-button">Mon Profil</a>
-                        <a href="?deco=true" class="logout-button">Déconnexion</a>
-                    </div>
-                </li>
+                <li><a href="../index.php">Accueil</a></li>
+                <li><a href="adminEntreprise.php">Entreprise</a></li>
+                <li><a href="adminEvent.php">Evenement</a></li>
+                <li><a href="adminOffre.php">Offre</a></li>
+                <li><a href="adminUser.php">Utilisateur</a></li>
+
+                <?php if ($userLoggedIn): ?>
+                    <li><a href="forum.php">Forum</a></li>
+
+                    <?php if ($isAdmin): ?>
+                        <!-- Un seul bouton Admin, comme sur l'index -->
+                        <li><a href="admin.php" class="active">Admin</a></li>
+                    <?php endif; ?>
+
+                    <li class="profile-dropdown" style="margin-left:auto">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="connexion.php">Connexion</a></li>
+                    <li><a href="inscription.php">Inscription</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </div>
@@ -197,12 +207,12 @@ $nowLabel = date('d/m/Y H:i');
         <div class="quick-card">
             <h3>Utilisateurs</h3>
             <p>Comptes, rôles et droits d’accès.</p>
-            <a href="adminUsers.php">Gérer les utilisateurs</a>
+            <a href="adminUser.php">Gérer les utilisateurs</a>
         </div>
         <div class="quick-card">
             <h3>Événements</h3>
             <p>Programmer et publier les événements.</p>
-            <a href="adminEvenements.php">Gérer les événements</a>
+            <a href="adminEvent.php">Gérer les événements</a>
         </div>
         <div class="quick-card">
             <h3>Formations</h3>
@@ -215,9 +225,9 @@ $nowLabel = date('d/m/Y H:i');
             <a href="adminSupport.php">Gérer le support</a>
         </div>
         <div class="quick-card">
-            <h3>Paramètres</h3>
+            <h3>Gestion</h3>
             <p>Options générales du site.</p>
-            <a href="adminSettings.php">Ouvrir les paramètres</a>
+            <a href="adminGestion.php">Ouvrir les paramètres</a>
         </div>
     </div>
 </div>
@@ -230,7 +240,6 @@ $nowLabel = date('d/m/Y H:i');
             <p>contact@ecolesup.fr</p>
             <p>+33 1 23 45 67 89</p>
         </div>
-
         <div>
             <h4>Réseaux sociaux</h4>
             <div class="footer-socials" style="display:flex;gap:15px;justify-content:center">
