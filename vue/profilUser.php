@@ -3,8 +3,39 @@ session_start();
 
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';
+require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+
+// Traitement de l'annulation de participation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['annuler_participation'])) {
+    if (!isset($_SESSION['id_user'])) {
+        header('Location: connexion.php');
+        exit();
+    }
+
+    $idUtilisateur = $_SESSION['id_user'];
+    $idEvenement = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
+
+    if ($idEvenement) {
+        $inscriptionRepo = new \repository\InscriptionEventRepo();
+        $success = $inscriptionRepo->annulerParticipation($idUtilisateur, $idEvenement);
+        
+        if ($success) {
+            $message = "Votre participation a été annulée avec succès.";
+            $messageClass = "success";
+        } else {
+            $message = "Une erreur est survenue lors de l'annulation de votre participation.";
+            $messageClass = "error";
+        }
+    }
+}
+
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
 
 use repository\UserRepo;
+use repository\EventRepo;
+use repository\InscriptionEventRepo;
 use modele\User;
 
 // Vérifie la connexion
@@ -13,9 +44,14 @@ if (!isset($_SESSION['id_user'])) {
     exit;
 }
 
-// Récupération utilisateur
+// Récupération utilisateur et ses réservations
 $userRepo = new UserRepo();
 $user = $userRepo->getUserById($_SESSION['id_user']);
+
+// Récupération des réservations de l'utilisateur
+$inscriptionRepo = new InscriptionEventRepo();
+$eventRepo = new EventRepo();
+$reservations = $inscriptionRepo->getReservationsByUser($_SESSION['id_user']);
 
 // Mise à jour profil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -290,13 +326,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             <button type="submit">💾 Mettre à jour</button>
         </form>
 
-        <a href="../index.php" class="back">⬅ Retour à l’accueil</a>
+        <?php if (isset($message)): ?>
+            <div class="alert alert-<?= $messageClass === 'success' ? 'success' : 'danger' ?>" 
+                 style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; 
+                        color: <?= $messageClass === 'success' ? '#155724' : '#721c24' ?>; 
+                        background-color: <?= $messageClass === 'success' ? '#d4edda' : '#f8d7da' ?>; 
+                        border-color: <?= $messageClass === 'success' ? '#c3e6cb' : '#f5c6cb' ?>;">
+                <?= htmlspecialchars($message) ?>
+            </div>
+        <?php endif; ?>
+
+        <a href="../index.php" class="back">⬅ Retour à l'accueil</a>
+
+        <!-- Section des réservations d'événements -->
+        <div class="reservations-section" style="margin-top: 50px;">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px;">📅 Mes réservations d'événements</h2>
+            
+            <?php if (empty($reservations)): ?>
+                <p>Vous n'avez pas encore réservé d'événement.</p>
+                <a href="evenement.php" class="btn" style="display: inline-block; margin-top: 10px;">Voir les événements</a>
+            <?php else: ?>
+                <div class="reservations-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <?php foreach ($reservations as $event): 
+                        $dateEvent = new DateTime($event['date_event']);
+                        $dateInscription = new DateTime($event['date_inscription']);
+                    ?>
+                        <div class="reservation-card" style="background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);">
+                            <h3 style="margin-top: 0; color: var(--primary-color);"><?= htmlspecialchars($event['titre']) ?></h3>
+                            <p><strong>Type :</strong> <?= htmlspecialchars($event['type']) ?></p>
+                            <p><strong>Lieu :</strong> <?= htmlspecialchars($event['lieu']) ?></p>
+                            <p><strong>Date de l'événement :</strong> <?= $dateEvent->format('d/m/Y H:i') ?></p>
+                            <p><strong>Date d'inscription :</strong> <?= $dateInscription->format('d/m/Y H:i') ?></p>
+                            
+                            <?php 
+                            // Récupérer le statut des places disponibles
+                            $places = $inscriptionRepo->getPlacesDisponibles($event['id_evenement']);
+                            
+                            // Afficher le statut
+                            if ($places['statut'] === 'complet'): ?>
+                                <div style="background-color: #f8d7da; color: #721c24; padding: 5px 10px; border-radius: 4px; display: inline-block; margin: 5px 0;">
+                                    <i class="bi bi-exclamation-triangle"></i> Complet
+                                </div>
+                            <?php elseif ($places['statut'] === 'bientot_complet'): ?>
+                                <div style="background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 4px; display: inline-block; margin: 5px 0;">
+                                    <i class="bi bi-exclamation-triangle"></i> Bientôt complet ! (<?= $places['disponibles'] ?> place<?= $places['disponibles'] > 1 ? 's' : '' ?> restante<?= $places['disponibles'] > 1 ? 's' : '' ?>)
+                                </div>
+                            <?php else: ?>
+                                <div style="background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 4px; display: inline-block; margin: 5px 0;">
+                                    <i class="bi bi-check-circle"></i> Places disponibles : <?= $places['disponibles'] ?>/<?= $places['total'] ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if (strtotime($event['date_event']) > time()): ?>
+                                <p style="color: var(--success-color); font-weight: 500;">
+                                    <i class="bi bi-check-circle"></i> Réservation confirmée
+                                </p>
+                            <?php else: ?>
+                                <p style="color: #666; font-style: italic;">
+                                    <i class="bi bi-calendar-check"></i> Événement terminé
+                                </p>
+                            <?php endif; ?>
+                            
+                            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                                <a href="evenement.php?event_id=<?= $event['id_evenement'] ?>" class="btn" style="flex: 1; text-align: center;">
+                                    Voir l'événement
+                                </a>
+                                <?php if (strtotime($event['date_event']) > time()): ?>
+                                <form method="post" action="" style="flex: 1;">
+                                    <input type="hidden" name="event_id" value="<?= $event['id_evenement'] ?>">
+                                    <button type="submit" name="annuler_participation" class="btn" 
+                                            style="background-color: #dc3545; border-color: #dc3545; width: 100%;"
+                                            onclick="return confirm('Êtes-vous sûr de vouloir annuler votre participation à cet événement ?');">
+                                        Annuler
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </main>
-
-<footer>
-    &copy; 2025 École Sup. — Tous droits réservés.
-</footer>
 
 </body>
 </html>

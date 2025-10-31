@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
         <a href="#" class="logo">Administration</a>
         <nav>
             <ul>
+                <li><a href="admin.php">Admin</a></li>
                 <li><a href="adminEntreprise.php">Entreprises</a></li>
                 <li><a href="adminOffre.php">Offres</a></li>
                 <li><a class="active" href="adminEvent.php">Événements</a></li>
@@ -164,9 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
                         <div class="form-group">
                             <label for="etat">État :</label>
                             <select id="etat" name="etat" class="form-control" required>
-                                <option value="actif">Actif</option>
-                                <option value="annulé">Annulé</option>
-                                <option value="complet">Complet</option>
+                                <option value="publie">Publié</option>
+                                <option value="brouillon">Brouillon</option>
+                                <option value="archive">Archive</option>
                             </select>
                         </div>
                     </div>

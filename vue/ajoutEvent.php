@@ -116,9 +116,9 @@ use repository\eventRepo;
         <label for="etat">État :</label>
         <select name="etat" id="etat" required>
             <option value="">-- Sélectionnez un état --</option>
-            <option value="ouvert">Ouvert</option>
-            <option value="fermé">Fermé</option>
-            <option value="reporté">Reporté</option>
+            <option value="publie">Publié</option>
+            <option value="brouillon">Brouillon</option>
+            <option value="archive">Archive</option>
         </select>
 
         <!-- Si ton script utilise l'ID utilisateur -->
