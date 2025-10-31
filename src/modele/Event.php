@@ -25,10 +25,16 @@ class event
     private function hydrate(array $donnees)
     {
         foreach ($donnees as $key => $value) {
+            // Gestion spéciale pour ref_user
+            if ($key === 'ref_user') {
+                $this->setRefUser($value);
+                continue;
+            }
+            
             // On récupère le nom du setter correspondant à l'attribut
             $method = 'set' . ucfirst($key);
 
-            // Si le setter correspondant existe.
+            // Si le setter correspondant existe
             if (method_exists($this, $method)) {
                 // On appelle le setter
                 $this->$method($value);
@@ -149,7 +155,7 @@ class event
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDateEvent()
     {
@@ -158,16 +164,36 @@ class event
 
     /**
      * @param mixed $dateEvent
+     * @throws \Exception Si le format de date est invalide
      */
     public function setDateEvent($dateEvent): void
     {
-        $this->dateEvent = $dateEvent; // doit être 'YYYY-MM-DD HH:MM:SS'
+        if (empty($dateEvent)) {
+            throw new \InvalidArgumentException("La date de l'événement ne peut pas être vide");
+        }
+
+        // Si la date est déjà au bon format, on la conserve
+        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $dateEvent)) {
+            $this->dateEvent = $dateEvent;
+            return;
+        }
+        
+        // Si c'est un format datetime-local (YYYY-MM-DDTHH:MM)
+        if (strpos($dateEvent, 'T') !== false) {
+            $dateTime = new \DateTime($dateEvent);
+            $this->dateEvent = $dateTime->format('Y-m-d H:i:s');
+            return;
+        }
+        
+        // Pour tout autre format, on essaie de le convertir
+        try {
+            $dateTime = new \DateTime($dateEvent);
+            $this->dateEvent = $dateTime->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            throw new \Exception("Format de date invalide: " . $dateEvent);
+        }
     }
-
-
-
     /**
-     * @return mixed
      */
     public function getEtat()
     {

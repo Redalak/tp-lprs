@@ -5,38 +5,13 @@ require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';
 require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
 require_once __DIR__ . '/../src/repository/EventRepo.php';
-
-// Traitement de l'annulation de participation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['annuler_participation'])) {
-    if (!isset($_SESSION['id_user'])) {
-        header('Location: connexion.php');
-        exit();
-    }
-
-    $idUtilisateur = $_SESSION['id_user'];
-    $idEvenement = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
-
-    if ($idEvenement) {
-        $inscriptionRepo = new \repository\InscriptionEventRepo();
-        $success = $inscriptionRepo->annulerParticipation($idUtilisateur, $idEvenement);
-        
-        if ($success) {
-            $message = "Votre participation a été annulée avec succès.";
-            $messageClass = "success";
-        } else {
-            $message = "Une erreur est survenue lors de l'annulation de votre participation.";
-            $messageClass = "error";
-        }
-    }
-}
-
-require_once __DIR__ . '/../src/repository/EventRepo.php';
-require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
+require_once __DIR__ . '/../src/modele/Event.php';
 
 use repository\UserRepo;
 use repository\EventRepo;
 use repository\InscriptionEventRepo;
 use modele\User;
+use modele\Event;
 
 // Vérifie la connexion
 if (!isset($_SESSION['id_user'])) {
@@ -44,14 +19,111 @@ if (!isset($_SESSION['id_user'])) {
     exit;
 }
 
-// Récupération utilisateur et ses réservations
+$userId = $_SESSION['id_user'];
 $userRepo = new UserRepo();
-$user = $userRepo->getUserById($_SESSION['id_user']);
+$eventRepo = new EventRepo();
+$inscriptionRepo = new InscriptionEventRepo();
+$user = $userRepo->getUserById($userId);
+
+// Messages de retour
+$message = $_SESSION['message'] ?? '';
+$messageClass = $_SESSION['messageClass'] ?? '';
+
+// Effacer les messages après les avoir affichés
+unset($_SESSION['message']);
+unset($_SESSION['messageClass']);
+
+// Traitement des actions sur les événements
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Annulation de participation
+    if (isset($_POST['annuler_participation'])) {
+        $idEvenement = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
+        if ($idEvenement) {
+            $success = $inscriptionRepo->annulerParticipation($userId, $idEvenement);
+            if ($success) {
+                $message = "Votre participation a été annulée avec succès.";
+                $messageClass = "success";
+            } else {
+                $message = "Une erreur est survenue lors de l'annulation de votre participation.";
+                $messageClass = "error";
+            }
+        }
+    }
+    // Suppression d'un événement
+    elseif (isset($_POST['supprimer_evenement'])) {
+        $eventId = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
+        if ($eventId && $eventRepo->evenementAppartientA($eventId, $userId)) {
+            $eventRepo->suppEvent($eventId);
+            $message = "L'événement a été supprimé avec succès.";
+            $messageClass = "success";
+        } else {
+            $message = "Action non autorisée ou événement introuvable.";
+            $messageClass = "error";
+        }
+    }
+    // Création/Modification d'un événement
+    elseif (isset($_POST['sauvegarder_evenement'])) {
+        $eventId = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
+        
+        // Vérification des droits pour la modification
+        if ($eventId && !$eventRepo->evenementAppartientA($eventId, $userId)) {
+            $message = "Action non autorisée.";
+            $messageClass = "error";
+        } else {
+            try {
+                // Récupération des données du formulaire
+                $eventData = [
+                    'type' => $_POST['type'] ?? '',
+                    'titre' => $_POST['titre'] ?? '',
+                    'description' => $_POST['description'] ?? '',
+                    'lieu' => $_POST['lieu'] ?? '',
+                    'nombre_place' => (int)($_POST['nombre_place'] ?? 0),
+                    'date_event' => $_POST['date_event'] ?? '',
+                    'etat' => 'publie', // Par défaut à 'publie' pour les événements créés depuis le profil
+                    'ref_user' => $userId
+                ];
+                
+                // Validation des champs obligatoires
+                $missingFields = [];
+                if (empty($eventData['titre'])) $missingFields[] = 'titre';
+                if (empty($eventData['type'])) $missingFields[] = 'type';
+                if (empty($eventData['date_event'])) $missingFields[] = 'date_event';
+                if (empty($eventData['lieu'])) $missingFields[] = 'lieu';
+                if (empty($eventData['nombre_place'])) $missingFields[] = 'nombre_place';
+                
+                if (!empty($missingFields)) {
+                    throw new Exception("Les champs suivants sont obligatoires : " . implode(', ', $missingFields));
+                }
+                
+                if ($eventId) {
+                    // Mise à jour
+                    $event = new Event($eventData + ['idEvent' => $eventId]);
+                    $eventRepo->modifEvent($event);
+                    $message = "L'événement a été mis à jour avec succès.";
+                } else {
+                    // Création
+                    $event = new Event($eventData);
+                    $eventRepo->ajoutEvent($event);
+                    $message = "L'événement a été créé avec succès.";
+                }
+                $messageClass = "success";
+                
+            } catch (\Exception $e) {
+                $message = "Erreur lors de la sauvegarde de l'événement : " . $e->getMessage();
+                $messageClass = "error";
+                error_log("ERREUR CRITIQUE: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                error_log("=== FIN TRACE ERREUR ===");
+            }
+        }
+    }
+}
+
+// Récupération des événements de l'utilisateur
+$evenementsUtilisateur = $eventRepo->getEvenementsParUtilisateur($userId);
 
 // Récupération des réservations de l'utilisateur
-$inscriptionRepo = new InscriptionEventRepo();
-$eventRepo = new EventRepo();
-$reservations = $inscriptionRepo->getReservationsByUser($_SESSION['id_user']);
+$reservations = $inscriptionRepo->getReservationsByUser($userId);
 
 // Mise à jour profil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -80,8 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Profil - École Sup.</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    
     <style>
         :root {
             --primary-color:#0A4D68;
@@ -299,6 +375,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 <main>
     <div class="profil-card">
         <h1>👤 Mon Profil</h1>
+        
+        <?php if (!empty($message)): ?>
+            <div class="alert alert-<?= $messageClass === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show" role="alert" style="margin-bottom: 20px;">
+                <?= htmlspecialchars($message) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        <?php endif; ?>
 
         <?php if (isset($successMessage)): ?>
             <div class="success"><?= htmlspecialchars($successMessage) ?></div>
@@ -337,6 +420,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         <?php endif; ?>
 
         <a href="../index.php" class="back">⬅ Retour à l'accueil</a>
+
+        <?php if (!empty($message)): ?>
+            <div class="alert alert-<?= $messageClass === 'success' ? 'success' : 'danger' ?>" 
+                 style="padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <?= htmlspecialchars($message) ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Section des événements créés par l'utilisateur -->
+        <section class="mes-evenements mt-5">
+            <h2 class="mb-4">
+                <i class="bi bi-calendar-event"></i> Mes événements
+            </h2>
+            
+            <?php if (empty($evenementsUtilisateur)): ?>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Vous n'avez pas encore créé d'événement.
+                </div>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Titre</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Lieu</th>
+                                <th>Places</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($evenementsUtilisateur as $event): 
+                                $dateEvent = new DateTime($event->getDateEvent());
+                                $now = new DateTime();
+                                $isPastEvent = $dateEvent < $now;
+                            ?>
+                            <tr class="<?= $isPastEvent ? 'table-secondary' : '' ?>">
+                                <td><?= htmlspecialchars($event->getTitre()) ?></td>
+                                <td><?= htmlspecialchars($event->getType()) ?></td>
+                                <td><?= $dateEvent->format('d/m/Y H:i') ?></td>
+                                <td><?= htmlspecialchars($event->getLieu()) ?></td>
+                                <td><?= $event->getNombrePlace() ?></td>
+                                <td>
+                                    <?php if ($isPastEvent): ?>
+                                        <span class="badge bg-secondary">Terminé</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success">À venir</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                onclick="editerEvenement(<?= htmlspecialchars(json_encode([
+                                                    'idEvent' => $event->getIdEvent(),
+                                                    'titre' => $event->getTitre(),
+                                                    'description' => $event->getDescription(),
+                                                    'type' => $event->getType(),
+                                                    'lieu' => $event->getLieu(),
+                                                    'nombre_place' => $event->getNombrePlace(),
+                                                    'date_event' => $dateEvent->format('Y-m-d\TH:i')
+                                                ]), JSON_HEX_APOS | JSON_HEX_QUOT) ?>)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form method="post" class="d-inline" 
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
+                                            <input type="hidden" name="event_id" value="<?= $event->getIdEvent() ?>">
+                                            <button type="submit" name="supprimer_evenement" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </section>
 
         <!-- Section des réservations d'événements -->
         <div class="reservations-section" style="margin-top: 50px;">
@@ -410,5 +574,199 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     </div>
 </main>
 
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Formulaire de création d'événement -->
+    <section class="mt-5">
+        <h2>Créer un nouvel événement</h2>
+        
+        <form method="post" action="/tp-lprs/src/traitement/ajoutEvent.php" class="form-container">
+            <input type="hidden" name="ref_user" value="<?= htmlspecialchars($userId) ?>">
+            <input type="hidden" name="etat" value="publie">
+            <input type="hidden" name="sauvegarder_evenement" value="1">
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group mb-3">
+                        <label for="titre">Titre :</label>
+                        <input type="text" id="titre" name="titre" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="type">Type :</label>
+                        <select id="type" name="type" class="form-control" required>
+                            <option value="">Sélectionnez un type</option>
+                            <option value="conférence">Conférence</option>
+                            <option value="atelier">Atelier</option>
+                            <option value="séminaire">Séminaire</option>
+                            <option value="formation">Formation</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="lieu">Lieu :</label>
+                        <input type="text" id="lieu" name="lieu" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="form-group mb-3">
+                        <label for="date_event">Date et heure :</label>
+                        <input type="datetime-local" id="date_event" name="date_event" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="nombre_place">Nombre de places :</label>
+                        <input type="number" id="nombre_place" name="nombre_place" class="form-control" min="1" required>
+                    </div>
+                    
+                    <!-- État déjà défini en haut du formulaire -->
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="description">Description :</label>
+                <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-actions mt-4">
+                <button type="submit" name="sauvegarder_evenement" class="btn btn-primary">
+                    <i class="bi bi-calendar-plus"></i> Créer l'événement
+                </button>
+                <button type="reset" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Réinitialiser
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        // Afficher le formulaire de création d'événement
+        function afficherFormulaireEvenement() {
+            const form = document.getElementById('eventForm');
+            form.reset();
+            form.classList.remove('was-validated');
+            document.getElementById('modalTitle').textContent = 'Nouvel événement';
+            document.getElementById('eventId').value = '';
+
+            // Définir la date et l'heure minimales à maintenant
+            const now = new Date();
+            const timezoneOffset = now.getTimezoneOffset() * 60000; // en millisecondes
+            const localISOTime = (new Date(now - timezoneOffset)).toISOString().slice(0, 16);
+            
+            const dateInput = document.getElementById('date_event');
+            dateInput.min = localISOTime;
+            dateInput.value = localISOTime;
+            
+            // Afficher la modal
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            modal.show();
+        }
+        
+        // Remplir le formulaire avec les données d'un événement existant
+        function editerEvenement(event) {
+            const form = document.getElementById('eventForm');
+            form.reset();
+            form.classList.remove('was-validated');
+            
+            document.getElementById('modalTitle').textContent = "Modifier l'événement";
+            document.getElementById('eventId').value = event.idEvent;
+            document.getElementById('titre').value = event.titre || '';
+            document.getElementById('type').value = event.type || '';
+            document.getElementById('description').value = event.description || '';
+            document.getElementById('lieu').value = event.lieu || '';
+            document.getElementById('nombre_place').value = event.nombre_place || 1;
+            
+            // Formater la date pour l'input datetime-local
+            const dateEvent = new Date(event.date_event);
+            const timezoneOffset = dateEvent.getTimezoneOffset() * 60000; // en millisecondes
+            const localISOTime = (new Date(dateEvent - timezoneOffset)).toISOString().slice(0, 16);
+            document.getElementById('date_event').value = localISOTime;
+            
+            // Afficher la modal
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            modal.show();
+        }
+        
+        // Gestion de la soumission du formulaire avec validation Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            'use strict';
+            
+            // Fonction pour comparer les dates en ignorant les secondes et millisecondes
+            function isFutureDate(dateString) {
+                if (!dateString) return false;
+                
+                // Créer une date à partir de la chaîne fournie
+                const selectedDate = new Date(dateString);
+                const now = new Date();
+                
+                // Mettre les deux dates à la même heure (minuit) pour la comparaison
+                const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), selectedDate.getHours(), selectedDate.getMinutes());
+                const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+                
+                return selectedDateOnly > nowDateOnly;
+            }
+            
+            // Récupérer le formulaire
+            const form = document.getElementById('eventForm');
+            if (!form) return;
+            
+            // Désactiver la soumission du formulaire si des champs ne sont pas valides
+            form.addEventListener('submit', function(event) {
+                // Réinitialiser les messages de validation personnalisés
+                const dateInput = document.getElementById('date_event');
+                dateInput.setCustomValidity('');
+                
+                // Vérifier d'abord la validité HTML5 de base
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    // Validation personnalisée de la date
+                    if (dateInput && dateInput.value) {
+                        if (!isFutureDate(dateInput.value)) {
+                            dateInput.setCustomValidity('La date doit être dans le futur');
+                            dateInput.reportValidity();
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return false;
+                        }
+                    }
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+            
+            // Réinitialiser la validation lorsque la modal est fermée
+            const modal = document.getElementById('eventModal');
+            if (modal) {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    form.classList.remove('was-validated');
+                    // Réinitialiser les messages de validation personnalisés
+                    const dateInput = document.getElementById('date_event');
+                    if (dateInput) {
+                        dateInput.setCustomValidity('');
+                    }
+                });
+            }
+            
+            // Validation en temps réel pour la date
+            const dateInput = document.getElementById('date_event');
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    if (this.value) {
+                        if (!isFutureDate(this.value)) {
+                            this.setCustomValidity('La date doit être dans le futur');
+                        } else {
+                            this.setCustomValidity('');
+                        }
+                        this.reportValidity();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -85,6 +85,70 @@ class EventRepo
      * @param bool $inclurePasses Si vrai, inclut les événements passés (par défaut: false)
      * @return array Tableau d'objets Event
      */
+    /**
+     * Récupère les événements créés par un utilisateur spécifique
+     * @param int $userId ID de l'utilisateur
+     * @param bool $inclurePasses Si vrai, inclut les événements passés (par défaut: false)
+     * @return array Tableau d'objets Event
+     */
+    public function getEvenementsParUtilisateur(int $userId, bool $inclurePasses = false): array {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        
+        $sql = 'SELECT * FROM event WHERE ref_user = :user_id';
+        
+        if (!$inclurePasses) {
+            $sql .= ' AND date_event >= CURDATE()';
+        }
+        
+        $sql .= ' ORDER BY date_event ASC';
+        
+        $req = $database->prepare($sql);
+        $req->execute(['user_id' => $userId]);
+        
+        $events = [];
+        while ($row = $req->fetch(\PDO::FETCH_ASSOC)) {
+            $events[] = new Event([
+                'idEvent'       => $row['id_evenement'],
+                'type'          => $row['type'],
+                'titre'         => $row['titre'],
+                'description'   => $row['description'],
+                'lieu'          => $row['lieu'],
+                'nombrePlace'   => $row['nombre_place'],
+                'dateEvent'     => $row['date_event'],
+                'etat'          => $row['etat'],
+                'ref_user'      => $row['ref_user']
+            ]);
+        }
+        
+        return $events;
+    }
+    
+    /**
+     * Vérifie si un événement appartient à un utilisateur
+     * @param int $eventId ID de l'événement
+     * @param int $userId ID de l'utilisateur
+     * @return bool True si l'événement appartient à l'utilisateur, false sinon
+     */
+    public function evenementAppartientA(int $eventId, int $userId): bool {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        
+        $req = $database->prepare('SELECT COUNT(*) as count FROM event WHERE id_evenement = :event_id AND ref_user = :user_id');
+        $req->execute([
+            'event_id' => $eventId,
+            'user_id' => $userId
+        ]);
+        
+        $result = $req->fetch(\PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+    
+    /**
+     * Récupère la liste des événements
+     * @param bool $inclurePasses Si vrai, inclut les événements passés (par défaut: false)
+     * @return array Tableau d'objets Event
+     */
     public function listeEvent(bool $inclurePasses = false) {
         $bdd = new Bdd();
         $database = $bdd->getBdd();

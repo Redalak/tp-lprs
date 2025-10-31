@@ -18,7 +18,7 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
 
 // Récupération des 5 derniers événements
 $eventRepo = new EventRepo();
-$latestEvents = $eventRepo->getDerniersEvents(5); // méthode à créer dans EventRepo
+$latestEvents = $eventRepo->getDerniersEvents(3); // méthode à créer dans EventRepo
 
 // NOUVEAU: Récupérer l'utilisateur connecté
 $userLoggedIn = null; // Initialiser
