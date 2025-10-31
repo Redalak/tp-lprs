@@ -87,7 +87,7 @@ $posts = $pRepo->all();
             <ul>
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
-                <li><a href="entreprises.php">Entreprises</a></li>
+                <li><a href="entreprise.php">Entreprises</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <?php if ($userId > 0): ?>
                     <li><a class="active" href="forum.php">Forum</a></li>

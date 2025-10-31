@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
+    session_destroy();
+    header("Location: ../index.php");
+    exit;
+}
+$isLoggedIn = !empty($_SESSION['id_user']);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -137,16 +146,20 @@
 
 <header>
     <div class="container">
-        <h1 class="logo">École Sup.</h1>
+        <a href="../index.php" class="logo" style="text-decoration:none">École Sup.</a>
         <nav>
             <ul>
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a class="active" href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
-                <li><a href="forum.php">Forum</a></li>
-                <li><a href="connexion.php">Connexion</a></li>
-                <li><a href="inscription.php">Inscription</a></li>
+                <?php if ($isLoggedIn): ?>
+                    <li><a href="forum.php">Forum</a></li>
+                    <li><a href="?deco=true">Déconnexion</a></li>
+                <?php else: ?>
+                    <li><a href="connexion.php">Connexion</a></li>
+                    <li><a href="inscription.php">Inscription</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </div>
