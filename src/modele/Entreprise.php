@@ -11,6 +11,7 @@ private $site_web;
 private $motifPartenariat;
 private $dateInscription;
 private $refOffre;
+ private $nombre_offres; // nombre d'offres liées à l'entreprise
 
 
 
@@ -143,6 +144,22 @@ private $refOffre;
     public function setRefOffre($refOffre): void
     {
         $this->refOffre = $refOffre;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getNombreOffres()
+    {
+        return $this->nombre_offres ?? null;
+    }
+
+    /**
+     * @param int $nombre
+     */
+    public function setNombreOffres($nombre): void
+    {
+        $this->nombre_offres = (int)$nombre;
     }
 
 

@@ -2,6 +2,13 @@
 declare(strict_types=1);
 session_start();
 
+// Déconnexion (aligné sur les pages publiques)
+if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
+    session_destroy();
+    header("Location: ../index.php");
+    exit;
+}
+
 require_once __DIR__ . '/../src/modele/PForum.php';
 require_once __DIR__ . '/../src/modele/RForum.php';
 require_once __DIR__ . '/../src/repository/PForumRepo.php';
@@ -27,8 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply') {
     $postId   = (int)($_POST['post_id'] ?? 0);
     $contenue = trim((string)($_POST['contenue'] ?? ''));
+    $parentId = isset($_POST['parent_id']) && $_POST['parent_id'] !== '' ? (int)$_POST['parent_id'] : null;
     if ($userId > 0 && $postId > 0 && $contenue !== '') {
-        $rRepo->create($postId, $userId, $contenue);
+        $rRepo->create($postId, $userId, $contenue, $parentId);
     }
     header('Location: forum.php#post-' . $postId); exit;
 }
@@ -43,10 +51,23 @@ $posts = $pRepo->all();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Forum général</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root{--pri:#0A4D68;--sec:#088395;--bg:#f7f8fa;--panel:#fff;--ink:#222;--mut:#6b7280;--sh:0 6px 24px rgba(0,0,0,.06)}
-        *{box-sizing:border-box} body{margin:0;font-family:Poppins,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+        *{box-sizing:border-box}
+        body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+        .container{max-width:1200px;margin:auto;padding:0 20px}
+        header{background:#fff;box-shadow:var(--sh);position:sticky;top:0;z-index:1000}
+        header .container{display:flex;justify-content:space-between;align-items:center;height:70px}
+        .logo{font-size:1.6rem;font-weight:700;color:var(--pri);margin:0; text-decoration:none}
+        nav ul{list-style:none;display:flex;align-items:center;gap:30px;margin:0;padding:0}
+        nav a{text-decoration:none;color:var(--ink);font-weight:500;position:relative;padding-bottom:5px;transition:color .3s ease}
+        nav a::after{content:'';position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--sec);transition:width .3s ease}
+        nav a:hover{color:var(--pri)}
+        nav a:hover::after{width:100%}
+        nav a.active{color:var(--pri)}
+        nav a.active::after{width:100%}
         .wrap{max-width:900px;margin:0 auto;padding:20px}
         h1{margin:10px 0 16px;color:var(--pri)}
         .panel{background:var(--panel);border-radius:12px;box-shadow:var(--sh);padding:16px;margin:14px 0}
@@ -59,6 +80,26 @@ $posts = $pRepo->all();
     </style>
 </head>
 <body>
+<header>
+    <div class="container">
+        <a href="../index.php" class="logo">École Sup.</a>
+        <nav>
+            <ul>
+                <li><a href="../index.php">Accueil</a></li>
+                <li><a href="formations.php">Formations</a></li>
+                <li><a href="entreprises.php">Entreprises</a></li>
+                <li><a href="supportContact.php">Contact</a></li>
+                <?php if ($userId > 0): ?>
+                    <li><a class="active" href="forum.php">Forum</a></li>
+                    <li><a href="?deco=true">Déconnexion</a></li>
+                <?php else: ?>
+                    <li><a href="connexion.php">Connexion</a></li>
+                    <li><a href="inscription.php">Inscription</a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+</header>
 <div class="wrap">
     <h1>Forum — canal général</h1>
 
@@ -90,16 +131,47 @@ $posts = $pRepo->all();
             <?php
             $replies = $rRepo->forPost((int)$p->getIdPost());
             if ($replies):
+                // Regrouper par parent (null => 0)
+                $byParent = [];
+                foreach ($replies as $r) {
+                    $pid = $r->getParentId() ?? 0;
+                    $byParent[$pid][] = $r;
+                }
+
+                $top = $byParent[0] ?? [];
                 ?>
                 <div class="reply">
                     <strong>Réponses (<?= count($replies) ?>)</strong>
-                    <?php foreach ($replies as $r): ?>
+                    <?php foreach ($top as $r): ?>
                         <div class="item">
                             <div class="meta">
                                 Le <?= htmlspecialchars((string)$r->getDateCreation()) ?>
                                 — utilisateur #<?= (int)$r->getRefUser() ?>
                             </div>
                             <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
+                            <?php if ($userId > 0): ?>
+                                <form class="reply" method="post" action="forum.php#post-<?= (int)$p->getIdPost() ?>">
+                                    <input type="hidden" name="action" value="reply">
+                                    <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
+                                    <input type="hidden" name="parent_id" value="<?= (int)$r->getIdReply() ?>">
+                                    <textarea name="contenue" rows="2" placeholder="Répondre à cette réponse…" required></textarea>
+                                    <button class="btn" type="submit">Répondre</button>
+                                </form>
+                            <?php endif; ?>
+
+                            <?php if (!empty($byParent[(int)$r->getIdReply()] ?? [])): ?>
+                                <div class="reply" style="margin-left:14px">
+                                    <?php foreach ($byParent[(int)$r->getIdReply()] as $c): ?>
+                                        <div class="item">
+                                            <div class="meta">
+                                                Le <?= htmlspecialchars((string)$c->getDateCreation()) ?>
+                                                — utilisateur #<?= (int)$c->getRefUser() ?>
+                                            </div>
+                                            <div><?= nl2br(htmlspecialchars($c->getContenue())) ?></div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

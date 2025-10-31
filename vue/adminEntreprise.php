@@ -115,7 +115,7 @@ $entreprises = $entrepriseRepo->listeEntreprise();
                 <td><?= date('d/m/Y', strtotime($entreprise->getDateInscription())) ?></td>
                 <td class="text-center">
                     <a href="detailEntreprise.php?id=<?= $entreprise->getIdEntreprise() ?>" class="badge">
-                        <?= $entreprise->nombre_offres ?? '0' ?> offre(s)
+                        <?= $entreprise->getNombreOffres() ?? '0' ?> offre(s)
                     </a>
                 </td>
                 <td class="actions">

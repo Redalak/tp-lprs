@@ -107,7 +107,7 @@ class EntrepriseRepo
                 'dateInscription' => $row['date_inscription'],
                 'refOffre' => $row['ref_offre']
             ]);
-            $entreprise->nombre_offres = (int)$row['nombre_offres'];
+            $entreprise->setNombreOffres((int)$row['nombre_offres']);
             $entreprises[] = $entreprise;
         }
 

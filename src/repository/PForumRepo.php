@@ -8,54 +8,83 @@ use modele\PForum;
 
 class PForumRepo {
     private string $table = 'p_forum';
+    private ?array $cols = null;
 
     private function pdo(): \PDO {
         $bdd = new \bdd\Bdd();
         return $bdd->getBdd();
     }
 
-    private const PK      = 'id_p_forum';
-    private const USER    = 'ref_user';
-    private const TITLE   = 'titre';
-    private const BODY    = 'contenue';
-    private const CREATED = 'date_creation';
+    /** Detecte les vrais noms de colonnes (tolérant : id / id_p_forum / ...). */
+    private function detect(): void {
+        if ($this->cols !== null) return;
+
+        $pdo    = $this->pdo();
+        $fields = $pdo->query("SHOW COLUMNS FROM {$this->table}")->fetchAll(\PDO::FETCH_ASSOC);
+        $names  = array_map(fn($f) => $f['Field'], $fields);
+
+        $this->cols = [
+            'id'    => $this->first($names, ['id_p_forum', 'id', 'id_post', 'idp_forum']),
+            'user'  => $this->first($names, ['ref_user', 'user_id', 'author', 'id_user']),
+            'title' => $this->first($names, ['titre', 'title']),
+            'body'  => $this->first($names, ['contenue', 'contenu', 'content', 'message', 'body']),
+            'date'  => $this->first($names, ['date_creation', 'created_at', 'createdAt', 'date_create']),
+        ];
+    }
+
+    private function first(array $names, array $candidates): string {
+        foreach ($candidates as $c) {
+            if (in_array($c, $names, true)) return $c;
+        }
+        // Dernier recours : première colonne existante pour éviter l'erreur SQL
+        return $names[0] ?? '';
+    }
 
     public function all(): array {
-        $pdo = $this->pdo();
-        $sql = "SELECT `".self::PK."` AS idPost,
-                       `".self::USER."` AS refUser,
-                       `".self::TITLE."` AS titre,
-                       `".self::BODY."` AS contenue,
-                       `".self::CREATED."` AS dateCreation
-                FROM {$this->table}
-                ORDER BY `".self::CREATED."` DESC";
-        $rows = $pdo->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map(fn($r) => new PForum($r), $rows);
+        $this->detect();
+        $pdo   = $this->pdo();
+        $order = $this->cols['date'] ?: $this->cols['id'];
+        $q = $pdo->query("SELECT * FROM {$this->table} ORDER BY `{$order}` DESC");
+        $rows = $q->fetchAll(\PDO::FETCH_ASSOC);
+
+        return array_map(function ($r) {
+            return new PForum([
+                'idPost'       => $r[$this->cols['id']]   ?? null,
+                'refUser'      => $r[$this->cols['user']] ?? null,
+                'titre'        => $r[$this->cols['title']]?? '',
+                'contenue'     => $r[$this->cols['body']] ?? '',
+                'dateCreation' => $r[$this->cols['date']] ?? null,
+            ]);
+        }, $rows);
     }
 
     public function find(int $id): ?PForum {
+        $this->detect();
         $pdo = $this->pdo();
-        $st = $pdo->prepare(
-            "SELECT `".self::PK."` AS idPost,
-                    `".self::USER."` AS refUser,
-                    `".self::TITLE."` AS titre,
-                    `".self::BODY."` AS contenue,
-                    `".self::CREATED."` AS dateCreation
-             FROM {$this->table}
-             WHERE `".self::PK."` = ?"
-        );
+        $st  = $pdo->prepare("SELECT * FROM {$this->table} WHERE `{$this->cols['id']}` = ?");
         $st->execute([$id]);
         $r = $st->fetch(\PDO::FETCH_ASSOC);
-        return $r ? new PForum($r) : null;
+
+        if (!$r) return null;
+
+        return new PForum([
+            'idPost'       => $r[$this->cols['id']]   ?? null,
+            'refUser'      => $r[$this->cols['user']] ?? null,
+            'titre'        => $r[$this->cols['title']]?? '',
+            'contenue'     => $r[$this->cols['body']] ?? '',
+            'dateCreation' => $r[$this->cols['date']] ?? null,
+        ]);
     }
 
     public function create(int $refUser, string $titre, string $contenue): PForum {
+        $this->detect();
         $pdo = $this->pdo();
         $st  = $pdo->prepare(
-            "INSERT INTO {$this->table} (`".self::USER."`,`".self::TITLE."`,`".self::BODY."`)
+            "INSERT INTO {$this->table} (`{$this->cols['user']}`, `{$this->cols['title']}`, `{$this->cols['body']}`)
              VALUES (?,?,?)"
         );
         $st->execute([$refUser, $titre, $contenue]);
-        return $this->find((int)$pdo->lastInsertId());
+        $id = (int)$pdo->lastInsertId();
+        return $this->find($id);
     }
 }

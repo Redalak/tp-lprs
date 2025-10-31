@@ -4,6 +4,7 @@ namespace modele;
 class RForum {
     private $idReply;
     private $postId;
+    private $parentId; // réponse parente (optionnel)
     private $contenue;
     private $dateCreation;
     private $refUser;
@@ -22,6 +23,9 @@ class RForum {
 
     public function getPostId(){ return $this->postId; }
     public function setPostId($v){ $this->postId = (int)$v; }
+
+    public function getParentId(){ return $this->parentId; }
+    public function setParentId($v){ $this->parentId = $v !== null ? (int)$v : null; }
 
     public function getContenue(){ return $this->contenue; }
     public function setContenue($v){ $this->contenue = $v; }
