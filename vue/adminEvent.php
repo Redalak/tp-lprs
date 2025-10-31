@@ -6,6 +6,7 @@ use modele\Event;
 
 $eventRepo = new EventRepo();
 $events = $eventRepo->listeEvent();
+$prochains = $eventRepo->getProchainsEvents(3);
 
 // Traitement du formulaire de création
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
@@ -73,6 +74,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i> Gestion des événements de l'école.
         </div>
+
+        <section class="mt-4">
+            <h2>Événements à venir (3 prochains)</h2>
+            <div class="table-responsive">
+                <?php if (!empty($prochains)): ?>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Type</th>
+                            <th>Lieu</th>
+                            <th>Date</th>
+                            <th>État</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach($prochains as $ev): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($ev->getTitre()) ?></td>
+                                <td><?= htmlspecialchars($ev->getType()) ?></td>
+                                <td><?= htmlspecialchars($ev->getLieu()) ?></td>
+                                <td><?= date('d/m/Y H:i', strtotime($ev->getDateEvent())) ?></td>
+                                <td>
+                                    <span class="badge <?= $ev->getEtat() === 'publie' ? 'badge-success' : 'badge-secondary' ?>">
+                                        <?= ucfirst(htmlspecialchars($ev->getEtat())) ?>
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <a href="modifEvent.php?id=<?= $ev->getIdEvent() ?>" class="btn btn-sm btn-primary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="suppEvent.php?id=<?= $ev->getIdEvent() ?>" class="btn btn-sm btn-danger" title="Supprimer" onclick="return confirm('Voulez-vous vraiment supprimer cet événement ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Aucun événement à venir.</div>
+                <?php endif; ?>
+            </div>
+        </section>
 
         <div class="table-responsive">
             <table>

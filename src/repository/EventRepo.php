@@ -123,6 +123,35 @@ class EventRepo
         
         return $events;
     }
+
+    /**
+     * Récupère les prochains événements (exclut les événements passés)
+     * Triés du plus proche au plus lointain et limités en nombre.
+     */
+    public function getProchainsEvents(int $limit = 3): array {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $stmt = $database->prepare('SELECT * FROM event WHERE date_event >= NOW() ORDER BY date_event ASC LIMIT :limit');
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $events = [];
+        foreach ($rows as $row) {
+            $events[] = new Event([
+                'idEvent'       => $row['id_evenement'],
+                'type'          => $row['type'],
+                'titre'         => $row['titre'],
+                'description'   => $row['description'],
+                'lieu'          => $row['lieu'],
+                'nombrePlace'   => $row['nombre_place'],
+                'dateEvent'     => $row['date_event'],
+                'etat'          => $row['etat'],
+                'ref_user'      => $row['ref_user']
+            ]);
+        }
+        return $events;
+    }
     
     /**
      * Vérifie si un événement appartient à un utilisateur
