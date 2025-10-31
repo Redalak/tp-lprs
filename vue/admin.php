@@ -217,17 +217,17 @@ $nowLabel = date('d/m/Y H:i');
         <div class="quick-card">
             <h3>Formations</h3>
             <p>Catalogue, matières et intervenants.</p>
-            <a href="adminFormations.php">Gérer les formations</a>
+            <a href="adminFormation.php">Gérer les formations</a>
         </div>
         <div class="quick-card">
             <h3>Support & Contact</h3>
             <p>Tickets et messages entrants.</p>
-            <a href="adminSupport.php">Gérer le support</a>
+            <a href="supportContact.php">Gérer le support</a>
         </div>
         <div class="quick-card">
             <h3>Gestion</h3>
             <p>Options générales du site.</p>
-            <a href="adminGestion.php">Ouvrir les paramètres</a>
+            <a href="admin.php">Ouvrir les paramètres</a>
         </div>
     </div>
 </div>

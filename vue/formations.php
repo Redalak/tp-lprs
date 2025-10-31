@@ -6,6 +6,55 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
     exit;
 }
 $isLoggedIn = !empty($_SESSION['id_user']);
+// Détection admin et chargement des formations
+require_once __DIR__ . '/../src/repository/UserRepo.php';
+require_once __DIR__ . '/../src/repository/FormationRepo.php';
+require_once __DIR__ . '/../src/modele/Formation.php';
+
+use repository\UserRepo;
+use repository\FormationRepo;
+use modele\formation;
+
+$isAdmin = false;
+$user = null;
+if ($isLoggedIn) {
+    $uRepo = new UserRepo();
+    $user = $uRepo->getUserById((int)$_SESSION['id_user']);
+    if ($user && method_exists($user, 'getRole')) {
+        $isAdmin = strtolower((string)$user->getRole()) === 'admin';
+    }
+}
+
+$fRepo = new FormationRepo();
+
+// Gestion des actions admin (CRUD)
+if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'create') {
+        $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        if ($nom !== '') {
+            $f = new formation(['nomformation' => $nom]);
+            $fRepo->ajoutFormation($f);
+        }
+        header('Location: formations.php'); exit;
+    }
+    if ($action === 'update') {
+        $id  = (int)($_POST['id_formation'] ?? 0);
+        $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        if ($id > 0 && $nom !== '') {
+            $f = new formation(['idformation' => $id, 'nomformation' => $nom]);
+            $fRepo->modifFormation($f);
+        }
+        header('Location: formations.php'); exit;
+    }
+    if ($action === 'delete') {
+        $id = (int)($_POST['id_formation'] ?? 0);
+        if ($id > 0) { $fRepo->suppFormation($id); }
+        header('Location: formations.php'); exit;
+    }
+}
+
+$formations = $fRepo->listeFormation();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -172,77 +221,46 @@ $isLoggedIn = !empty($_SESSION['id_user']);
 
 <div class="container">
     <div class="grid">
-        <!-- Cartes formations -->
-        <article class="card">
-            <span class="badge">Bac pro</span>
-            <h3>TRPM — Technicien de Réalisation de Produits Mécaniques</h3>
-            <p>Maîtrisez l’usinage, l’assemblage et les procédés de fabrication industrielle.</p>
-            <div class="meta">
-                <span>2 ans</span><span>Ateliers</span><span>Stage</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">Bac pro</span>
-            <h3>MSPC — Maintenance des Systèmes de Production Connectés</h3>
-            <p>Diagnostic, capteurs, GMAO : devenez le pilier de la disponibilité des lignes.</p>
-            <div class="meta">
-                <span>2 ans</span><span>TP</span><span>Alternance</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">Bac pro</span>
-            <h3>CIEL — Conduite et Innovation en Équipement Logistique</h3>
-            <p>Planification des flux, automatisation et gestion de stock avancée.</p>
-            <div class="meta">
-                <span>2 ans</span><span>Logistique</span><span>Stage</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">Bac tech</span>
-            <h3>STI2D — Sciences & Technologies de l’Industrie et du DD</h3>
-            <p>Innovation, énergies, éco-conception : préparez les métiers de demain.</p>
-            <div class="meta">
-                <span>2 ans</span><span>Innovation</span><span>Projets</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">BTS</span>
-            <h3>CPRP — Conception des Processus de Réalisation de Produits</h3>
-            <p>Industrialisation, CAO/FAO et optimisation des process de production.</p>
-            <div class="meta">
-                <span>2 ans</span><span>CAO/FAO</span><span>Alternance</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">BTS</span>
-            <h3>MSPC — Maintenance des Systèmes de Production Connectés</h3>
-            <p>Automates, IoT industriel, supervision : montez en expertise maintenance.</p>
-            <div class="meta">
-                <span>2 ans</span><span>Automates</span><span>TP</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
-
-        <article class="card">
-            <span class="badge">BTS</span>
-            <h3>SIO — Services Informatiques aux Organisations</h3>
-            <p>Dév. (SLAM) ou Réseaux (SISR) : projets réels, sécurité et bonnes pratiques.</p>
-            <div class="meta">
-                <span>2 ans</span><span>SLAM/SISR</span><span>Projets</span>
-            </div>
-            <div class="actions"><a href="#" class="btn">Voir détails</a></div>
-        </article>
+        <?php if (!empty($formations)): ?>
+            <?php foreach ($formations as $f): ?>
+                <article class="card">
+                    <span class="badge">Formation</span>
+                    <h3><?= htmlspecialchars($f->getNomformation()) ?></h3>
+                    <p>Programme disponible auprès de l'administration.</p>
+                    <?php if ($isAdmin): ?>
+                        <div class="actions" style="display:flex; gap:8px; flex-wrap:wrap">
+                            <form method="post" action="formations.php" style="display:flex; gap:8px; align-items:center">
+                                <input type="hidden" name="action" value="update">
+                                <input type="hidden" name="id_formation" value="<?= (int)$f->getIdformation() ?>">
+                                <input type="text" name="nom_formation" value="<?= htmlspecialchars($f->getNomformation()) ?>" placeholder="Nom" required>
+                                <button class="btn" type="submit">Modifier</button>
+                            </form>
+                            <form method="post" action="formations.php" onsubmit="return confirm('Supprimer cette formation ?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id_formation" value="<?= (int)$f->getIdformation() ?>">
+                                <button class="btn" type="submit" style="background:#b31d1d">Supprimer</button>
+                            </form>
+                        </div>
+                    <?php else: ?>
+                        <div class="actions"><a href="#" class="btn">Voir détails</a></div>
+                    <?php endif; ?>
+                </article>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p>Aucune formation disponible pour le moment.</p>
+        <?php endif; ?>
     </div>
+
+    <?php if ($isAdmin): ?>
+        <div style="margin-top:28px; padding:16px; background:#fff; border:1px solid #e9eef0; border-radius:12px; box-shadow:var(--shadow)">
+            <h3 style="margin-top:0; color:var(--primary-color)">Ajouter une formation</h3>
+            <form method="post" action="formations.php" style="display:flex; gap:12px; flex-wrap:wrap">
+                <input type="hidden" name="action" value="create">
+                <input type="text" name="nom_formation" placeholder="Nom de la formation" required>
+                <button class="btn" type="submit">Ajouter</button>
+            </form>
+        </div>
+    <?php endif; ?>
 </div>
 
 <footer>
