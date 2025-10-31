@@ -10,15 +10,8 @@ if (!isset($_GET['id'])) {
 
 $idEvent = (int)$_GET['id'];
 
-// Vérifier que l'événement existe avant de supprimer
-$event = null;
-foreach($eventRepo->listeEvent() as $e) {
-    if ($e->getIdEvent() === $idEvent) {
-        $event = $e;
-        break;
-    }
-}
-
+// Vérifier que l'événement existe (sans filtrer les passés)
+$event = $eventRepo->getEvenementById($idEvent);
 if (!$event) {
     die('Événement introuvable');
 }
@@ -26,6 +19,6 @@ if (!$event) {
 // Suppression de l'événement
 $eventRepo->suppEvent($idEvent);
 
-// Redirection vers la liste des événements
-header('Location: listeEvents.php');
+// Redirection vers la page d'administration des événements
+header('Location: adminEvent.php');
 exit;
