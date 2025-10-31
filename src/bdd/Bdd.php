@@ -5,7 +5,7 @@ use PDO;
 use PDOException;
 class Bdd {
     private $pdo = null;
-    const DB_NAME = 'Tplprs';
+    const DB_NAME = 'tplprs';
     public function getBdd(): PDO {
         if ($this->pdo instanceof PDO) {
             return $this->pdo;

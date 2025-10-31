@@ -1,81 +1,121 @@
 <?php
-require_once __DIR__ . '/../src/bdd/Bdd.php';
+declare(strict_types=1);
+session_start();
+
 require_once __DIR__ . '/../src/modele/PForum.php';
 require_once __DIR__ . '/../src/modele/RForum.php';
 require_once __DIR__ . '/../src/repository/PForumRepo.php';
 require_once __DIR__ . '/../src/repository/RForumRepo.php';
 
-use repository\PForumRepo;
-use repository\RForumRepo;
+$pRepo = new \repository\PForumRepo();
+$rRepo = new \repository\RForumRepo();
 
-function s($v){ return htmlspecialchars((string)$v, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8'); }
+$userId   = (int)($_SESSION['id_user'] ?? 0);
+$userName = trim((string)($_SESSION['prenom'] ?? '') . ' ' . (string)($_SESSION['nom'] ?? ''));
 
-$pRepo = new PForumRepo();
-$rRepo = new RForumRepo();
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$post = $id ? $pRepo->find($id) : null;
-$replies = $post ? $rRepo->forPost($id) : [];
-$posts = $id ? [] : $pRepo->all();
+/* Création d’un post */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post') {
+    $titre    = trim((string)($_POST['titre'] ?? ''));
+    $contenue = trim((string)($_POST['contenue'] ?? ''));
+    if ($userId > 0 && $titre !== '' && $contenue !== '') {
+        $pRepo->create($userId, $titre, $contenue);
+    }
+    header('Location: forum.php'); exit;
+}
+
+/* Création d’une réponse */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply') {
+    $postId   = (int)($_POST['post_id'] ?? 0);
+    $contenue = trim((string)($_POST['contenue'] ?? ''));
+    if ($userId > 0 && $postId > 0 && $contenue !== '') {
+        $rRepo->create($postId, $userId, $contenue);
+    }
+    header('Location: forum.php#post-' . $postId); exit;
+}
+
+/* Liste des posts */
+$posts = $pRepo->all();
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Forum – Section générale</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Forum général</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { margin:0; font-family: system-ui, Segoe UI, Roboto, Arial; background:#0b1020; color:#e8ecf5 }
-        .container{max-width:900px;margin:0 auto;padding:24px}
-        .card{background:#151b2e;padding:16px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2);margin-bottom:16px}
-        .input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #2a3356;background:#0e1430;color:#e8ecf5}
-        button{padding:10px 14px;border:none;border-radius:10px;background:#7aa2ff;color:#07122b;font-weight:700;cursor:pointer}
-        .small{color:#9aa4bf;font-size:12px}
-        .a{color:#fff;text-decoration:none}
-        hr{border:0;border-top:1px solid #263056;margin:16px 0}
+        :root{--pri:#0A4D68;--sec:#088395;--bg:#f7f8fa;--panel:#fff;--ink:#222;--mut:#6b7280;--sh:0 6px 24px rgba(0,0,0,.06)}
+        *{box-sizing:border-box} body{margin:0;font-family:Poppins,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+        .wrap{max-width:900px;margin:0 auto;padding:20px}
+        h1{margin:10px 0 16px;color:var(--pri)}
+        .panel{background:var(--panel);border-radius:12px;box-shadow:var(--sh);padding:16px;margin:14px 0}
+        .meta{color:var(--mut);font-size:.9rem;margin-bottom:8px}
+        form input, form textarea{width:100%;padding:10px 12px;margin:8px 0;border:1px solid #e5e7eb;border-radius:10px;font:inherit}
+        .btn{display:inline-block;background:var(--sec);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+        .btn:hover{background:var(--pri)}
+        .reply{margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb}
+        .reply .item{background:#f9fafb;border:1px solid #eef2f7;border-radius:10px;padding:10px 12px;margin:8px 0}
     </style>
 </head>
 <body>
-<div class="container">
-  <?php if(!$post): ?>
-    <div class="card">
-      <h2 style="margin:0 0 12px;">Forum – Section générale</h2>
-      <form method="post" action="../src/traitement/gestionForum.php">
-        <input type="hidden" name="action" value="new_post">
-        <input class="input" name="author" placeholder="Votre nom" required>
-        <input class="input" name="title" placeholder="Titre" required style="margin-top:8px;">
-        <textarea class="input" name="content" rows="6" placeholder="Contenu" required style="margin-top:8px;"></textarea>
-        <button type="submit" style="margin-top:10px;">Publier</button>
-      </form>
-    </div>
-    <?php foreach($posts as $p): ?>
-      <div class="card">
-        <h3 style="margin:0"><a class="a" href="?id=<?=s($p->getIdPost())?>"><?=s($p->getTitre())?></a></h3>
-        <div class="small">par <?=s($p->getAuthor())?> • <?=date('d/m/Y H:i', strtotime($p->getDateCreation()))?></div>
-      </div>
+<div class="wrap">
+    <h1>Forum — canal général</h1>
+
+    <?php if ($userId > 0): ?>
+        <div class="panel">
+            <h3>Nouveau post</h3>
+            <form method="post" action="forum.php">
+                <input type="hidden" name="action" value="post">
+                <input type="text" name="titre" placeholder="Titre" required>
+                <textarea name="contenue" rows="5" placeholder="Votre message…" required></textarea>
+                <button class="btn" type="submit">Publier</button>
+            </form>
+        </div>
+    <?php else: ?>
+        <div class="panel" style="background:#fff8e6;border:1px solid #ffe3a3">
+            Connectez-vous pour publier ou répondre.
+        </div>
+    <?php endif; ?>
+
+    <?php foreach ($posts as $p): ?>
+        <div id="post-<?= (int)$p->getIdPost() ?>" class="panel">
+            <div class="meta">
+                Posté le <?= htmlspecialchars((string)$p->getDateCreation()) ?>
+                — utilisateur #<?= (int)$p->getRefUser() ?>
+            </div>
+            <h3 style="margin:0 0 6px"><?= htmlspecialchars($p->getTitre()) ?></h3>
+            <p style="margin:0 0 10px"><?= nl2br(htmlspecialchars($p->getContenue())) ?></p>
+
+            <?php
+            $replies = $rRepo->forPost((int)$p->getIdPost());
+            if ($replies):
+                ?>
+                <div class="reply">
+                    <strong>Réponses (<?= count($replies) ?>)</strong>
+                    <?php foreach ($replies as $r): ?>
+                        <div class="item">
+                            <div class="meta">
+                                Le <?= htmlspecialchars((string)$r->getDateCreation()) ?>
+                                — utilisateur #<?= (int)$r->getRefUser() ?>
+                            </div>
+                            <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($userId > 0): ?>
+                <form class="reply" method="post" action="forum.php#post-<?= (int)$p->getIdPost() ?>">
+                    <input type="hidden" name="action" value="reply">
+                    <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
+                    <textarea name="contenue" rows="3" placeholder="Répondre…" required></textarea>
+                    <button class="btn" type="submit">Répondre</button>
+                </form>
+            <?php endif; ?>
+        </div>
     <?php endforeach; ?>
-  <?php else: ?>
-    <div class="card">
-      <a class="a" href="forum.php">← Retour</a>
-      <h2 style="margin:8px 0 0;"><?=s($post->getTitre())?></h2>
-      <div class="small">par <?=s($post->getAuthor())?> • <?=date('d/m/Y H:i', strtotime($post->getDateCreation()))?></div>
-      <hr>
-      <div><?=nl2br(s($post->getContenue()))?></div>
-    </div>
-    <div class="card">
-      <h3 style="margin:0 0 8px;">Réponses (<?=count($replies)?>)</h3>
-      <?php foreach($replies as $r): ?>
-        <div class="card"><div class="small">par <?=s($r->getAuthor())?> • <?=date('d/m/Y H:i', strtotime($r->getDateCreation()))?></div><div><?=nl2br(s($r->getContenue()))?></div></div>
-      <?php endforeach; ?>
-      <hr>
-      <form method="post" action="../src/traitement/gestionForum.php">
-        <input type="hidden" name="action" value="new_reply">
-        <input type="hidden" name="post_id" value="<?=s($post->getIdPost())?>">
-        <input class="input" name="author" placeholder="Votre nom" required>
-        <textarea class="input" name="content" rows="5" placeholder="Votre réponse" required style="margin-top:8px;"></textarea>
-        <button type="submit" style="margin-top:10px;">Répondre</button>
-      </form>
-    </div>
-  <?php endif; ?>
+
 </div>
 </body>
 </html>

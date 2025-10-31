@@ -1,109 +1,34 @@
 <?php
 namespace modele;
 
-class RForum{
-    private $idRepForum;
+class RForum {
+    private $idReply;
+    private $postId;
     private $contenue;
     private $dateCreation;
-    private $refPostForum;
     private $refUser;
-    public function __construct(array $donnees)
-    {
-        $this->hydrate($donnees);
-    }
 
-    private function hydrate(array $donnees)
-    {
-        foreach ($donnees as $key => $value) {
-            // On récupère le nom du setter correspondant à l'attribut
-            $method = 'set' . ucfirst($key);
+    public function __construct(array $d){ $this->hydrate($d); }
 
-            // Si le setter correspondant existe.
-            if (method_exists($this, $method)) {
-                // On appelle le setter
-                $this->$method($value);
-            }
+    private function hydrate(array $d){
+        foreach($d as $k=>$v){
+            $m = 'set'.str_replace(' ', '', ucwords(str_replace('_',' ',$k)));
+            if(method_exists($this,$m)) $this->$m($v);
         }
     }
 
-    /**
-     * @return mixed
-     */
-    public function getIdRepForum()
-    {
-        return $this->idRepForum;
-    }
+    public function getIdReply(){ return $this->idReply; }
+    public function setIdReply($v){ $this->idReply = (int)$v; }
 
-    /**
-     * @param mixed $idRepForum
-     */
-    public function setIdRepForum($idRepForum): void
-    {
-        $this->idRepForum = $idRepForum;
-    }
+    public function getPostId(){ return $this->postId; }
+    public function setPostId($v){ $this->postId = (int)$v; }
 
-    /**
-     * @return mixed
-     */
-    public function getContenue()
-    {
-        return $this->contenue;
-    }
+    public function getContenue(){ return $this->contenue; }
+    public function setContenue($v){ $this->contenue = $v; }
 
-    /**
-     * @param mixed $contenue
-     */
-    public function setContenue($contenue): void
-    {
-        $this->contenue = $contenue;
-    }
+    public function getDateCreation(){ return $this->dateCreation; }
+    public function setDateCreation($v){ $this->dateCreation = $v; }
 
-    /**
-     * @return mixed
-     */
-    public function getDateCreation()
-    {
-        return $this->dateCreation;
-    }
-
-    /**
-     * @param mixed $dateCreation
-     */
-    public function setDateCreation($dateCreation): void
-    {
-        $this->dateCreation = $dateCreation;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRefPostForum()
-    {
-        return $this->refPostForum;
-    }
-
-    /**
-     * @param mixed $refPostForum
-     */
-    public function setRefPostForum($refPostForum): void
-    {
-        $this->refPostForum = $refPostForum;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRefUser()
-    {
-        return $this->refUser;
-    }
-
-    /**
-     * @param mixed $refUser
-     */
-    public function setRefUser($refUser): void
-    {
-        $this->refUser = $refUser;
-    }
-
+    public function getRefUser(){ return $this->refUser; }
+    public function setRefUser($v){ $this->refUser = (int)$v; }
 }
