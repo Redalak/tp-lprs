@@ -473,18 +473,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary" 
-                                                onclick="editerEvenement(<?= htmlspecialchars(json_encode([
-                                                    'idEvent' => $event->getIdEvent(),
-                                                    'titre' => $event->getTitre(),
-                                                    'description' => $event->getDescription(),
-                                                    'type' => $event->getType(),
-                                                    'lieu' => $event->getLieu(),
-                                                    'nombre_place' => $event->getNombrePlace(),
-                                                    'date_event' => $dateEvent->format('Y-m-d\TH:i')
-                                                ]), JSON_HEX_APOS | JSON_HEX_QUOT) ?>)">
+                                        <a href="modifUtilisateurEvent.php?id=<?= $event->getRefUser() ?>" 
+                                           class="btn btn-outline-primary"
+                                           title="Modifier l'événement">
                                             <i class="bi bi-pencil"></i>
-                                        </button>
+                                        </a>
                                         <form method="post" class="d-inline" 
                                               onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
                                             <input type="hidden" name="event_id" value="<?= $event->getIdEvent() ?>">
