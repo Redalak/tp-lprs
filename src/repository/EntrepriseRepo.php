@@ -150,7 +150,7 @@ class EntrepriseRepo
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
-        $req = $database->prepare('SELECT * FROM offre WHERE ref_entreprise = :id_entreprise ORDER BY date_creation DESC');
+        $req = $database->prepare('SELECT * FROM offre WHERE ref_entreprise = :id_entreprise AND etat NOT IN ("ferme", "brouillon") ORDER BY date_creation DESC');
         $req->execute(['id_entreprise' => $id_entreprise]);
 
         $offres = [];
