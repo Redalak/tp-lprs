@@ -71,30 +71,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageClass = "error";
         } else {
             try {
-                // Récupération des données du formulaire
+                // Récupération des données du formulaire (clés alignées avec le modèle Event)
                 $eventData = [
-                    'type' => $_POST['type'] ?? '',
-                    'titre' => $_POST['titre'] ?? '',
+                    'type'        => $_POST['type'] ?? '',
+                    'titre'       => $_POST['titre'] ?? '',
                     'description' => $_POST['description'] ?? '',
-                    'lieu' => $_POST['lieu'] ?? '',
-                    'nombre_place' => (int)($_POST['nombre_place'] ?? 0),
-                    'date_event' => $_POST['date_event'] ?? '',
-                    'etat' => 'publie', // Par défaut à 'publie' pour les événements créés depuis le profil
-                    'ref_user' => $userId
+                    'lieu'        => $_POST['lieu'] ?? '',
+                    'nombrePlace' => (int)($_POST['nombre_place'] ?? 0),
+                    'dateEvent'   => $_POST['date_event'] ?? '',
+                    'etat'        => 'publie', // créé depuis profil => publié
+                    'ref_user'    => $userId
                 ];
-                
-                // Validation des champs obligatoires
-                $missingFields = [];
-                if (empty($eventData['titre'])) $missingFields[] = 'titre';
-                if (empty($eventData['type'])) $missingFields[] = 'type';
-                if (empty($eventData['date_event'])) $missingFields[] = 'date_event';
-                if (empty($eventData['lieu'])) $missingFields[] = 'lieu';
-                if (empty($eventData['nombre_place'])) $missingFields[] = 'nombre_place';
-                
-                if (!empty($missingFields)) {
-                    throw new Exception("Les champs suivants sont obligatoires : " . implode(', ', $missingFields));
+
+                // Normaliser la date HTML5 ("YYYY-MM-DDTHH:MM") vers MySQL ("YYYY-MM-DD HH:MM:SS")
+                if ($eventData['dateEvent'] !== '') {
+                    $dt = str_replace('T', ' ', $eventData['dateEvent']);
+                    // Ajouter ":00" si les secondes manquent
+                    if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $dt)) {
+                        $dt .= ':00';
+                    }
+                    $eventData['dateEvent'] = $dt;
                 }
-                
+
+                // Validation basique
+                $missingFields = [];
+                if ($eventData['titre'] === '') $missingFields[] = 'titre';
+                if ($eventData['type'] === '') $missingFields[] = 'type';
+                if ($eventData['dateEvent'] === '') $missingFields[] = 'date_event';
+                if ($eventData['lieu'] === '') $missingFields[] = 'lieu';
+                if ($eventData['nombrePlace'] <= 0) $missingFields[] = 'nombre_place (> 0)';
+                if (!empty($missingFields)) {
+                    throw new \Exception("Les champs suivants sont obligatoires : " . implode(', ', $missingFields));
+                }
+
                 if ($eventId) {
                     // Mise à jour
                     $event = new Event($eventData + ['idEvent' => $eventId]);
@@ -106,11 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $eventRepo->ajoutEvent($event);
                     $message = "L'événement a été créé avec succès.";
                 }
-                $messageClass = "success";
-                
+                $messageClass = 'success';
+
             } catch (\Exception $e) {
                 $message = "Erreur lors de la sauvegarde de l'événement : " . $e->getMessage();
-                $messageClass = "error";
+                $messageClass = 'error';
                 error_log("ERREUR CRITIQUE: " . $e->getMessage());
                 error_log("Stack trace: " . $e->getTraceAsString());
                 error_log("=== FIN TRACE ERREUR ===");
@@ -574,7 +583,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     <section class="mt-5">
         <h2>Créer un nouvel événement</h2>
         
-        <form method="post" action="/tp-lprs/src/traitement/ajoutEvent.php" class="form-container">
+        <form method="post" action="profilUser.php" class="form-container">
             <input type="hidden" name="ref_user" value="<?= htmlspecialchars($userId) ?>">
             <input type="hidden" name="etat" value="publie">
             <input type="hidden" name="sauvegarder_evenement" value="1">
