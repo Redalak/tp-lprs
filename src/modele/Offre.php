@@ -16,6 +16,7 @@ class offre
     private $etat;
     private $dateCreation;
     private $refEntreprise;
+    private $entreprise_nom;
 
     // --- Constructeur ---
     public function __construct(array $data = [])
@@ -78,4 +79,7 @@ class offre
 
     public function getRefEntreprise()  { return $this->refEntreprise; }
     public function setRefEntreprise($ref) { $this->refEntreprise = $ref; }
+    
+    public function getEntrepriseNom() { return $this->entreprise_nom; }
+    public function setEntrepriseNom($nom) { $this->entreprise_nom = $nom; }
 }

@@ -156,7 +156,7 @@ class OffreRepo
             // On crée l'objet offre à partir de la ligne BDD
             $o = new \modele\offre($row);
             if (isset($row['entreprise_nom'])) {
-                $o->entreprise_nom = $row['entreprise_nom'];
+                $o->setEntrepriseNom($row['entreprise_nom']);
             }
             $offres[] = $o;
         }
