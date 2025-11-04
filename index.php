@@ -245,9 +245,9 @@ if ($userLoggedIn) {
         <!-- Flèche précédente -->
         <div class="carousel-slide-wrapper">
             <div class="carousel-slide">
-                <img src="/assets/img/lycees-jpg-15782.jpg" alt="Étudiants en cours">
-                <img src="/assets/img/lycee-voltaire.jpg" alt="Vie étudiante">
-                <img src="/assets/img/LYCEE-I-472404164.jpg" alt="Diplômés">
+                <img src="/assets/img/façade-lycée-étoiles-1030x686.jpg" alt="Étudiants en cours">
+                <img src="/assets/img/images.jpeg" alt="Vie étudiante">
+                <img src="/assets/img/3EME-PREPAPRO.jpeg" alt="Diplômés">
             </div>
         </div>
         
