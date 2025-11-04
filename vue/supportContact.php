@@ -111,7 +111,7 @@ $isLoggedIn = !empty($_SESSION['id_user']);
             <ul>
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
-                <li><a href="entreprises.php">Entreprises</a></li>
+                <li><a href="entreprise.php">Entreprises</a></li>
                 <li><a class="active" href="supportContact.php">Contact</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="forum.php">Forum</a></li>
