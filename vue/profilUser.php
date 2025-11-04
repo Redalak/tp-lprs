@@ -319,22 +319,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             margin-top:10px;
         }
 
-        button {
-            margin-top:15px;
-            background:var(--secondary-color);
-            border:none;
-            color:white;
-            padding:12px;
-            cursor:pointer;
-            transition:background .2s ease, transform .1s ease;
-        .profil-card button:hover {
-            background-color: #0a4d68;
+        button[type="submit"] {
+            margin-top: 25px;
+            background: var(--secondary-color);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: background .2s ease, transform .1s ease;
         }
-            margin-top:25px;
-            color:var(--secondary-color);
-            text-decoration:none;
-            font-weight:500;
-            transition:color .2s ease;
+        
+        button[type="submit"]:hover {
+            background-color: #0a4d68;
+            transform: translateY(-1px);
         }
 
         a.back:hover { color:var(--primary-color); }
