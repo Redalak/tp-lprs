@@ -1,12 +1,24 @@
 <?php
 
 
+session_start();
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 use repository\UserRepo;
 use modele\User;
 
 $userRepo = new UserRepo();
 $users = $userRepo->listeUser();
+
+// Récupérer prénom/nom pour l'en-tête
+$prenom = $_SESSION['prenom'] ?? '';
+$nom    = $_SESSION['nom'] ?? '';
+if (!empty($_SESSION['id_user'])) {
+    try {
+        $u = $userRepo->getUserById((int)$_SESSION['id_user']);
+        if ($u && method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
+        if ($u && method_exists($u, 'getNom'))    { $nom    = $u->getNom(); }
+    } catch (\Throwable $e) {}
+}
 
 // Traitement du formulaire de création
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
@@ -65,6 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         .role-etudiant { background-color: #fff3e0; color: #f57c00; }
         .role-entreprise { background-color: #f3e5f5; color: #8e24aa; }
         .role-alumni { background-color: #e0f7fa; color: #00acc1; }
+        /* Dropdown profil minimal */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:#fff;min-width:220px;box-shadow:0 6px 24px rgba(0,0,0,.06);border-radius:12px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:#088395}
+        .profile-button:hover{background:#0A4D68}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -78,7 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 <li><a href="adminOffre.php">Offres</a></li>
                 <li><a href="adminEvent.php">Événements</a></li>
                 <li><a class="active" href="adminUser.php">Utilisateurs</a></li>
-                <li><a href="?deconnexion=1">Déconnexion</a></li>
+                <li class="profile-dropdown" style="margin-left:auto">
+                    <a href="profilUser.php" class="profile-icon">👤</a>
+                    <div class="dropdown-content">
+                        <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> <?= htmlspecialchars((string)$nom) ?> !</span>
+                        <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                        <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
+                    </div>
+                </li>
             </ul>
         </nav>
     </div>

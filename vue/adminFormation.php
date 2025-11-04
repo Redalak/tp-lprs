@@ -143,6 +143,18 @@ $nowLabel = date('d/m/Y H:i');
         table{width:100%;border-collapse:collapse}
         th,td{padding:12px;border-bottom:1px solid #eef2f4}
         thead th{background:#fafcfd;color:#335; font-weight:600}
+        /* Dropdown profil (aligné avec index) */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:var(--surface-color);min-width:220px;box-shadow:var(--shadow);border-radius:8px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:var(--secondary-color)}
+        .profile-button:hover{background:var(--primary-color)}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -157,8 +169,14 @@ $nowLabel = date('d/m/Y H:i');
                 <li><a class="active" href="adminFormation.php">Formations</a></li>
                 <li><a href="adminOffre.php">Offre</a></li>
                 <li><a href="adminUser.php">Utilisateur</a></li>
-                <li><a href="profilUser.php">Mon Profil</a></li>
-                <li><a href="../index.php?deco=true" style="color:#fff;background:var(--danger);padding:8px 12px;border-radius:6px">Déconnexion</a></li>
+                <li class="profile-dropdown" style="margin-left:auto">
+                    <a href="profilUser.php" class="profile-icon">👤</a>
+                    <div class="dropdown-content">
+                        <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> !</span>
+                        <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                        <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
+                    </div>
+                </li>
             </ul>
         </nav>
     </div>

@@ -13,12 +13,28 @@ require_once __DIR__ . '/../src/modele/PForum.php';
 require_once __DIR__ . '/../src/modele/RForum.php';
 require_once __DIR__ . '/../src/repository/PForumRepo.php';
 require_once __DIR__ . '/../src/repository/RForumRepo.php';
+require_once __DIR__ . '/../src/repository/UserRepo.php';
+use repository\UserRepo;
 
 $pRepo = new \repository\PForumRepo();
 $rRepo = new \repository\RForumRepo();
 
 $userId   = (int)($_SESSION['id_user'] ?? 0);
-$userName = trim((string)($_SESSION['prenom'] ?? '') . ' ' . (string)($_SESSION['nom'] ?? ''));
+// Récupérer prénom/nom pour le header dropdown
+$prenom = $_SESSION['prenom'] ?? '';
+$nom    = $_SESSION['nom'] ?? '';
+if ($userId > 0) {
+    try {
+        $uRepo = new UserRepo();
+        $u = $uRepo->getUserById($userId);
+        if ($u && method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
+        if ($u && method_exists($u, 'getNom'))    { $nom    = $u->getNom(); }
+    } catch (\Throwable $e) {}
+}
+$userName = trim((string)$prenom . ' ' . (string)$nom);
+if ($userName === '' || $userName === ' ') {
+    $userName = (string)($_SESSION['email'] ?? 'Mon compte');
+}
 
 /* Création d’un post */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post') {
@@ -77,6 +93,18 @@ $posts = $pRepo->all();
         .btn:hover{background:var(--pri)}
         .reply{margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb}
         .reply .item{background:#f9fafb;border:1px solid #eef2f7;border-radius:10px;padding:10px 12px;margin:8px 0}
+        /* Dropdown profil */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:#fff;min-width:220px;box-shadow:var(--sh);border-radius:12px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:var(--sec)}
+        .profile-button:hover{background:var(--pri)}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -88,10 +116,18 @@ $posts = $pRepo->all();
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <?php if ($userId > 0): ?>
                     <li><a class="active" href="forum.php">Forum</a></li>
-                    <li><a href="?deco=true">Déconnexion</a></li>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars((string)$userName) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
                 <?php else: ?>
                     <li><a href="connexion.php">Connexion</a></li>
                     <li><a href="inscription.php">Inscription</a></li>

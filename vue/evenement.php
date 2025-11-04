@@ -238,6 +238,18 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
             padding: 30px 20px;
             margin-top: 50px;
         }
+        /* Dropdown profil (minimal) */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:#fff;min-width:220px;box-shadow:var(--shadow);border-radius:12px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:var(--secondary-color)}
+        .profile-button:hover{background:var(--primary-color)}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -255,7 +267,14 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
 
                 <?php if (!empty($userLoggedIn)): ?>
                     <li><a href="forum.php">Forum</a></li>
-                    <li><a href="?deco=true">Déconnexion</a></li>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> <?= htmlspecialchars($userLoggedIn->getNom()) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
                 <?php else: ?>
                     <li><a href="connexion.php">Connexion</a></li>
                     <li><a href="inscription.php">Inscription</a></li>

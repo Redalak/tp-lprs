@@ -6,6 +6,20 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
     exit;
 }
 $isLoggedIn = !empty($_SESSION['id_user']);
+require_once __DIR__ . '/../src/repository/UserRepo.php';
+use repository\UserRepo;
+
+// Récupérer prénom/nom pour la salutation si connecté
+$prenom = $_SESSION['prenom'] ?? '';
+$nom    = $_SESSION['nom'] ?? '';
+if ($isLoggedIn) {
+    try {
+        $uRepo = new UserRepo();
+        $u = $uRepo->getUserById((int)$_SESSION['id_user']);
+        if ($u && method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
+        if ($u && method_exists($u, 'getNom'))    { $nom    = $u->getNom(); }
+    } catch (\Throwable $e) {}
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -100,6 +114,18 @@ $isLoggedIn = !empty($_SESSION['id_user']);
             background:var(--primary-color);color:var(--light-text-color);
             text-align:center;padding:40px 20px;margin-top:80px;
         }
+        /* Dropdown profil (aligné avec index) */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:var(--surface-color);min-width:220px;box-shadow:var(--shadow);border-radius:8px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:var(--secondary-color)}
+        .profile-button:hover{background:var(--primary-color)}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -112,10 +138,18 @@ $isLoggedIn = !empty($_SESSION['id_user']);
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="evenement.php">Evenements</a></li>
                 <li><a class="active" href="supportContact.php">Contact</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="forum.php">Forum</a></li>
-                    <li><a href="?deco=true">Déconnexion</a></li>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> <?= htmlspecialchars((string)$nom) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
                 <?php else: ?>
                     <li><a href="connexion.php">Connexion</a></li>
                     <li><a href="inscription.php">Inscription</a></li>

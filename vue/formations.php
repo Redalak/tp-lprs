@@ -17,11 +17,17 @@ use modele\formation;
 
 $isAdmin = false;
 $user = null;
+$prenom = $_SESSION['prenom'] ?? '';
+$nom    = $_SESSION['nom'] ?? '';
 if ($isLoggedIn) {
     $uRepo = new UserRepo();
     $user = $uRepo->getUserById((int)$_SESSION['id_user']);
     if ($user && method_exists($user, 'getRole')) {
         $isAdmin = strtolower((string)$user->getRole()) === 'admin';
+    }
+    if ($user) {
+        if (method_exists($user, 'getPrenom')) { $prenom = $user->getPrenom(); }
+        if (method_exists($user, 'getNom'))    { $nom    = $user->getNom(); }
     }
 }
 
@@ -191,6 +197,18 @@ $formations = $fRepo->listeFormation();
             background:var(--primary-color);color:var(--light-text-color);
             text-align:center;padding:40px 20px;margin-top:70px;
         }
+        /* Dropdown profil (aligné avec index) */
+        .profile-dropdown{position:relative;display:inline-block}
+        .profile-icon{font-size:1.5rem;cursor:pointer;padding:5px}
+        .profile-icon::after{display:none!important}
+        .dropdown-content{display:none;position:absolute;background:var(--surface-color);min-width:220px;box-shadow:var(--shadow);border-radius:12px;padding:20px;right:0;top:100%;z-index:1001;text-align:center}
+        .profile-dropdown:hover .dropdown-content{display:block}
+        .dropdown-content a{display:block;padding:10px 15px;margin-bottom:8px;border-radius:5px;text-decoration:none;font-weight:500;color:#fff!important}
+        .dropdown-content a::after{display:none}
+        .profile-button{background:var(--secondary-color)}
+        .profile-button:hover{background:var(--primary-color)}
+        .logout-button{background:#e74c3c}
+        .logout-button:hover{background:#c0392b}
     </style>
 </head>
 <body>
@@ -203,10 +221,18 @@ $formations = $fRepo->listeFormation();
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a class="active" href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="forum.php">Forum</a></li>
-                    <li><a href="?deco=true">Déconnexion</a></li>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> <?= htmlspecialchars((string)$nom) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
                 <?php else: ?>
                     <li><a href="connexion.php">Connexion</a></li>
                     <li><a href="inscription.php">Inscription</a></li>

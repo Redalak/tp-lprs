@@ -286,6 +286,7 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a class="active" href="../vue/entreprise.php">Entreprises</a></li>
+                <li><a class="active" href="../vue/evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
 
                 <?php if ($userLoggedIn): ?>
@@ -294,7 +295,7 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
                         <a href="#" class="profile-icon">👤</a>
                         <div class="dropdown-content">
                             <span>Bonjour, <?= htmlspecialchars($userLoggedIn->getPrenom()) ?> !</span>
-                            <a href="profil.php" class="profile-button">Mon Profil</a>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
                             <a href="?deco=true" class="logout-button">Déconnexion</a>
                         </div>
                     </li>
