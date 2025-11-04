@@ -245,11 +245,11 @@ if ($userLoggedIn) {
         <!-- Flèche précédente -->
         <div class="carousel-slide-wrapper">
             <div class="carousel-slide">
-                <img src="/assets/img/entree.jpeg" alt="Étudiants en cours">
-                <img src="/assets/img/3EME-PREPAPRO.jpeg"Vie étudiante">
-                <img src="/assets/img/3EME-PREPAPRO.jpeg" alt="Diplômés">
+                <img src="assets/img/entree.jpeg" >
+                <img src="assets/img/WhatsApp-Image-2022-11-25-at-14.55.33-7.jpeg">
+                <img src="assets/img/3EME-PREPAPRO.jpeg">
             </div>
-        </div>
+        </div>gi
         
         <!-- Flèche précédente -->
         <button class="carousel-arrow prev" aria-label="Image précédente">
