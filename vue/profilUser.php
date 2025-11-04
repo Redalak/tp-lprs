@@ -325,21 +325,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             border:none;
             color:white;
             padding:12px;
-            border-radius:var(--radius);
-            font-weight:600;
-            font-size:1rem;
             cursor:pointer;
             transition:background .2s ease, transform .1s ease;
+        .profil-card button:hover {
+            background-color: #0a4d68;
         }
-
-        button:hover {
-            background:var(--primary-color);
-            transform:translateY(-2px);
-        }
-
-        a.back {
-            display:inline-block;
-            text-align:center;
             margin-top:25px;
             color:var(--secondary-color);
             text-decoration:none;
@@ -400,10 +390,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             <input type="hidden" name="update_profile" value="1">
 
             <label>Nom :</label>
-            <input type="text" name="nom" required value="<?= htmlspecialchars($user->getNom()) ?>">
+            <input type="text" name="nom" value="<?= htmlspecialchars($user->getNom()) ?>" readonly>
 
             <label>Prénom :</label>
-            <input type="text" name="prenom" required value="<?= htmlspecialchars($user->getPrenom()) ?>">
+            <input type="text" name="prenom" value="<?= htmlspecialchars($user->getPrenom()) ?>" readonly>
 
             <label>Email :</label>
             <input type="email" name="email" required value="<?= htmlspecialchars($user->getEmail()) ?>">
