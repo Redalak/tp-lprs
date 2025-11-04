@@ -35,8 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'create') {
         $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
         if ($nom !== '') {
-            $f = new formation(['nomformation' => $nom]);
+            $f = new formation(['nomformation' => $nom, 'description' => $description]);
             $fRepo->ajoutFormation($f);
             $_SESSION['flash_msg'] = "La formation a été ajoutée.";
             $_SESSION['flash_type'] = 'success';
@@ -49,8 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update') {
         $id  = (int)($_POST['id_formation'] ?? 0);
         $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
         if ($id > 0 && $nom !== '') {
-            $f = new formation(['idformation' => $id, 'nomformation' => $nom]);
+            $f = new formation(['idformation' => $id, 'nomformation' => $nom, 'description' => $description]);
             if ($fRepo->modifFormation($f)) {
                 $_SESSION['flash_msg'] = "La formation #$id a été mise à jour.";
                 $_SESSION['flash_type'] = 'success';
@@ -185,6 +187,9 @@ $nowLabel = date('d/m/Y H:i');
                 <div class="col-sm-6 col-md-4">
                     <input type="text" class="form-control" name="nom_formation" placeholder="Nom de la formation" required>
                 </div>
+                <div class="col-sm-12 col-md-6">
+                    <input type="text" class="form-control" name="description" placeholder="Description (optionnelle)">
+                </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" type="submit">Ajouter</button>
                 </div>
@@ -213,6 +218,7 @@ $nowLabel = date('d/m/Y H:i');
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="id_formation" value="<?= (int)$f->getIdformation() ?>">
                                     <input type="text" class="form-control" name="nom_formation" value="<?= htmlspecialchars($f->getNomformation()) ?>" required>
+                                    <input type="text" class="form-control" name="description" value="<?= htmlspecialchars((string)($f->getDescription() ?? '')) ?>" placeholder="Description">
                                     <button class="btn btn-outline-primary" type="submit">Modifier</button>
                                 </form>
                             </td>

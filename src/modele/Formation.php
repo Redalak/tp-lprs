@@ -6,6 +6,7 @@ class formation
 {
     private $idformation;
     private $nomformation;
+    private $description;
 
 
 
@@ -58,6 +59,22 @@ class formation
     public function setNomformation($nomformation)
     {
         $this->nomformation = $nomformation;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param mixed $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
     }
 
 }

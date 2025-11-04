@@ -32,8 +32,9 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'create') {
         $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
         if ($nom !== '') {
-            $f = new formation(['nomformation' => $nom]);
+            $f = new formation(['nomformation' => $nom, 'description' => $description]);
             $fRepo->ajoutFormation($f);
         }
         header('Location: formations.php'); exit;
@@ -41,8 +42,9 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update') {
         $id  = (int)($_POST['id_formation'] ?? 0);
         $nom = trim((string)($_POST['nom_formation'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
         if ($id > 0 && $nom !== '') {
-            $f = new formation(['idformation' => $id, 'nomformation' => $nom]);
+            $f = new formation(['idformation' => $id, 'nomformation' => $nom, 'description' => $description]);
             $fRepo->modifFormation($f);
         }
         header('Location: formations.php'); exit;
@@ -226,13 +228,14 @@ $formations = $fRepo->listeFormation();
                 <article class="card">
                     <span class="badge">Formation</span>
                     <h3><?= htmlspecialchars($f->getNomformation()) ?></h3>
-                    <p>Programme disponible auprès de l'administration.</p>
+                    <p><?= htmlspecialchars((string)($f->getDescription() ?? 'Programme disponible auprès de l\'administration.')) ?></p>
                     <?php if ($isAdmin): ?>
                         <div class="actions" style="display:flex; gap:8px; flex-wrap:wrap">
                             <form method="post" action="formations.php" style="display:flex; gap:8px; align-items:center">
                                 <input type="hidden" name="action" value="update">
                                 <input type="hidden" name="id_formation" value="<?= (int)$f->getIdformation() ?>">
                                 <input type="text" name="nom_formation" value="<?= htmlspecialchars($f->getNomformation()) ?>" placeholder="Nom" required>
+                                <input type="text" name="description" value="<?= htmlspecialchars((string)($f->getDescription() ?? '')) ?>" placeholder="Description">
                                 <button class="btn" type="submit">Modifier</button>
                             </form>
                             <form method="post" action="formations.php" onsubmit="return confirm('Supprimer cette formation ?');">
@@ -257,6 +260,7 @@ $formations = $fRepo->listeFormation();
             <form method="post" action="formations.php" style="display:flex; gap:12px; flex-wrap:wrap">
                 <input type="hidden" name="action" value="create">
                 <input type="text" name="nom_formation" placeholder="Nom de la formation" required>
+                <input type="text" name="description" placeholder="Description (optionnelle)">
                 <button class="btn" type="submit">Ajouter</button>
             </form>
         </div>
