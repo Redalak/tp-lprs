@@ -286,7 +286,8 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a class="active" href="../vue/entreprise.php">Entreprises</a></li>
-                <li><a class="active" href="../vue/evenement.php">Evenements</a></li>
+                <li><a href="../vue/offres.php">Offres</a></li>
+                <li><a  href="../vue/evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
 
                 <?php if ($userLoggedIn): ?>

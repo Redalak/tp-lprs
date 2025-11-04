@@ -138,6 +138,7 @@ if ($isLoggedIn) {
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="offres.php">Offres</a></li>
                 <li><a href="evenement.php">Evenements</a></li>
                 <li><a class="active" href="supportContact.php">Contact</a></li>
                 <?php if ($isLoggedIn): ?>

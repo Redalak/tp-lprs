@@ -140,7 +140,7 @@ $nowLabel = date('d/m/Y H:i');
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="adminEntreprise.php">Entreprise</a></li>
                 <li><a href="adminEvent.php">Evenement</a></li>
-                <li><a href="adminOffre.php">Offre</a></li>
+                <li><a href="adminOffre.php">Offres</a></li>
                 <li><a href="adminUser.php">Utilisateur</a></li>
 
                 <?php if ($userLoggedIn): ?>
@@ -212,7 +212,7 @@ $nowLabel = date('d/m/Y H:i');
         <div class="quick-card">
             <h3>Événements</h3>
             <p>Programmer et publier les événements.</p>
-            <a href="adminEvent.php">Gérer les événements</a>
+             <a href="adminEvent.php">Gérer les événements</a>
         </div>
         <div class="quick-card">
             <h3>Formations</h3>

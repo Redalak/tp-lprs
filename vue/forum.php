@@ -234,10 +234,11 @@ $posts = $pRepo->findByCanal($canalActif);
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="offres.php">Offres</a></li>
                 <li><a href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <?php if ($userId > 0): ?>
-                    <li><a class="active" href="forum_v3.php">Forum</a></li>
+                    <li><a class="active" href="forum.php">Forum</a></li>
                     <li class="profile-dropdown">
                         <a href="profilUser.php" class="profile-icon">👤</a>
                         <div class="dropdown-content">

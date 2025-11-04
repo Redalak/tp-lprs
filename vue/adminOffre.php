@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_offre'])) {
             <ul>
                 <li><a href="admin.php">admin</a></li>
                 <li><a href="adminEntreprise.php">Entreprises</a></li>
-                <li><a href="adminOffre.php">offre</a></li>
+                <li><a href="adminOffre.php">Offres</a></li>
                 <li><a href="adminEvent.php">Événements</a></li>
                 <li><a href="adminUser.php">Utilisateurs</a></li>
                 <li class="profile-dropdown" style="margin-left:auto">
