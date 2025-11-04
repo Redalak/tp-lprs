@@ -8,6 +8,7 @@ class PForum
     private $contenue;
     private $dateCreation;
     private $refUser;
+    private $canal;
 
     public function __construct(array $donnees)
     {
@@ -108,5 +109,19 @@ class PForum
         $this->refUser = $refUser;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getCanal()
+    {
+        return $this->canal;
+    }
 
+    /**
+     * @param mixed $canal
+     */
+    public function setCanal($canal): void
+    {
+        $this->canal = $canal;
+    }
 }

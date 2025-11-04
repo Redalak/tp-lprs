@@ -10,7 +10,6 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
 }
 
 require_once __DIR__ . '/../src/modele/PForum.php';
-require_once __DIR__ . '/../src/modele/RForum.php';
 require_once __DIR__ . '/../src/repository/PForumRepo.php';
 require_once __DIR__ . '/../src/repository/RForumRepo.php';
 require_once __DIR__ . '/../src/repository/UserRepo.php';
@@ -20,34 +19,20 @@ $pRepo = new \repository\PForumRepo();
 $rRepo = new \repository\RForumRepo();
 
 // Récupérer le rôle de l'utilisateur
-$role = '';
-$userId = (int)($_SESSION['id_user'] ?? 0);
+$role = $_SESSION['role'] ?? 'etudiant';
 
-// Récupérer les informations de l'utilisateur
-$prenom = $_SESSION['prenom'] ?? '';
-$nom = $_SESSION['nom'] ?? '';
+// Afficher le rôle pour débogage
+echo "<!-- Rôle détecté : " . htmlspecialchars($role) . " -->\n";
+echo "<!-- Session : " . print_r($_SESSION, true) . " -->";
 
-if ($userId > 0) {
-    try {
-        $uRepo = new UserRepo();
-        $u = $uRepo->getUserById($userId);
-        if ($u) {
-            if (method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
-            if (method_exists($u, 'getNom'))    { $nom = $u->getNom(); }
-            if (method_exists($u, 'getRole'))   { $role = strtolower((string)$u->getRole()); }
-        }
-    } catch (\Throwable $e) {}
-}
-
-// Si le rôle n'est pas défini, on utilise une valeur par défaut
-if (empty($role)) {
-    $role = 'etudiant';
-}
-
-$userName = trim((string)$prenom . ' ' . (string)$nom);
-if ($userName === '' || $userName === ' ') {
-    $userName = (string)($_SESSION['email'] ?? 'Mon compte');
-}
+// Debug - à supprimer après
+$debug_info = [
+    'session' => $_SESSION,
+    'role' => $role,
+    'canViewAlumni' => $pRepo->canViewCanal($role, 'alumni_entreprises'),
+    'canViewEtudiants' => $pRepo->canViewCanal($role, 'etudiants_professeurs')
+];
+// Fin du debug
 
 // Récupérer le canal actif depuis l'URL, par défaut 'general'
 $canalActif = isset($_GET['canal']) ? $_GET['canal'] : 'general';
@@ -67,6 +52,24 @@ if (!$pRepo->canViewCanal($role, $canalActif)) {
 // Vérifier si l'utilisateur peut poster dans ce canal
 $peutPoster = $pRepo->canPostInCanal($role, $canalActif);
 
+$userId = (int)($_SESSION['id_user'] ?? 0);
+
+// Récupérer prénom/nom pour le header dropdown
+$prenom = $_SESSION['prenom'] ?? '';
+$nom    = $_SESSION['nom'] ?? '';
+if ($userId > 0) {
+    try {
+        $uRepo = new UserRepo();
+        $u = $uRepo->getUserById($userId);
+        if ($u && method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
+        if ($u && method_exists($u, 'getNom'))    { $nom    = $u->getNom(); }
+    } catch (\Throwable $e) {}
+}
+$userName = trim((string)$prenom . ' ' . (string)$nom);
+if ($userName === '' || $userName === ' ') {
+    $userName = (string)($_SESSION['email'] ?? 'Mon compte');
+}
+
 /* Création d'un post */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post') {
     $titre    = trim((string)($_POST['titre'] ?? ''));
@@ -78,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post'
         }
         $pRepo->create($userId, $titre, $contenue, $canal);
     }
-    header('Location: forum_v3.php?canal=' . $canalActif);
+    header('Location: forum_v2.php?canal=' . $canalActif);
     exit;
 }
 
@@ -90,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply
     if ($userId > 0 && $postId > 0 && $contenue !== '') {
         $rRepo->create($postId, $userId, $contenue, $parentId);
     }
-    header('Location: forum_v3.php?canal=' . $canalActif . '#post-' . $postId);
+    header('Location: forum_v2.php?canal=' . $canalActif . '#post-' . $postId);
     exit;
 }
 
@@ -169,6 +172,18 @@ $posts = $pRepo->findByCanal($canalActif);
     </style>
 </head>
 <body>
+<!-- Début du débogage - À supprimer après -->
+<div style="background: #f8f9fa; padding: 15px; margin: 10px; border: 1px solid #ddd; border-radius: 5px;">
+    <h3>Informations de débogage :</h3>
+    <pre><?php 
+    echo 'Rôle détecté : ' . htmlspecialchars($role) . "\n";
+    echo 'Peut voir Alumni & Entreprises : ' . ($pRepo->canViewCanal($role, 'alumni_entreprises') ? 'Oui' : 'Non') . "\n";
+    echo 'Peut voir Étudiants & Professeurs : ' . ($pRepo->canViewCanal($role, 'etudiants_professeurs') ? 'Oui' : 'Non') . "\n";
+    echo 'Session : ' . print_r($_SESSION, true);
+    ?></pre>
+</div>
+<!-- Fin du débogage -->
+
 <header>
     <div class="container">
         <a href="../index.php" class="logo">École Sup.</a>
@@ -180,7 +195,7 @@ $posts = $pRepo->findByCanal($canalActif);
                 <li><a href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
                 <?php if ($userId > 0): ?>
-                    <li><a class="active" href="forum_v3.php">Forum</a></li>
+                    <li><a class="active" href="forum_v2.php">Forum</a></li>
                     <li class="profile-dropdown">
                         <a href="profilUser.php" class="profile-icon">👤</a>
                         <div class="dropdown-content">
@@ -200,7 +215,7 @@ $posts = $pRepo->findByCanal($canalActif);
 
 <div class="wrap">
     <h1>Forum — <?= ucfirst(str_replace('_', ' ', $canalActif)) ?></h1>
-
+    
     <!-- Navigation entre les canaux -->
     <div class="canaux-navigation">
         <a href="?canal=general" class="btn-canal" style="background: <?= $canalActif === 'general' ? 'var(--sec)' : '#f0f0f0' ?>; color: <?= $canalActif === 'general' ? '#fff' : '#333' ?>">
@@ -221,7 +236,7 @@ $posts = $pRepo->findByCanal($canalActif);
     <?php if ($userId > 0 && $peutPoster): ?>
         <div class="panel">
             <h3>Nouveau post</h3>
-            <form method="post" action="forum_v3.php?canal=<?= $canalActif ?>">
+            <form method="post" action="forum_v2.php?canal=<?= $canalActif ?>">
                 <input type="hidden" name="action" value="post">
                 <input type="hidden" name="canal" value="<?= $canalActif ?>">
                 <input type="text" name="titre" placeholder="Titre" required>
@@ -275,7 +290,7 @@ $posts = $pRepo->findByCanal($canalActif);
                                 </div>
                                 <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
                                 <?php if ($userId > 0): ?>
-                                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                                    <form class="reply" method="post" action="forum_v2.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="action" value="reply">
                                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="parent_id" value="<?= (int)$r->getIdReply() ?>">
@@ -303,7 +318,7 @@ $posts = $pRepo->findByCanal($canalActif);
                 <?php endif; ?>
 
                 <?php if ($userId > 0): ?>
-                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                    <form class="reply" method="post" action="forum_v2.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                         <input type="hidden" name="action" value="reply">
                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                         <textarea name="contenue" rows="3" placeholder="Répondre…" required></textarea>

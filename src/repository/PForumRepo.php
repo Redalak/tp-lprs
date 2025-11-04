@@ -29,6 +29,7 @@ class PForumRepo {
             'title' => $this->first($names, ['titre', 'title']),
             'body'  => $this->first($names, ['contenue', 'contenu', 'content', 'message', 'body']),
             'date'  => $this->first($names, ['date_creation', 'created_at', 'createdAt', 'date_create']),
+            'canal' => $this->first($names, ['canal', 'channel', 'categorie']),
         ];
     }
 
@@ -40,12 +41,24 @@ class PForumRepo {
         return $names[0] ?? '';
     }
 
-    public function all(): array {
+    public function all(string $canal = null): array {
         $this->detect();
-        $pdo   = $this->pdo();
+        $pdo = $this->pdo();
         $order = $this->cols['date'] ?: $this->cols['id'];
-        $q = $pdo->query("SELECT * FROM {$this->table} ORDER BY `{$order}` DESC");
-        $rows = $q->fetchAll(\PDO::FETCH_ASSOC);
+        
+        $sql = "SELECT * FROM {$this->table}";
+        $params = [];
+        
+        if ($canal !== null) {
+            $sql .= " WHERE `{$this->cols['canal']}` = :canal";
+            $params[':canal'] = $canal;
+        }
+        
+        $sql .= " ORDER BY `{$order}` DESC";
+        
+        $st = $pdo->prepare($sql);
+        $st->execute($params);
+        $rows = $st->fetchAll(\PDO::FETCH_ASSOC);
 
         return array_map(function ($r) {
             return new PForum([
@@ -54,6 +67,7 @@ class PForumRepo {
                 'titre'        => $r[$this->cols['title']]?? '',
                 'contenue'     => $r[$this->cols['body']] ?? '',
                 'dateCreation' => $r[$this->cols['date']] ?? null,
+                'canal'        => $r[$this->cols['canal']] ?? 'general',
             ]);
         }, $rows);
     }
@@ -61,7 +75,8 @@ class PForumRepo {
     public function find(int $id): ?PForum {
         $this->detect();
         $pdo = $this->pdo();
-        $st  = $pdo->prepare("SELECT * FROM {$this->table} WHERE `{$this->cols['id']}` = ?");
+        
+        $st = $pdo->prepare("SELECT * FROM {$this->table} WHERE `{$this->cols['id']}` = ?");
         $st->execute([$id]);
         $r = $st->fetch(\PDO::FETCH_ASSOC);
 
@@ -73,18 +88,68 @@ class PForumRepo {
             'titre'        => $r[$this->cols['title']]?? '',
             'contenue'     => $r[$this->cols['body']] ?? '',
             'dateCreation' => $r[$this->cols['date']] ?? null,
+            'canal'        => $r[$this->cols['canal']] ?? 'general',
         ]);
     }
 
-    public function create(int $refUser, string $titre, string $contenue): PForum {
+    public function create(int $refUser, string $titre, string $contenue, string $canal = 'general'): PForum {
         $this->detect();
         $pdo = $this->pdo();
-        $st  = $pdo->prepare(
-            "INSERT INTO {$this->table} (`{$this->cols['user']}`, `{$this->cols['title']}`, `{$this->cols['body']}`)
-             VALUES (?,?,?)"
+        
+        // Vérifier si le canal est valide
+        $canauxValides = ['general', 'alumni_entreprises', 'etudiants_professeurs'];
+        if (!in_array($canal, $canauxValides)) {
+            $canal = 'general';
+        }
+        
+        $st = $pdo->prepare(
+            "INSERT INTO {$this->table} (`{$this->cols['user']}`, `{$this->cols['title']}`, `{$this->cols['body']}`, `{$this->cols['canal']}`)
+             VALUES (?, ?, ?, ?)"
         );
-        $st->execute([$refUser, $titre, $contenue]);
+        $st->execute([$refUser, $titre, $contenue, $canal]);
         $id = (int)$pdo->lastInsertId();
         return $this->find($id);
+    }
+    
+    /**
+     * Récupère les messages d'un canal spécifique
+     */
+    public function findByCanal(string $canal): array {
+        return $this->all($canal);
+    }
+    
+    /**
+     * Vérifie si un utilisateur a la permission de poster dans un canal
+     */
+    public function canPostInCanal(string $role, string $canal): bool {
+        // Règles de permission par canal
+        $permissions = [
+            'alumni_entreprises' => ['alumni', 'entreprise'],
+            'etudiants_professeurs' => ['etudiant'], // Seuls les étudiants peuvent créer des posts
+            'general' => ['etudiant', 'prof', 'alumni', 'entreprise', 'admin']
+        ];
+        
+        // Si le canal n'existe pas, on ne permet pas la création
+        if (!isset($permissions[$canal])) {
+            return false;
+        }
+        
+        // Vérifier si le rôle de l'utilisateur est autorisé dans ce canal
+        return in_array($role, $permissions[$canal]);
+    }
+    
+    /**
+     * Vérifie si un utilisateur peut voir un canal spécifique
+     */
+    public function canViewCanal(string $role, string $canal): bool {
+        // Définir quels rôles peuvent voir quels canaux
+        $canauxParRole = [
+            'general' => ['etudiant', 'prof', 'alumni', 'entreprise', 'admin'],
+            'alumni_entreprises' => ['alumni', 'entreprise', 'admin'],
+            'etudiants_professeurs' => ['etudiant', 'prof', 'admin']
+        ];
+        
+        // Vérifier si le canal existe et si le rôle peut le voir
+        return isset($canauxParRole[$canal]) && in_array($role, $canauxParRole[$canal]);
     }
 }
