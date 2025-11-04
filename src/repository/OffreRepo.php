@@ -134,13 +134,15 @@ class OffreRepo
         $bdd = new \bdd\Bdd();
         $database = $bdd->getBdd();
 
-        // On prend les dernières offres créées
+        // On prend les dernières offres créées qui ne sont ni fermées ni en brouillon
         $stmt = $database->prepare('
-        SELECT *
-        FROM offre
-        ORDER BY date_creation DESC
-        LIMIT :limite
-    ');
+            SELECT o.*, e.nom as entreprise_nom
+            FROM offre o
+            LEFT JOIN entreprise e ON o.ref_entreprise = e.id_entreprise
+            WHERE o.etat NOT IN ("ferme", "brouillon")
+            ORDER BY o.date_creation DESC
+            LIMIT :limite
+        ');
 
         // LIMIT doit être bindé en entier sinon MySQL râle
         $stmt->bindValue(':limite', $limit, \PDO::PARAM_INT);
@@ -152,8 +154,10 @@ class OffreRepo
 
         foreach ($rows as $row) {
             // On crée l'objet offre à partir de la ligne BDD
-            // Ton modèle `offre` sait hydrater avec les clés de la BDD
             $o = new \modele\offre($row);
+            if (isset($row['entreprise_nom'])) {
+                $o->entreprise_nom = $row['entreprise_nom'];
+            }
             $offres[] = $o;
         }
 

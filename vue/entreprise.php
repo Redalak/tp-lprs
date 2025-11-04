@@ -352,9 +352,11 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
                 <?php foreach ($dernieresOffres as $offre): ?>
                     <article class="card job-card">
                         <!-- type_offre en badge -->
+                        <?php if ($offre->getTypeOffre() !== null): ?>
                         <span class="badge">
                             <?= htmlspecialchars($offre->getTypeOffre()) ?>
                         </span>
+                        <?php endif; ?>
 
                         <!-- titre -->
                         <h3><?= htmlspecialchars($offre->getTitre()) ?></h3>
