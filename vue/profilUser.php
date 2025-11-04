@@ -1,19 +1,22 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';
-require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
-require_once __DIR__ . '/../src/repository/EventRepo.php';
 require_once __DIR__ . '/../src/modele/Event.php';
+require_once __DIR__ . '/../src/modele/Entreprise.php';
+require_once __DIR__ . '/../src/repository/UserRepo.php';
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
+require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
+require_once __DIR__ . '/../src/repository/UserEntrepriseRepo.php';
 
 use repository\UserRepo;
 use repository\EventRepo;
 use repository\InscriptionEventRepo;
+use repository\UserEntrepriseRepo;
 use modele\User;
 use modele\Event;
 
-// Vérifie la connexion
 if (!isset($_SESSION['id_user'])) {
     header('Location: connexion.php');
     exit;
@@ -25,13 +28,116 @@ $eventRepo = new EventRepo();
 $inscriptionRepo = new InscriptionEventRepo();
 $user = $userRepo->getUserById($userId);
 
+// Initialisation du repository UserEntrepriseRepo
+try {
+    $userEntrepriseRepo = new UserEntrepriseRepo();
+} catch (\Exception $e) {
+    error_log("Erreur lors de l'initialisation de UserEntrepriseRepo: " . $e->getMessage());
+    $userEntrepriseRepo = null;
+}
+
+// Gestion de l'entreprise
+$userEntreprise = null;
+$allEntreprises = [];
+$showEntrepriseForm = false;
+
+if ($userEntrepriseRepo) {
+    try {
+        $userEntreprise = $userEntrepriseRepo->getUserEntreprise($userId);
+        $allEntreprises = $userEntrepriseRepo->getAllEntreprises();
+        $showEntrepriseForm = !$userEntreprise && ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['submit_entreprise']));
+    } catch (\Exception $e) {
+        error_log("Erreur lors de la récupération des données d'entreprise: " . $e->getMessage());
+        $message = "Une erreur est survenue lors du chargement des données d'entreprise.";
+        $messageClass = "error";
+    }
+}
+
 // Messages de retour
 $message = $_SESSION['message'] ?? '';
 $messageClass = $_SESSION['messageClass'] ?? '';
-
 // Effacer les messages après les avoir affichés
 unset($_SESSION['message']);
 unset($_SESSION['messageClass']);
+
+// Traitement des actions sur l'entreprise
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $entrepriseRepo = new \repository\EntrepriseRepo();
+    
+    try {
+        if ($_POST['action'] === 'link_entreprise' && !$userEntreprise) {
+            // Vérifier si une entreprise existante est sélectionnée
+            if (!empty($_POST['entreprise_id']) && $_POST['entreprise_id'] !== '') {
+                // Lier à une entreprise existante
+                $entrepriseId = filter_input(INPUT_POST, 'entreprise_id', FILTER_VALIDATE_INT);
+                if ($entrepriseId) {
+                    $userEntrepriseRepo->linkUserToEntreprise($userId, $entrepriseId);
+                    $message = "L'entreprise a été liée à votre compte avec succès.";
+                    $messageClass = "success";
+                    // Recharger les données de l'entreprise
+                    $userEntreprise = $userEntrepriseRepo->getUserEntreprise($userId);
+                    
+                    // Mettre à jour la variable pour masquer le formulaire
+                    $showEntrepriseForm = false;
+                }
+            } elseif (isset($_POST['new_nom']) && !empty(trim($_POST['new_nom']))) {
+                // Créer une nouvelle entreprise
+                $nom = trim($_POST['new_nom']);
+                $motifPartenariat = !empty(trim($_POST['new_motif_partenariat'])) 
+                    ? trim($_POST['new_motif_partenariat']) 
+                    : null;
+
+                if (empty($nom)) {
+                    throw new \Exception("Le nom de l'entreprise est obligatoire.");
+                }
+
+                $data = [
+                    'nom' => $nom,
+                    'adresse' => !empty(trim($_POST['new_adresse'])) ? trim($_POST['new_adresse']) : null,
+                    'site_web' => !empty(trim($_POST['new_site_web'])) ? trim($_POST['new_site_web']) : null,
+                    'motif_partenariat' => $motifPartenariat,
+                    'date_inscription' => date('Y-m-d'),
+                    'ref_offre' => null
+                ];
+                
+                $entreprise = new \modele\Entreprise($data);
+                $entreprise = $entrepriseRepo->ajoutEntreprise($entreprise);
+                
+                // Lier l'utilisateur à la nouvelle entreprise
+                $userEntrepriseRepo->linkUserToEntreprise($userId, $entreprise->getIdEntreprise());
+                
+                $message = "L'entreprise a été créée et liée à votre compte avec succès.";
+                $messageClass = "success";
+                // Recharger les données de l'entreprise
+                $userEntreprise = $userEntrepriseRepo->getUserEntreprise($userId);
+                $showEntrepriseForm = false;
+            } else {
+                // Si on arrive ici, c'est qu'aucune option valide n'a été sélectionnée
+                if (empty($_POST['entreprise_id']) && empty(trim($_POST['new_nom'] ?? ''))) {
+                    throw new \Exception("Veuillez sélectionner une entreprise existante ou remplir le formulaire pour en créer une nouvelle.");
+                }
+            }
+        } 
+        elseif ($_POST['action'] === 'delete_entreprise' && $userEntreprise) {
+            // Supprimer le lien avec l'entreprise
+            $userEntrepriseRepo->unlinkUserFromEntreprise($userId, $userEntreprise['id_entreprise']);
+            $message = "Le lien avec l'entreprise a été supprimé avec succès.";
+            $messageClass = "success";
+            $userEntreprise = null;
+        }
+    } catch (\Exception $e) {
+        $message = $e->getMessage();
+        $messageClass = "error";
+    }
+    
+    // Stocker le message dans la session pour le réafficher après redirection
+    $_SESSION['message'] = $message;
+    $_SESSION['messageClass'] = $messageClass;
+    
+    // Rediriger pour éviter la soumission multiple du formulaire
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
 
 // Traitement des actions sur les événements
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -252,18 +358,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         }
 
         .profil-card {
-            background:var(--surface-color);
-            border-radius:var(--radius);
-            box-shadow:var(--shadow);
-            padding:40px 50px;
-            width:100%;
-            max-width:550px;
-            animation:fadeIn .6s ease;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1000px;
         }
-
-        @keyframes fadeIn {
-            from {opacity:0; transform:translateY(20px);}
-            to {opacity:1; transform:translateY(0);}
         }
 
         h1 {
@@ -373,7 +474,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 <main>
     <div class="profil-card">
-        <h1>👤 Mon Profil</h1>
+        <?php if ($user->getRole() === 'alumni'): ?>
+            <h1>👨‍🎓 Profil Alumni</h1>
+        <?php else: ?>
+            <h1>👤 Mon Profil</h1>
+        <?php endif; ?>
         
         <?php if (!empty($message)): ?>
             <div class="alert alert-<?= $messageClass === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show" role="alert" style="margin-bottom: 20px;">
@@ -427,10 +532,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             </div>
         <?php endif; ?>
 
+        <!-- Section Gestion de l'entreprise -->
+        <section class="entreprise-section mt-5">
+            <h2 class="mb-4">
+                <i class="bi bi-building"></i> Mon entreprise
+            </h2>
+            
+            <?php if ($userEntreprise): ?>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($userEntreprise['nom']) ?></h5>
+                        <p class="card-text">
+                            <strong>Adresse :</strong> <?= htmlspecialchars($userEntreprise['adresse']) ?><br>
+                            <strong>Site web :</strong> 
+                            <?php if ($userEntreprise['site_web']): ?>
+                                <a href="<?= htmlspecialchars($userEntreprise['site_web']) ?>" target="_blank">
+                                    <?= htmlspecialchars($userEntreprise['site_web']) ?>
+                                </a>
+                            <?php else: ?>
+                                Non renseigné
+                            <?php endif; ?>
+                        </p>
+                        <form method="POST" style="display: inline-block;">
+                            <input type="hidden" name="action" value="delete_entreprise">
+                            <button type="submit" class="btn btn-danger" 
+                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer le lien avec cette entreprise ?')">
+                                <i class="bi bi-trash"></i> Supprimer le lien
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <?php elseif ($showEntrepriseForm): ?>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Lier ou créer une entreprise</h5>
+                        <form method="POST" id="entrepriseForm">
+                            <input type="hidden" name="action" value="link_entreprise">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Choisir une entreprise existante :</label>
+                                <select name="entreprise_id" id="entreprise_id" class="form-select mb-3" onchange="toggleEntrepriseFields()">
+                                    <option value="">Sélectionner une entreprise...</option>
+                                    <?php foreach ($allEntreprises as $entreprise): ?>
+                                        <option value="<?= $entreprise['id_entreprise'] ?>">
+                                            <?= htmlspecialchars($entreprise['nom']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="text-center mb-3">
+                                    <strong>OU</strong>
+                                </div>
+                            </div>
+                            
+                            <h6>Créer une nouvelle entreprise :</h6>
+                            <div id="newEntrepriseFields">
+                                <div class="mb-3">
+                                    <label class="form-label">Nom de l'entreprise *</label>
+                                    <input type="text" name="new_nom" id="new_nom" class="form-control">
+                                </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Adresse</label>
+                                <input type="text" name="new_adresse" class="form-control">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Site web</label>
+                                <input type="url" name="new_site_web" class="form-control">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Motif du partenariat *</label>
+                                <textarea name="new_motif_partenariat" class="form-control" required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Enregistrer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </section>
+
         <!-- Section des événements créés par l'utilisateur -->
+        <?php if ($user->getRole() === 'alumni'): ?>
+            <section class="alumni-section mt-5">
+                <h2 class="mb-4">
+                    <i class="bi bi-award"></i> Espace Alumni
+                </h2>
+                <div class="alumni-content">
+                    <div class="alert alert-info">
+                        <h4>Bienvenue dans votre espace Alumni</h4>
+                        <p>En tant qu'ancien élève, bénéficiez d'avantages exclusifs :</p>
+                        <ul>
+                            <li>Accès aux événements réservés aux anciens élèves</li>
+                            <li>Réseautage avec d'autres diplômés</n                            <li>Accès aux offres d'emploi du réseau alumni</li>
+                            <li>Invitations aux conférences et ateliers</li>
+                        </ul>
+                    </div>
+                    <!-- Vous pouvez ajouter plus de contenu spécifique aux alumni ici -->
+                </div>
+            </section>
+        <?php endif; ?>
+
         <section class="mes-evenements mt-5">
             <h2 class="mb-4">
-                <i class="bi bi-calendar-event"></i> Mes événements
+                <i class="bi bi-calendar-event"></i> 
+                <?= $user->getRole() === 'alumni' ? 'Événements pour les anciens élèves' : 'Mes événements' ?>
             </h2>
             
             <?php if (empty($evenementsUtilisateur)): ?>
@@ -759,6 +968,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 });
             }
         });
+    </script>
+    
+    <script>
+    // Fonction pour gérer l'affichage des champs de nouvelle entreprise
+    function toggleEntrepriseFields() {
+        const entrepriseId = document.getElementById('entreprise_id');
+        const newEntrepriseFields = document.getElementById('newEntrepriseFields');
+        
+        if (entrepriseId.value !== '') {
+            // Désactiver les champs de nouvelle entreprise
+            const inputs = newEntrepriseFields.getElementsByTagName('input');
+            for (let input of inputs) {
+                input.required = false;
+            }
+        } else {
+            // Réactiver les champs requis pour la nouvelle entreprise
+            document.getElementById('new_nom').required = true;
+        }
+    }
+    
+    // Validation personnalisée du formulaire d'entreprise
+    document.addEventListener('DOMContentLoaded', function() {
+        const entrepriseForm = document.getElementById('entrepriseForm');
+        if (entrepriseForm) {
+            entrepriseForm.addEventListener('submit', function(e) {
+                const entrepriseId = document.getElementById('entreprise_id').value;
+                const newNom = document.getElementById('new_nom').value;
+                
+                if (entrepriseId === '' && newNom.trim() === '') {
+                    e.preventDefault();
+                    alert('Veuillez sélectionner une entreprise existante ou remplir le formulaire pour en créer une nouvelle.');
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+    });
     </script>
 </body>
 </html>
