@@ -56,6 +56,8 @@ if ($userLoggedIn) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Carousel CSS -->
+    <link href="assets/css/carousel.css" rel="stylesheet">
 
     <style>
         /* Styles précédemment définis… */
@@ -237,20 +239,44 @@ if ($userLoggedIn) {
     </div>
 </header>
 
-<section class="hero">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <h2>Construire les mondes de demain</h2>
-        <p>Formation. Recherche. Innovation.</p>
-        <a href="vue/formations.php" class="cta-button">Découvrir nos formations</a>
-    </div>
-</section>
-
 <div class="container">
+    <!-- Hero Section with Carousel -->
+    <div class="carousel-container">
+        <!-- Flèche précédente -->
+        <div class="carousel-slide-wrapper">
+            <div class="carousel-slide">
+                <img src="/assets/img/lycees-jpg-15782.jpg" alt="Étudiants en cours">
+                <img src="/assets/img/lycee-voltaire.jpg" alt="Vie étudiante">
+                <img src="/assets/img/LYCEE-I-472404164.jpg" alt="Diplômés">
+            </div>
+        </div>
+        
+        <!-- Flèche précédente -->
+        <button class="carousel-arrow prev" aria-label="Image précédente">
+            &lt;
+        </button>
+        
+        <!-- Flèche suivante -->
+        <button class="carousel-arrow next" aria-label="Image suivante">
+            &gt;
+        </button>
+        
+        <div class="carousel-content">
+            <h2>Construire les mondes de demain</h2>
+            <p>Formation. Recherche. Innovation.</p>
+            <a href="vue/formations.php" class="cta-button">Découvrir nos formations</a>
+        </div>
+        
+        <div class="carousel-nav">
+            <div class="carousel-dot active" data-slide="0"></div>
+            <div class="carousel-dot" data-slide="1"></div>
+            <div class="carousel-dot" data-slide="2"></div>
+        </div>
+    </div>
+
     <section class="actus-events">
         <div class="card actus">
             <h3>Actualités</h3>
-            <ul>
                 <li><a href="#">Ouverture des candidatures pour la rentrée 2026</a></li>
                 <li><a href="#">Signature d'un partenariat stratégique avec TechLabs</a></li>
                 <li><a href="#">Lancement du nouveau master en Data Science & IA</a></li>
@@ -323,5 +349,7 @@ if ($userLoggedIn) {
     </div>
 </footer>
 
+    <!-- Carousel JavaScript -->
+    <script src="assets/js/carousel.js"></script>
 </body>
 </html>
