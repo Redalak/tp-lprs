@@ -18,6 +18,18 @@ use repository\UserRepo;
 
 $pRepo = new \repository\PForumRepo();
 $rRepo = new \repository\RForumRepo();
+$userRepo = new UserRepo();
+
+// Fonction pour obtenir le nom complet d'un utilisateur
+function getUserFullName($userId, $userRepo) {
+    try {
+        $user = $userRepo->getUserById($userId);
+        if ($user && method_exists($user, 'getPrenom') && method_exists($user, 'getNom')) {
+            return trim($user->getPrenom() . ' ' . $user->getNom());
+        }
+    } catch (\Throwable $e) {}
+    return 'Utilisateur #' . $userId;
+}
 
 // Récupérer le rôle de l'utilisateur
 $role = '';
@@ -78,7 +90,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'post'
         }
         $pRepo->create($userId, $titre, $contenue, $canal);
     }
-    header('Location: forum_v3.php?canal=' . $canalActif);
+    header('Location: forum.php?canal=' . $canalActif);
+    exit;
+}
+
+/* Mise à jour d'un post */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_post') {
+    $postId = (int)($_POST['post_id'] ?? 0);
+    $titre = trim((string)($_POST['titre'] ?? ''));
+    $contenue = trim((string)($_POST['contenue'] ?? ''));
+    
+    if ($postId > 0 && $titre !== '' && $contenue !== '') {
+        $pRepo->update($postId, $userId, $titre, $contenue);
+    }
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
+    exit;
+}
+
+/* Suppression d'un post */
+if (isset($_GET['delete_post'])) {
+    $postId = (int)$_GET['delete_post'];
+    if ($postId > 0) {
+        $pRepo->delete($postId, $userId);
+    }
+    header('Location: forum.php?canal=' . $canalActif);
+    exit;
+}
+
+/* Mise à jour d'une réponse */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_reply') {
+    $replyId = (int)($_POST['reply_id'] ?? 0);
+    $contenu = trim((string)($_POST['contenu'] ?? ''));
+    
+    if ($replyId > 0 && $contenu !== '') {
+        $rRepo->update($replyId, $userId, $contenu);
+    }
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
+    exit;
+}
+
+/* Suppression d'une réponse */
+if (isset($_GET['delete_reply'])) {
+    $replyId = (int)$_GET['delete_reply'];
+    if ($replyId > 0) {
+        $rRepo->delete($replyId, $userId);
+    }
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
 }
 
@@ -248,7 +305,29 @@ $posts = $pRepo->findByCanal($canalActif);
             <div id="post-<?= (int)$p->getIdPost() ?>" class="panel">
                 <div class="meta">
                     Posté le <?= htmlspecialchars((string)$p->getDateCreation()) ?>
-                    — utilisateur #<?= (int)$p->getRefUser() ?>
+                    — <?= htmlspecialchars(getUserFullName((int)$p->getRefUser(), $userRepo)) ?>
+                    <?php if ($userId === (int)$p->getRefUser() || $role === 'admin'): ?>
+                        <div class="post-actions" style="display: inline-block; margin-left: 10px;">
+                            <a href="#" onclick="event.preventDefault(); document.getElementById('edit-post-<?= $p->getIdPost() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 10px;">
+                                <small>Modifier</small>
+                            </a>
+                            <a href="?delete_post=<?= $p->getIdPost() ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce post ?')" style="color: #e74c3c; text-decoration: none;">
+                                <small>Supprimer</small>
+                            </a>
+                        </div>
+                        
+                        <!-- Formulaire de modification (caché par défaut) -->
+                        <div id="edit-post-<?= $p->getIdPost() ?>" style="display: none; margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <form method="post" action="forum.php?canal=<?= $canalActif ?>">
+                                <input type="hidden" name="action" value="update_post">
+                                <input type="hidden" name="post_id" value="<?= $p->getIdPost() ?>">
+                                <input type="text" name="titre" value="<?= htmlspecialchars($p->getTitre()) ?>" style="width: 100%; margin-bottom: 5px;" required>
+                                <textarea name="contenue" rows="3" style="width: 100%; margin-bottom: 5px;" required><?= htmlspecialchars($p->getContenue()) ?></textarea>
+                                <button type="submit" class="btn" style="padding: 5px 10px; font-size: 0.9em;">Enregistrer</button>
+                                <button type="button" class="btn" onclick="document.getElementById('edit-post-<?= $p->getIdPost() ?>').style.display='none'" style="padding: 5px 10px; font-size: 0.9em; background: #6c757d;">Annuler</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <h3 style="margin:0 0 6px"><?= htmlspecialchars($p->getTitre()) ?></h3>
                 <p style="margin:0 0 10px"><?= nl2br(htmlspecialchars($p->getContenue())) ?></p>
@@ -271,7 +350,28 @@ $posts = $pRepo->findByCanal($canalActif);
                             <div class="item">
                                 <div class="meta">
                                     Le <?= htmlspecialchars((string)$r->getDateCreation()) ?>
-                                    — utilisateur #<?= (int)$r->getRefUser() ?>
+                                    — <?= htmlspecialchars(getUserFullName((int)$r->getRefUser(), $userRepo)) ?>
+                                    <?php if ($userId === (int)$r->getRefUser() || $role === 'admin'): ?>
+                                        <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
+                                            <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $r->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.9em;">
+                                                <small>Modifier</small>
+                                            </a>
+                                            <a href="?delete_reply=<?= $r->getIdReply() ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réponse ?')" style="color: #e74c3c; text-decoration: none; font-size: 0.9em;">
+                                                <small>Supprimer</small>
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- Formulaire de modification de réponse (caché par défaut) -->
+                                        <div id="edit-reply-<?= $r->getIdReply() ?>" style="display: none; margin-top: 5px; background: #f1f3f5; padding: 8px; border-radius: 5px;">
+                                            <form method="post" action="forum.php?canal=<?= $canalActif ?>">
+                                                <input type="hidden" name="action" value="update_reply">
+                                                <input type="hidden" name="reply_id" value="<?= $r->getIdReply() ?>">
+                                                <textarea name="contenu" rows="2" style="width: 100%; margin-bottom: 5px;" required><?= htmlspecialchars($r->getContenue()) ?></textarea>
+                                                <button type="submit" class="btn" style="padding: 4px 8px; font-size: 0.8em;">Enregistrer</button>
+                                                <button type="button" class="btn" onclick="document.getElementById('edit-reply-<?= $r->getIdReply() ?>').style.display='none'" style="padding: 4px 8px; font-size: 0.8em; background: #6c757d;">Annuler</button>
+                                            </form>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
                                 <?php if ($userId > 0): ?>
@@ -289,9 +389,30 @@ $posts = $pRepo->findByCanal($canalActif);
                                         <?php foreach ($byParent[(int)$r->getIdReply()] as $c): ?>
                                             <div class="item">
                                                 <div class="meta">
-                                                    Le <?= htmlspecialchars((string)$c->getDateCreation()) ?>
-                                                    — utilisateur #<?= (int)$c->getRefUser() ?>
-                                                </div>
+                                                Le <?= htmlspecialchars((string)$c->getDateCreation()) ?>
+                                                — <?= htmlspecialchars(getUserFullName((int)$c->getRefUser(), $userRepo)) ?>
+                                                <?php if ($userId === (int)$c->getRefUser() || $role === 'admin'): ?>
+                                                    <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
+                                                        <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $c->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.8em;">
+                                                            <small>Modifier</small>
+                                                        </a>
+                                                        <a href="?delete_reply=<?= $c->getIdReply() ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réponse ?')" style="color: #e74c3c; text-decoration: none; font-size: 0.8em;">
+                                                            <small>Supprimer</small>
+                                                        </a>
+                                                    </div>
+                                                    
+                                                    <!-- Formulaire de modification de réponse imbriquée (caché par défaut) -->
+                                                    <div id="edit-reply-<?= $c->getIdReply() ?>" style="display: none; margin-top: 5px; background: #f1f3f5; padding: 8px; border-radius: 5px;">
+                                                        <form method="post" action="forum.php?canal=<?= $canalActif ?>">
+                                                            <input type="hidden" name="action" value="update_reply">
+                                                            <input type="hidden" name="reply_id" value="<?= $c->getIdReply() ?>">
+                                                            <textarea name="contenu" rows="2" style="width: 100%; margin-bottom: 5px; font-size: 0.9em;" required><?= htmlspecialchars($c->getContenue()) ?></textarea>
+                                                            <button type="submit" class="btn" style="padding: 3px 6px; font-size: 0.8em;">Enregistrer</button>
+                                                            <button type="button" class="btn" onclick="document.getElementById('edit-reply-<?= $c->getIdReply() ?>').style.display='none'" style="padding: 3px 6px; font-size: 0.8em; background: #6c757d;">Annuler</button>
+                                                        </form>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
                                                 <div><?= nl2br(htmlspecialchars($c->getContenue())) ?></div>
                                             </div>
                                         <?php endforeach; ?>

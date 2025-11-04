@@ -152,4 +152,45 @@ class PForumRepo {
         // Vérifier si le canal existe et si le rôle peut le voir
         return isset($canauxParRole[$canal]) && in_array($role, $canauxParRole[$canal]);
     }
+
+    /**
+     * Met à jour un post existant
+     */
+    public function update(int $postId, int $userId, string $titre, string $contenu): bool {
+        $this->detect();
+        $pdo = $this->pdo();
+        
+        $st = $pdo->prepare(
+            "UPDATE {$this->table} 
+             SET `{$this->cols['title']}` = ?, 
+                 `{$this->cols['body']}` = ?
+             WHERE `{$this->cols['id']}` = ? AND `{$this->cols['user']}` = ?"
+        );
+        
+        return $st->execute([$titre, $contenu, $postId, $userId]);
+    }
+
+    /**
+     * Supprime un post et toutes ses réponses
+     */
+    public function delete(int $postId, int $userId): bool {
+        $this->detect();
+        $pdo = $this->pdo();
+        
+        // Vérifier que l'utilisateur est bien l'auteur du post
+        $st = $pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE `{$this->cols['id']}` = ? AND `{$this->cols['user']}` = ?");
+        $st->execute([$postId, $userId]);
+        
+        if ($st->fetchColumn() === 0) {
+            return false;
+        }
+        
+        // Supprimer les réponses associées
+        $rRepo = new RForumRepo();
+        $rRepo->deleteByPostId($postId);
+        
+        // Supprimer le post
+        $st = $pdo->prepare("DELETE FROM {$this->table} WHERE `{$this->cols['id']}` = ?");
+        return $st->execute([$postId]);
+    }
 }
