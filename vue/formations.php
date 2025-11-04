@@ -218,7 +218,10 @@ $formations = $fRepo->listeFormation();
 
 <div class="container page-head">
     <h1>Nos Formations</h1>
-    <div class="sub">Des parcours concrets, pensés avec les entreprises.</div>
+    <div class="sub"> Actuellement 450 élèves, guidés par une équipe exigeante dont l’objectif est non
+        seulement de donner une formation professionnelle et une formation générale, mais aussi
+        une formation humaine fondée sur la ponctualité, l’assiduité, la rigueur, le respect de soi et
+        des autres ainsi que le sens de l’effort.</div>
 </div>
 
 <div class="container">
