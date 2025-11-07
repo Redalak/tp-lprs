@@ -98,6 +98,10 @@ $nowLabel = date('d/m/Y H:i');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
+    <!-- Bootstrap CSS (match index) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root{
             --primary-color:#0A4D68;
@@ -160,27 +164,36 @@ $nowLabel = date('d/m/Y H:i');
 <body>
 <header>
     <div class="container">
-        <h1 class="logo">École Sup.</h1>
+        <a class="logo">École Sup.</a>
         <nav>
             <ul>
                 <li><a href="../index.php">Accueil</a></li>
-                <li><a href="adminEntreprise.php">Entreprise</a></li>
-                <li><a href="adminEvent.php">Evenement</a></li>
-                <li><a class="active" href="adminFormation.php">Formations</a></li>
-                <li><a href="adminOffre.php">Offre</a></li>
-                <li><a href="adminUser.php">Utilisateur</a></li>
-                <li class="profile-dropdown" style="margin-left:auto">
-                    <a href="profilUser.php" class="profile-icon">👤</a>
-                    <div class="dropdown-content">
-                        <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> !</span>
-                        <a href="profilUser.php" class="profile-button">Mon Profil</a>
-                        <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
-                    </div>
-                </li>
+                <li><a href="formations.php">Formations</a></li>
+                <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="offres.php">Offres</a></li>
+                <li><a href="evenement.php">Evenement</a></li>
+                <li><a href="supportContact.php">Contact</a></li>
+                <?php if (!empty($userLoggedIn)): ?>
+                    <li><a href="forum.php">Forum</a></li>
+                    <?php if ($isAdmin): ?>
+                        <li><a class="active" href="admin.php">Admin</a></li>
+                    <?php endif; ?>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars((string)$prenom) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="connexion.php">Connexion</a></li>
+                    <li><a href="inscription.php">Inscription</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </div>
-    </header>
+</header>
 
 <main class="container py-4">
     <?php if (!empty($_SESSION['flash_msg'])): ?>

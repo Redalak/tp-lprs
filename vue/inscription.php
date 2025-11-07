@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Inscription</title>
+    <title>Inscription - École Sup.</title>
 
     <!-- Icônes Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -35,6 +35,8 @@
         .register-link{text-align:center;margin-top:15px}
         .register-link a{color:#005baa;text-decoration:none}
         .register-link a:hover{text-decoration:underline}
+        /* Shared theme */
+        @import url('../assets/css/site.css');
     </style>
 </head>
 <body>
@@ -70,11 +72,11 @@
         <input id="CMdp" name="CMdp" type="password" required minlength="6" autocomplete="new-password"/>
 
         <button type="submit">Créer un compte</button>
-    </form>
 
     <div class="register-link">
         <p>Déjà inscrit ? <a href="connexion.php">Se connecter</a></p>
     </div>
 </div>
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

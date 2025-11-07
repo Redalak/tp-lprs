@@ -9,6 +9,8 @@ use repository\eventRepo;
     <meta charset="UTF-8">
     <title>Ajouter un Événement</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -128,5 +130,6 @@ use repository\eventRepo;
     </form>
 </div>
 
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

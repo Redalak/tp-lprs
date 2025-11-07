@@ -16,7 +16,6 @@ class UserRepo
         $req = $database->prepare('SELECT * FROM user WHERE email = :email LIMIT 1');
         $req->execute(['email' => $user->getEmail()]);
         $row = $req->fetch();
-
         if (!$row) {
             return null;
         }
@@ -28,6 +27,21 @@ class UserRepo
             'prenom' => $row['prenom'],
             'mdp' => $row['mdp'],
             'role' => $row['role'],
+            'isApproved' => $row['is_approved'] ?? 0,
+        ]);
+    }
+
+    /**
+     * Approuve/Désapprouve un utilisateur
+     */
+    public function setApproval(int $idUser, bool $approved): bool
+    {
+        $bdd = new Bdd();
+        $db = $bdd->getBdd();
+        $req = $db->prepare('UPDATE user SET is_approved = :approuve WHERE id_user = :id');
+        return $req->execute([
+            'approuve' => $approved ? 1 : 0,
+            'id' => $idUser,
         ]);
     }
 
@@ -36,8 +50,7 @@ class UserRepo
         $bdd = new Bdd();
         $database = $bdd->getBdd();
 
-        $req = $database->prepare("
-            INSERT INTO user(nom, prenom, email, mdp, role) VALUES (:nom, :prenom, :email, :mdp, :role)");
+        $req = $database->prepare("\n            INSERT INTO user(nom, prenom, email, mdp, role, is_approved) VALUES (:nom, :prenom, :email, :mdp, :role, :is_approved)");
 
 
         $req->execute([
@@ -46,6 +59,7 @@ class UserRepo
             "email" => $user->getEmail(),
             "mdp" => $user->getMdp(),
             "role" => $user->getRole(), // doit être 'admin' ou 'etudiant' etc.
+            "is_approved" => method_exists($user,'getIsApproved') ? (int)$user->getIsApproved() : 0,
         ]);
         return $user;
     }
@@ -86,6 +100,7 @@ class UserRepo
                 'email' => $listeUserBdd['email'],
                 'mdp' => $listeUserBdd['mdp'],
                 'role' => $listeUserBdd['role'],
+                'isApproved' => $listeUserBdd['is_approved'] ?? 0,
             ]);
         }
         return $listeUser;
@@ -205,6 +220,7 @@ class UserRepo
             'prenom' => $row['prenom'],
             'mdp' => $row['mdp'],
             'role' => $row['role'],
+            'isApproved' => $row['is_approved'] ?? 0,
         ]);
     }
 
@@ -227,8 +243,8 @@ class UserRepo
 
         // Préparer la requête d'insertion
         $req = $database->prepare("
-        INSERT INTO user (nom, prenom, email, mdp, role, ref_entreprise, ref_formation) 
-        VALUES (:nom, :prenom, :email, :mdp, :role, :ref_entreprise, :ref_formation)
+        INSERT INTO user (nom, prenom, email, mdp, role, ref_entreprise, ref_formation, is_approved) 
+        VALUES (:nom, :prenom, :email, :mdp, :role, :ref_entreprise, :ref_formation, :is_approved)
     ");
 
         // Exécuter la requête avec les données de l'utilisateur
@@ -240,6 +256,7 @@ class UserRepo
             "role" => $user->getRole(),
             "ref_entreprise" => $refEntreprise,  // Peut être NULL
             "ref_formation" => $refFormation,   // Peut être NULL
+            "is_approved" => method_exists($user,'getIsApproved') ? (int)$user->getIsApproved() : 0,
         ]);
 
         // Récupérer l'ID de l'utilisateur ajouté

@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Mot de passe oublié - École Exemple</title>
+    <title>Mot de passe oublié - École Sup.</title>
 
     <style>
         body{margin:0;font-family:'Segoe UI',sans-serif;background:#f4f4f4;}
@@ -45,6 +45,8 @@
         .register-link{text-align:center;margin-top:15px;}
         .register-link a{color:#005baa;text-decoration:none;}
         .register-link a:hover{text-decoration:underline;}
+        /* Shared theme */
+        @import url('../assets/css/site.css');
     </style>
 </head>
 <body>
@@ -75,5 +77,6 @@
 
 </div>
 
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

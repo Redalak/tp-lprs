@@ -38,6 +38,8 @@ $offres = $offreRepo->listeOffre();
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
 
     <style>
         :root {
@@ -197,6 +199,8 @@ $offres = $offreRepo->listeOffre();
                 <li><a href="../index.php">Accueil</a></li>
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a class="active" href="offres.php">Offres</a></li>
+                <li><a  href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
 
                 <?php if ($userLoggedIn): ?>
@@ -271,4 +275,5 @@ $offres = $offreRepo->listeOffre();
 </footer>
 
 </body>
+<script src="../assets/js/site.js"></script>
 </html>

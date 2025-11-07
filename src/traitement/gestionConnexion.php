@@ -32,6 +32,15 @@ if ($userFromDb === null) {
 
 // Vérification du mot de passe
 if (!empty($userFromDb->getIdUser()) && password_verify($_POST['password'], $userFromDb->getMdp())) {
+    // Bloquer l'accès si le compte n'est pas approuvé par un admin (hors admin)
+    if (method_exists($userFromDb,'getIsApproved')) {
+        $approved = (int)$userFromDb->getIsApproved();
+        $role = $userFromDb->getRole();
+        if ($approved !== 1 && strtolower((string)$role) !== 'admin') {
+            header("Location: ../../vue/connexion.php?parametre=nonApprouve");
+            exit();
+        }
+    }
     $_SESSION['id_user'] = $userFromDb->getIdUser();
     $_SESSION['email'] = $userFromDb->getEmail();
     $_SESSION["connexion"] = true;

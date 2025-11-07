@@ -35,7 +35,11 @@ $offres = $entrepriseRepo->getOffresParEntreprise($id_entreprise);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails de l'entreprise - Administration</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS (match index) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-style.css">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
     <style>
         .company-header {
             background: #f8f9fa;
@@ -93,20 +97,35 @@ $offres = $entrepriseRepo->getOffresParEntreprise($id_entreprise);
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <a href="#" class="logo">Administration</a>
-            <nav>
-                <ul>
-                    <li><a href="adminEntreprise.php">Entreprises</a></li>
-                    <li><a href="adminOffre.php">Offres</a></li>
-                    <li><a href="adminEvent.php">Événements</a></li>
-                    <li><a href="adminUser.php">Utilisateurs</a></li>
-                    <li><a href="?deconnexion=1">Déconnexion</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<header>
+    <div class="container">
+        <a class="logo">École Sup.</a>
+        <nav>
+            <ul>
+                <li><a href="../index.php">Accueil</a></li>
+                <li><a href="formations.php">Formations</a></li>
+                <li><a href="entreprise.php">Entreprises</a></li>
+                <li><a href="offres.php">Offres</a></li>
+                <li><a href="evenement.php">Evenement</a></li>
+                <li><a href="supportContact.php">Contact</a></li>
+                <?php if (isset($_SESSION['id_user'])): ?>
+                    <li><a href="forum.php">Forum</a></li>
+                    <li class="profile-dropdown">
+                        <a href="profilUser.php" class="profile-icon">👤</a>
+                        <div class="dropdown-content">
+                            <span>Bonjour, <?= htmlspecialchars((string)($_SESSION['prenom'] ?? '')) ?> !</span>
+                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="connexion.php">Connexion</a></li>
+                    <li><a href="inscription.php">Inscription</a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+</header>
 
     <main class="main-content">
         <div class="container">
@@ -184,5 +203,6 @@ $offres = $entrepriseRepo->getOffresParEntreprise($id_entreprise);
             <p>&copy; <?= date('Y') ?> Tous droits réservés</p>
         </div>
     </footer>
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

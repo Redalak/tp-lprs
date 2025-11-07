@@ -18,6 +18,8 @@ $events = $repo->getByUser($idUser); // Retourne un tableau d'objets event
     <meta charset="UTF-8">
     <title>Événements de l’utilisateur</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container my-4">
@@ -52,5 +54,6 @@ $events = $repo->getByUser($idUser); // Retourne un tableau d'objets event
         </table>
     <?php endif; ?>
 </div>
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

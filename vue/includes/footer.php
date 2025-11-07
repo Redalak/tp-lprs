@@ -2,7 +2,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; <?= date('Y') ?> Mon Application. Tous droits réservés.</p>
+                    <p class="mb-0">&copy; <?= date('Y') ?> École Sup. Tous droits réservés.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <a href="#" class="text-decoration-none me-3">Mentions légales</a>
@@ -38,5 +38,6 @@
             });
         });
     </script>
+    <script src="../assets/js/site.js"></script>
 </body>
 </html>

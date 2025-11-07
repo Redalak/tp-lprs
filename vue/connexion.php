@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Connexion - École Exemple</title>
+    <title>Connexion - École Sup.</title>
     <style>
         body{margin:0;font-family:'Segoe UI',sans-serif;background:#f4f4f4;}
 
@@ -34,6 +34,10 @@
         .register-link{text-align:center;margin-top:15px;}
         .register-link a{color:#005baa;text-decoration:none;}
         .register-link a:hover{text-decoration:underline;}
+        .alert{margin:10px 0;padding:10px;border-radius:6px;background:#fff4e5;border:1px solid #f7c77d;color:#8a5a00}
+        .alert.error{background:#fee;border-color:#f99;color:#900}
+        /* Shared theme */
+        @import url('../assets/css/site.css');
     </style>
 </head>
 <body>
@@ -44,6 +48,13 @@
     </a>
 
     <h2>Connexion</h2>
+    <?php if (!empty($_GET['parametre']) && $_GET['parametre']==='nonApprouve'): ?>
+        <div class="alert">
+            Votre compte est en attente de validation par un administrateur. Vous recevrez un accès dès approbation.
+        </div>
+    <?php elseif (!empty($_GET['parametre']) && $_GET['parametre']==='emailmdpInvalide'): ?>
+        <div class="alert error">Email ou mot de passe invalide.</div>
+    <?php endif; ?>
     <form action="../src/traitement/gestionConnexion.php" method="POST">
         <label for="email">Adresse email</label>
         <input type="email" id="email" name="email" required />
@@ -54,11 +65,11 @@
         <button type="submit">Se connecter</button>
     </form>
 
-    <div class="register-link">
         <p>Pas encore de compte ? <a href="inscription.php">S'inscrire</a></p>
         <p>Mot de passe oublié ? <a href="oublie_mdp.php">Récupération par mail</a></p>
     </div>
 </div>
 
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

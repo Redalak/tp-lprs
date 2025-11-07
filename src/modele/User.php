@@ -9,6 +9,7 @@ class User
     private $email;
     private $mdp;
     private $role;
+    private $isApproved; // 0/1: compte approuvé par l'admin
     private $createdAt;
     private $UpdatedAt;
     private $refEntreprise;
@@ -128,6 +129,22 @@ class User
     public function setRole($role)
     {
         $this->role = $role;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIsApproved()
+    {
+        return $this->isApproved;
+    }
+
+    /**
+     * @param mixed $isApproved
+     */
+    public function setIsApproved($isApproved)
+    {
+        $this->isApproved = $isApproved;
     }
 
     /**

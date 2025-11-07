@@ -49,6 +49,8 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
 
     <style>
         :root{
@@ -414,5 +416,6 @@ $dernieresOffres = $offreRepo->getDernieresOffres(3);
     &copy; 2025 École Supérieure — Tous droits réservés
 </footer>
 
+<script src="../assets/js/site.js"></script>
 </body>
 </html>

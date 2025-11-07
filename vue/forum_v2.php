@@ -109,6 +109,8 @@ $posts = $pRepo->findByCanal($canalActif);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared site styles -->
+    <link href="../assets/css/site.css" rel="stylesheet">
     <style>
         :root{--pri:#0A4D68;--sec:#088395;--bg:#f7f8fa;--panel:#fff;--ink:#222;--mut:#6b7280;--sh:0 6px 24px rgba(0,0,0,.06)}
         *{box-sizing:border-box}
@@ -329,5 +331,6 @@ $posts = $pRepo->findByCanal($canalActif);
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
+<script src="../assets/js/site.js"></script>
 </body>
 </html>
