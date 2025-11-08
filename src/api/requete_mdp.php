@@ -22,8 +22,15 @@ $stmt->execute(['email' => $email]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    echo "Aucun utilisateur trouvé avec cette adresse email.";
-    exit;
+    echo '
+        <p>Aucun utilisateur trouvé avec cette adresse email. Vous allez être redirigé vers la page précédente dans 5 secondes...</p>
+        <script>
+            setTimeout(function() {
+                window.history.back(); // Retour à la page précédente
+            }, 5000); // 5000 ms = 5 secondes
+        </script>
+    ';
+    exit();
 }
 
 $userId = $user['id_user'];
