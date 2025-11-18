@@ -1,10 +1,15 @@
 <?php
-session_start();
+// Définir le titre de la page
+$pageTitle = 'Accueil';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/includes/header.php';
+
+// Inclure les dépendances nécessaires
 require_once __DIR__ . "/src/bdd/Bdd.php";
 require_once __DIR__ . "/src/repository/EventRepo.php";
-// NOUVEAU: Inclure le UserRepo et l'entité User (chemins à adapter si besoin)
 require_once __DIR__ . "/src/repository/UserRepo.php";
-require_once __DIR__ . "/src/modele/User.php"; // Ou votre classe User
+require_once __DIR__ . "/src/modele/User.php";
 
 use repository\EventRepo;
 use repository\UserRepo; // NOUVEAU
@@ -387,9 +392,8 @@ if ($userLoggedIn) {
     <div class="footer-grid container">
         <div>
             <h4>École Sup.</h4>
-            <p>123 Rue de l'Innovation, 75000 Paris</p>
-            <p>contact@ecolesup.fr</p>
-            <p>+33 1 23 45 67 89</p>
+            <p>15 avenue du Général De Gaulle, Dugny</p>
+            <p>Contact2jrs@gmail.com</p>
         </div>
         <div>
             <h4>Liens rapides</h4>

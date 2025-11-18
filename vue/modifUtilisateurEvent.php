@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'ModifierUtilisateurÉvénement';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 session_start();
 
 // Vérification de l'authentification

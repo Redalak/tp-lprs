@@ -1,16 +1,29 @@
 <?php
-session_start();
+// Démarrer la session si elle n'est pas déjà démarrée
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Définir le titre de la page
+$pageTitle = 'Contact & Support';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+
+// Gestion de la déconnexion
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
     session_destroy();
     header("Location: ../index.php");
     exit;
 }
+
+// Vérifier si l'utilisateur est connecté
 $isLoggedIn = !empty($_SESSION['id_user']);
+$prenom = $_SESSION['prenom'] ?? '';
+
+// Inclure les dépendances nécessaires
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 use repository\UserRepo;
-
-// Récupérer prénom/nom pour la salutation si connecté
-$prenom = $_SESSION['prenom'] ?? '';
 $nom    = $_SESSION['nom'] ?? '';
 if ($isLoggedIn) {
     try {

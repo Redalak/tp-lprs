@@ -1,5 +1,11 @@
 <?php
-session_start();
+// Définir le titre de la page
+$pageTitle = 'Formations';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+
+// Gestion de la déconnexion
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
     session_destroy();
     header("Location: ../index.php");

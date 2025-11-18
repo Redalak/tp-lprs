@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'SupprimerEntreprise';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
 require_once __DIR__ . '/../src/modele/Entreprise.php';
 use repository\EntrepriseRepo;

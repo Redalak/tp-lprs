@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'SupprimerUtilisateur';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';  // Assurez-vous que cette ligne est présente pour inclure la classe User
 use repository\UserRepo;

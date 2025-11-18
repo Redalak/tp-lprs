@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'Forum';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 declare(strict_types=1);
 session_start();
 

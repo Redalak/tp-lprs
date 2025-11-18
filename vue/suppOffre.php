@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'SupprimerOffre';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 require_once __DIR__ . '/../src/repository/OffreRepo.php';
 
 use repository\OffreRepo;

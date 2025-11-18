@@ -1,4 +1,10 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'AdminÉvénement';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
 
 session_start();
 require_once __DIR__ . '/../src/repository/EventRepo.php';

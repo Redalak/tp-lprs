@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'Inscription Evenement';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 require_once __DIR__ . '/../src/bootstrap.php';
 require_once __DIR__ . '/../src/repository/EventRepo.php';
 require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';

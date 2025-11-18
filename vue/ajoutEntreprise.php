@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'AjouterEntreprise';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 // Optionnel : Démarrer la session si vous avez besoin d'infos utilisateur (ex: pour ref_user)
 // session_start();
 

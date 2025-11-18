@@ -1,4 +1,11 @@
 <?php
+// Définir le titre de la page
+$pageTitle = 'AjouterOffre';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
+
 require_once __DIR__ . '/../src/repository/OffreRepo.php';
 require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
 use repository\OffreRepo;

@@ -1,5 +1,10 @@
 <?php
-session_start();
+// Définir le titre de la page
+$pageTitle = 'Offres';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+?>
 
 require_once __DIR__ . "/../src/bdd/Bdd.php";
 require_once __DIR__ . "/../src/repository/UserRepo.php";

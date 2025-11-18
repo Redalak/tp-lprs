@@ -1,10 +1,23 @@
+<?php
+// Définir le titre de la page
+$pageTitle = 'Connexion';
+
+// Inclure l'en-tête qui gère la session et l'authentification
+require_once __DIR__ . '/../includes/header.php';
+
+// Vérifier si l'utilisateur est déjà connecté
+if (isset($_SESSION['connexion']) && $_SESSION['connexion'] === true) {
+    header('Location: /lprs/tp-lprs/vue/evenement.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Connexion - École Sup.</title>
+    <title><?= $pageTitle ?> - LPRS</title>
     <style>
         body{margin:0;font-family:'Segoe UI',sans-serif;background:#f4f4f4;}
 
