@@ -263,6 +263,7 @@ $offres = $offreRepo->listeOffre();
                 </article>
                 </article>
             <?php endforeach; ?>
+
             <?php if (empty($offres)): ?>
                 <p>Aucune offre disponible pour le moment.</p>
             <?php endif; ?>

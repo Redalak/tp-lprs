@@ -279,6 +279,7 @@ if ($userLoggedIn) {
                 <li><a href="vue/supportContact.php">Contact</a></li>
 
                 <?php if ($userLoggedIn): ?>
+
                     <li><a href="vue/forum.php">Forum</a></li>
 
                     <?php if ($isAdmin): ?>
