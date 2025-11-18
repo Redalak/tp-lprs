@@ -1,14 +1,10 @@
 <?php
+declare(strict_types=1);
 // Définir le titre de la page
 $pageTitle = 'AdminFormation';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
-// FICHIER: vue/adminFormation.php
-declare(strict_types=1);
-session_start();
 
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/repository/FormationRepo.php';

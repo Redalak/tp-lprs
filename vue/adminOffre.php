@@ -4,9 +4,6 @@ $pageTitle = 'AdminOffre';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
-session_start();
 require_once __DIR__ . '/../src/repository/OffreRepo.php';
 require_once __DIR__ . '/../src/modele/offre.php';
 require_once __DIR__ . '/../src/repository/UserRepo.php';

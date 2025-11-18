@@ -4,9 +4,6 @@ $pageTitle = 'AdminEntreprise';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
-session_start();
 // Active l'affichage des erreurs pour le débogage
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);

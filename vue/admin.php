@@ -233,7 +233,7 @@ $nowLabel = date('d/m/Y H:i');
         <div class="quick-card">
             <h3>Gestion</h3>
             <p>Options générales du site.</p>
-            <a href="admin.php">Ouvrir les paramètres</a>
+            <a href="adminGestion.php">Ouvrir les paramètres</a>
         </div>
     </div>
 </div>
