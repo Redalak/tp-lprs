@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // Définir le titre de la page
-$pageTitle = 'Gestion des Actualités';
+$pageTitle = 'Modifier une actualité';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
@@ -49,7 +49,21 @@ if (!$isAdmin) {
     exit;
 }
 
-// Traitement du formulaire d'ajout
+// Vérifier si un ID a été fourni
+if (empty($_GET['id'])) {
+    header('Location: adminGestion.php?error=1&message=' . urlencode('Aucun ID d\'actualité fourni'));
+    exit;
+}
+
+$actualitesRepo = new ActualitesRepo();
+$actualite = $actualitesRepo->getActualiteById((int)$_GET['id']);
+
+if (!$actualite) {
+    header('Location: adminGestion.php?error=1&message=' . urlencode('Actualité introuvable'));
+    exit;
+}
+
+// Traitement du formulaire de modification
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['contenu'])) {
     try {
         $contenu = trim($_POST['contenu']);
@@ -62,24 +76,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['contenu'])) {
             throw new Exception('Le contenu ne doit pas dépasser 50 caractères');
         }
         
-        // Création et sauvegarde
-        $actualite = new Actualites(['contexte' => $contenu]);
-        $actualitesRepo = new ActualitesRepo();
-        $actualitesRepo->ajoutActualite($actualite);
+        // Mise à jour de l'actualité
+        $actualite->setContexte($contenu);
+        $actualitesRepo->modifActualite($actualite);
         
-        // Message de succès
-        $message = 'L\'actualité a été ajoutée avec succès';
-        $alertClass = 'alert-success';
+        // Redirection avec message de succès
+        header('Location: adminGestion.php?success=1&message=' . urlencode('L\'actualité a été modifiée avec succès'));
+        exit;
+        
     } catch (Exception $e) {
         $message = $e->getMessage();
         $alertClass = 'alert-danger';
-        error_log('Erreur lors de l\'ajout d\'actualité : ' . $message);
+        error_log('Erreur lors de la modification d\'actualité : ' . $message);
     }
 }
-
-// Récupérer toutes les actualités
-$actualitesRepo = new ActualitesRepo();
-$actualites = $actualitesRepo->listeActualites();
 ?>
 
 <!DOCTYPE html>
@@ -87,7 +97,7 @@ $actualites = $actualitesRepo->listeActualites();
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Gestion des Actualités | Administration</title>
+    <title>Modifier une actualité | Administration</title>
     
     <!-- Styles -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -99,9 +109,6 @@ $actualites = $actualitesRepo->listeActualites();
         }
         .action-buttons .btn {
             margin: 0 2px;
-        }
-        .add-actu-btn {
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -142,25 +149,11 @@ $actualites = $actualitesRepo->listeActualites();
 
 <main class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestion des Actualités</h1>
-        <a href="adminAjoutActu.php" class="btn btn-primary add-actu-btn">
-            <i class="bi bi-plus-circle"></i> Ajouter une actualité
+        <h1>Modifier une actualité</h1>
+        <a href="adminGestion.php" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
         </a>
     </div>
-
-    <?php if (isset($_GET['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars(urldecode($_GET['message'] ?? 'Opération effectuée avec succès')) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (isset($_GET['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars(urldecode($_GET['message'] ?? 'Une erreur est survenue')) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
 
     <?php if (isset($message)): ?>
         <div class="alert <?= $alertClass ?> alert-dismissible fade show" role="alert">
@@ -169,94 +162,23 @@ $actualites = $actualitesRepo->listeActualites();
         </div>
     <?php endif; ?>
 
-    <!-- Formulaire d'ajout d'actualité -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Ajouter une nouvelle actualité</h5>
-        </div>
+    <div class="card">
         <div class="card-body">
             <form method="POST" onsubmit="return validateForm()">
                 <div class="mb-3">
                     <label for="contenu" class="form-label">Contenu de l'actualité</label>
                     <textarea class="form-control" id="contenu" name="contenu" rows="2" required minlength="10" maxlength="50" 
-                              placeholder="Saisissez le contenu de l'actualité (10 à 50 caractères)" 
-                              oninput="updateCharCount(this)"></textarea>
-                    <div class="form-text"><span id="charCount">0</span>/50 caractères</div>
+                              oninput="updateCharCount(this)"><?= htmlspecialchars($actualite->getContexte()) ?></textarea>
+                    <div class="form-text"><span id="charCount"><?= mb_strlen($actualite->getContexte()) ?></span>/50 caractères</div>
                 </div>
-                <div class="d-flex justify-content-end">
+                <div class="d-flex justify-content-between">
+                    <a href="adminGestion.php" class="btn btn-secondary">Annuler</a>
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Enregistrer
+                        <i class="bi bi-save"></i> Enregistrer les modifications
                     </button>
                 </div>
             </form>
         </div>
-    </div>
-    
-    <script>
-    function updateCharCount(textarea) {
-        const charCount = textarea.value.length;
-        document.getElementById('charCount').textContent = charCount;
-        
-        // Changer la couleur du compteur si on approche ou dépasse la limite
-        const charCountElement = document.getElementById('charCount');
-        if (charCount > 45) {
-            charCountElement.style.color = 'red';
-            charCountElement.style.fontWeight = 'bold';
-        } else {
-            charCountElement.style.color = '';
-            charCountElement.style.fontWeight = '';
-        }
-    }
-    
-    function validateForm() {
-        const contenu = document.getElementById('contenu').value.trim();
-        if (contenu.length < 10) {
-            alert('Le contenu doit faire au moins 10 caractères');
-            return false;
-        }
-        if (contenu.length > 50) {
-            alert('Le contenu ne doit pas dépasser 50 caractères');
-            return false;
-        }
-        return true;
-    }
-    </script>
-
-    <!-- Tableau des actualités -->
-    <div class="table-responsive">
-        <?php if (!empty($actualites)): ?>
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Contenu</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($actualites as $actualite): ?>
-                        <tr>
-                            <td><?= htmlspecialchars((string)$actualite->getIdActu()) ?></td>
-                            <td><?= nl2br(htmlspecialchars($actualite->getContexte() ?? '')) ?></td>
-                            <td class="action-buttons">
-                                <a href="adminModifActu.php?id=<?= $actualite->getIdActu() ?>" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i> Modifier
-                                </a>
-                                <a href="adminSupprActu.php?id=<?= $actualite->getIdActu() ?>" 
-                                   class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette actualité ?')">
-                                    <i class="bi bi-trash"></i> Supprimer
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="alert alert-info">
-                Aucune actualité n'a été trouvée.
-            </div>
-        <?php endif; ?>
     </div>
 </main>
 
@@ -285,9 +207,40 @@ $actualites = $actualitesRepo->listeActualites();
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-<script src="../assets/js/site.js"></script>
+<script>
+function updateCharCount(textarea) {
+    const charCount = textarea.value.length;
+    document.getElementById('charCount').textContent = charCount;
+    
+    // Changer la couleur du compteur si on approche ou dépasse la limite
+    const charCountElement = document.getElementById('charCount');
+    if (charCount > 45) {
+        charCountElement.style.color = 'red';
+        charCountElement.style.fontWeight = 'bold';
+    } else {
+        charCountElement.style.color = '';
+        charCountElement.style.fontWeight = '';
+    }
+}
 
+function validateForm() {
+    const contenu = document.getElementById('contenu').value.trim();
+    if (contenu.length < 10) {
+        alert('Le contenu doit faire au moins 10 caractères');
+        return false;
+    }
+    if (contenu.length > 50) {
+        alert('Le contenu ne doit pas dépasser 50 caractères');
+        return false;
+    }
+    return true;
+}
+
+// Initialiser le compteur au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('contenu');
+    updateCharCount(textarea);
+});
+</script>
 </body>
 </html>
