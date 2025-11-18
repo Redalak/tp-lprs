@@ -1,13 +1,19 @@
 <?php
+declare(strict_types=1);
+
 // Définir le titre de la page
 $pageTitle = 'Profil Utilisateur';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
 
-session_start();
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION['id_user'])) {
+    header('Location: connexion.php');
+    exit;
+}
 
+// Inclure les dépendances nécessaires
 require_once __DIR__ . '/../src/modele/User.php';
 require_once __DIR__ . '/../src/modele/Event.php';
 require_once __DIR__ . '/../src/modele/Entreprise.php';
@@ -23,11 +29,6 @@ use repository\InscriptionEventRepo;
 use repository\UserEntrepriseRepo;
 use modele\User;
 use modele\Event;
-
-if (!isset($_SESSION['id_user'])) {
-    header('Location: connexion.php');
-    exit;
-}
 
 $userId = $_SESSION['id_user'];
 $userRepo = new UserRepo();
@@ -792,7 +793,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         <h2>Créer un nouvel événement</h2>
         
         <form method="post" action="profilUser.php" class="form-container">
-            <input type="hidden" name="ref_user" value="<?= htmlspecialchars($userId) ?>">
+            <input type="hidden" name="ref_user" value="<?= htmlspecialchars((string)$userId) ?>">
             <input type="hidden" name="etat" value="publie">
             <input type="hidden" name="sauvegarder_evenement" value="1">
             
