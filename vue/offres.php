@@ -4,8 +4,6 @@ $pageTitle = 'Offres';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
 require_once __DIR__ . "/../src/bdd/Bdd.php";
 require_once __DIR__ . "/../src/repository/UserRepo.php";
 require_once __DIR__ . "/../src/modele/User.php";
@@ -15,6 +13,9 @@ require_once __DIR__ . "/../src/modele/offre.php";
 use repository\UserRepo;
 use repository\OffreRepo;
 
+?>
+
+<?php
 // Déconnexion
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
     session_destroy();

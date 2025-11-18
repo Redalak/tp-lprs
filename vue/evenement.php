@@ -4,8 +4,6 @@ $pageTitle = 'Evenement';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
 require_once __DIR__ . '/../src/repository/EventRepo.php';
 require_once __DIR__ . '/../src/modele/Event.php';
 require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
@@ -13,7 +11,10 @@ require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
 use repository\EventRepo;
 use repository\InscriptionEventRepo;
 
-session_start();
+// La session est déjà démarrée dans header.php
+
+// Initialisation des repositories
+
 
 $evenementRepo = new EventRepo();
 $inscriptionRepo = new InscriptionEventRepo();

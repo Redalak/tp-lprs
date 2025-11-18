@@ -4,7 +4,6 @@ $pageTitle = 'Entreprise';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
 
 // Inclure les fichiers nécessaires
 require_once __DIR__ . "/../src/bdd/Bdd.php";
@@ -20,6 +19,9 @@ require_once __DIR__ . "/../src/modele/offre.php";
 use repository\EntrepriseRepo;
 use repository\UserRepo;
 use repository\OffreRepo;
+
+?>
+<?php
 
 // Déconnexion (copié de votre index.php)
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {

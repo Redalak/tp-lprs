@@ -1,15 +1,13 @@
 <?php
+declare(strict_types=1);
+
 // Définir le titre de la page
 $pageTitle = 'Admin';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
 
-// FICHIER: vue/admin.php
-declare(strict_types=1);
-session_start();
-
+// Inclure les dépendances nécessaires
 require_once __DIR__ . '/../src/bdd/Bdd.php';
 require_once __DIR__ . '/../src/repository/UserRepo.php';
 require_once __DIR__ . '/../src/modele/User.php';
