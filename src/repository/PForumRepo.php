@@ -155,34 +155,54 @@ class PForumRepo {
 
     /**
      * Met à jour un post existant
+     * @param int $postId ID du post à mettre à jour
+     * @param int $userId ID de l'utilisateur qui effectue la mise à jour
+     * @param string $titre Nouveau titre du post
+     * @param string $contenu Nouveau contenu du post
+     * @param string $role Rôle de l'utilisateur (optionnel, pour les admins)
+     * @return bool True si la mise à jour a réussi, false sinon
      */
-    public function update(int $postId, int $userId, string $titre, string $contenu): bool {
+    public function update(int $postId, int $userId, string $titre, string $contenu, string $role = ''): bool {
         $this->detect();
         $pdo = $this->pdo();
         
-        $st = $pdo->prepare(
-            "UPDATE {$this->table} 
-             SET `{$this->cols['title']}` = ?, 
-                 `{$this->cols['body']}` = ?
-             WHERE `{$this->cols['id']}` = ? AND `{$this->cols['user']}` = ?"
-        );
+        // Préparer la requête de base
+        $sql = "UPDATE {$this->table} 
+                SET `{$this->cols['title']}` = ?, 
+                    `{$this->cols['body']}` = ?
+                WHERE `{$this->cols['id']}` = ?";
         
-        return $st->execute([$titre, $contenu, $postId, $userId]);
+        $params = [$titre, $contenu, $postId];
+        
+        // Si l'utilisateur n'est pas admin, on vérifie qu'il est l'auteur du post
+        if ($role !== 'admin') {
+            $sql .= " AND `{$this->cols['user']}` = ?";
+            $params[] = $userId;
+        }
+        
+        $st = $pdo->prepare($sql);
+        return $st->execute($params);
     }
 
     /**
      * Supprime un post et toutes ses réponses
+     * @param int $postId ID du post à supprimer
+     * @param int $userId ID de l'utilisateur qui effectue la suppression
+     * @param string $role Rôle de l'utilisateur (optionnel, pour les admins)
+     * @return bool True si la suppression a réussi, false sinon
      */
-    public function delete(int $postId, int $userId): bool {
+    public function delete(int $postId, int $userId, string $role = ''): bool {
         $this->detect();
         $pdo = $this->pdo();
         
-        // Vérifier que l'utilisateur est bien l'auteur du post
-        $st = $pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE `{$this->cols['id']}` = ? AND `{$this->cols['user']}` = ?");
-        $st->execute([$postId, $userId]);
-        
-        if ($st->fetchColumn() === 0) {
-            return false;
+        // Si l'utilisateur n'est pas admin, on vérifie qu'il est l'auteur du post
+        if ($role !== 'admin') {
+            $st = $pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE `{$this->cols['id']}` = ? AND `{$this->cols['user']}` = ?");
+            $st->execute([$postId, $userId]);
+            
+            if ($st->fetchColumn() === 0) {
+                return false; // L'utilisateur n'est pas autorisé à supprimer ce post
+            }
         }
         
         // Supprimer les réponses associées

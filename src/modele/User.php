@@ -128,7 +128,7 @@ class User
      */
     public function setRole($role)
     {
-        $this->role = $role;
+        $this->role = strtolower(trim((string)$role));
     }
 
     /**
