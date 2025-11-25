@@ -125,7 +125,7 @@ class PForumRepo {
         // Règles de permission par canal
         $permissions = [
             'alumni_entreprises' => ['alumni', 'entreprise'],
-            'etudiants_professeurs' => ['etudiant'], // Seuls les étudiants peuvent créer des posts
+            'etudiants_professeurs' => ['etudiant', 'prof'], // Les étudiants et les professeurs peuvent créer des posts
             'general' => ['etudiant', 'prof', 'alumni', 'entreprise', 'admin']
         ];
         
