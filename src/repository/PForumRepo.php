@@ -193,4 +193,27 @@ class PForumRepo {
         $st = $pdo->prepare("DELETE FROM {$this->table} WHERE `{$this->cols['id']}` = ?");
         return $st->execute([$postId]);
     }
+    
+    /**
+     * Récupère les posts d'un utilisateur spécifique
+     * @param int $userId ID de l'utilisateur
+     * @return array Tableau d'objets PForum
+     */
+    public function findByUser(int $userId): array {
+        $this->detect();
+        $pdo = $this->pdo();
+        $order = $this->cols['date'] ?: $this->cols['id'];
+        
+        $sql = "SELECT * FROM {$this->table} WHERE {$this->cols['user']} = :userId ORDER BY {$order} DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $posts = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $posts[] = new \modele\PForum($row);
+        }
+        
+        return $posts;
+    }
 }

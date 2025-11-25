@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply
     if ($userId > 0 && $postId > 0 && $contenue !== '') {
         $rRepo->create($postId, $userId, $contenue, $parentId);
     }
-    header('Location: forum_v3.php?canal=' . $canalActif . '#post-' . $postId);
+    header('Location: forum.php?canal=' . $canalActif . '#post-' . $postId);
     exit;
 }
 
@@ -251,6 +251,7 @@ $posts = $pRepo->findByCanal($canalActif);
                         <div class="dropdown-content">
                             <span>Bonjour, <?= htmlspecialchars((string)$userName) ?> !</span>
                             <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="mes_discussions.php" class="profile-button">Mes discussions</a>
                             <a href="?deco=true" class="logout-button">Déconnexion</a>
                         </div>
                     </li>
@@ -286,7 +287,7 @@ $posts = $pRepo->findByCanal($canalActif);
     <?php if ($userId > 0 && $peutPoster): ?>
         <div class="panel">
             <h3>Nouveau post</h3>
-            <form method="post" action="forum_v3.php?canal=<?= $canalActif ?>">
+            <form method="post" action="forum.php?canal=<?= $canalActif ?>">
                 <input type="hidden" name="action" value="post">
                 <input type="hidden" name="canal" value="<?= $canalActif ?>">
                 <input type="text" name="titre" placeholder="Titre" required>
@@ -383,7 +384,7 @@ $posts = $pRepo->findByCanal($canalActif);
                                 </div>
                                 <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
                                 <?php if ($userId > 0): ?>
-                                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                                    <form class="reply" method="post" action="forum.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="action" value="reply">
                                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="parent_id" value="<?= (int)$r->getIdReply() ?>">
@@ -432,7 +433,7 @@ $posts = $pRepo->findByCanal($canalActif);
                 <?php endif; ?>
 
                 <?php if ($userId > 0): ?>
-                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                    <form class="reply" method="post" action="forum.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                         <input type="hidden" name="action" value="reply">
                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                         <textarea name="contenue" rows="3" placeholder="Répondre…" required></textarea>
@@ -444,5 +445,174 @@ $posts = $pRepo->findByCanal($canalActif);
     <?php endif; ?>
 </div>
 <script src="../assets/js/site.js"></script>
+<script>
+// Fonction pour afficher les messages de débogage
+function debugLog(message) {
+    console.log(message);
+    const debugConsole = document.getElementById('debug-console');
+    if (debugConsole) {
+        const p = document.createElement('p');
+        p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+        debugConsole.appendChild(p);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+}
+
+// Fonction pour faire défiler vers un élément
+function scrollToElement(elementId) {
+    debugLog('Tentative de défilement vers: ' + elementId);
+    const element = document.getElementById(elementId.replace('#', ''));
+    
+    if (element) {
+        debugLog('Élément trouvé, défilement en cours...');
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        element.classList.add('highlighted-post');
+        
+        // Retirer la mise en surbrillance après 3 secondes
+        setTimeout(() => {
+            element.classList.remove('highlighted-post');
+        }, 3000);
+        
+        return true;
+    } else {
+        debugLog('Élément non trouvé: ' + elementId);
+        return false;
+    }
+}
+
+// Fonction pour gérer le défilement
+function handleScrollToHash() {
+    if (window.location.hash) {
+        debugLog('Hash détecté dans l\'URL: ' + window.location.hash);
+        
+        // Essayer de faire défiler immédiatement
+        if (scrollToElement(window.location.hash)) {
+            return;
+        }
+        
+        // Si l'élément n'est pas encore chargé, essayer plusieurs fois avec un délai
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = 200; // ms
+        
+        const checkForElement = setInterval(() => {
+            attempts++;
+            debugLog(`Tentative ${attempts}/${maxAttempts} pour trouver l'élément`);
+            
+            if (scrollToElement(window.location.hash)) {
+                clearInterval(checkForElement);
+            } else if (attempts >= maxAttempts) {
+                debugLog('Échec: élément non trouvé après ' + maxAttempts + ' tentatives');
+                clearInterval(checkForElement);
+            }
+        }, checkInterval);
+    } else {
+        debugLog('Aucun hash trouvé dans l\'URL');
+    }
+}
+
+// Démarrer le processus de défilement quand le DOM est chargé
+document.addEventListener('DOMContentLoaded', function() {
+    debugLog('DOM entièrement chargé');
+    
+    // Si le contenu est chargé de manière asynchrone, il faudra peut-être attendre plus longtemps
+    // ou utiliser un événement personnalisé déclenché quand le contenu est chargé
+    
+    // Essayer de faire défiler immédiatement
+    handleScrollToHash();
+    
+    // Réessayer après un certain délai au cas où le contenu se charge de manière asynchrone
+    setTimeout(handleScrollToHash, 1000);
+});
+
+// Écouter les changements d'URL (au cas où le hash change sans rechargement de page)
+window.addEventListener('hashchange', handleScrollToHash, false);
+
+// Afficher la console de débogage si le paramètre debug est présent dans l'URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === '1') {
+    const debugConsole = document.createElement('div');
+    debugConsole.id = 'debug-console';
+    debugConsole.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#fff;padding:10px;font-family:monospace;font-size:12px;max-height:200px;overflow-y:auto;z-index:9999;';
+    document.body.appendChild(debugConsole);
+    debugLog('Console de débogage activée');
+}
+});
+</script>
+<style>
+/* Style pour la mise en surbrillance du post cible */
+.highlighted-post {
+    animation: highlight 3s ease-in-out;
+    border-left: 4px solid #4a90e2;
+    padding-left: 10px;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+@keyframes highlight {
+    0% { 
+        background-color: rgba(74, 144, 226, 0.2);
+        transform: translateX(-5px);
+    }
+    50% {
+        background-color: rgba(74, 144, 226, 0.1);
+    }
+    100% { 
+        background-color: transparent;
+        transform: translateX(0);
+    }
+}
+
+/* Style pour la console de débogage (visible uniquement en développement) */
+#debug-console {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none; /* Caché par défaut */
+}
+
+/* Pour afficher la console de débogage, ajoutez ?debug=1 à l'URL */
+</style>
+
+<!-- Console de débogage -->
+<div id="debug-console"></div>
+
+<script>
+// Fonction pour afficher les messages de débogage
+function debugLog(message) {
+    console.log(message);
+    const debugConsole = document.getElementById('debug-console');
+    if (debugConsole) {
+        const p = document.createElement('p');
+        p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+        debugConsole.appendChild(p);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+}
+
+// Afficher la console de débogage si le paramètre debug est présent dans l'URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === '1') {
+    document.getElementById('debug-console').style.display = 'block';
+}
+
+// Redéfinir la fonction scrollToPost pour utiliser debugLog
+const originalScrollToPost = window.scrollToPost;
+window.scrollToPost = function() {
+    debugLog('Fonction scrollToPost appelée');
+    if (originalScrollToPost) {
+        return originalScrollToPost.apply(this, arguments);
+    }
+};
+</script>
 </body>
 </html>
