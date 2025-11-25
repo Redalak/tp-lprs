@@ -36,28 +36,44 @@ function getUserFullName($userId, $userRepo) {
     return 'Utilisateur #' . $userId;
 }
 
-// Récupérer le rôle de l'utilisateur
-$role = '';
+// Récupérer l'ID de l'utilisateur depuis la session
 $userId = (int)($_SESSION['id_user'] ?? 0);
 
-// Récupérer les informations de l'utilisateur
+// Initialiser les variables utilisateur
 $prenom = $_SESSION['prenom'] ?? '';
 $nom = $_SESSION['nom'] ?? '';
+$role = '';
+
+// Debug: Afficher les informations de session
+// echo "<pre>Session: "; print_r($_SESSION); echo "</pre>";
 
 if ($userId > 0) {
     try {
         $uRepo = new UserRepo();
         $u = $uRepo->getUserById($userId);
         if ($u) {
+            // Récupérer le prénom et le nom
             if (method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
             if (method_exists($u, 'getNom'))    { $nom = $u->getNom(); }
-            if (method_exists($u, 'getRole'))   { $role = strtolower((string)$u->getRole()); }
+            
+            // Récupérer le rôle
+            if (method_exists($u, 'getRole')) { 
+                $role = strtolower(trim((string)$u->getRole()));
+                // Debug: Afficher le rôle récupéré
+                // echo "<p>Rôle récupéré de la base de données: $role</p>";
+            }
         }
-    } catch (\Throwable $e) {}
+    } catch (\Throwable $e) {
+        // En cas d'erreur, on laisse le rôle vide
+        // Debug: Afficher l'erreur
+        // echo "<p>Erreur lors de la récupération du rôle: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
 }
 
 // Si le rôle n'est pas défini, on utilise une valeur par défaut
 if (empty($role)) {
+    // Debug: Afficher un avertissement si le rôle n'est pas défini
+    // echo "<p>Avertissement: Aucun rôle défini pour l'utilisateur, utilisation de 'etudiant' par défaut</p>";
     $role = 'etudiant';
 }
 
@@ -106,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $contenue = trim((string)($_POST['contenue'] ?? ''));
     
     if ($postId > 0 && $titre !== '' && $contenue !== '') {
-        $pRepo->update($postId, $userId, $titre, $contenue);
+        $pRepo->update($postId, $userId, $titre, $contenue, $role);
     }
     header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
@@ -116,9 +132,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 if (isset($_GET['delete_post'])) {
     $postId = (int)$_GET['delete_post'];
     if ($postId > 0) {
-        $pRepo->delete($postId, $userId);
+        // Récupérer le post pour vérifier l'auteur
+        $post = $pRepo->find($postId);
+        if ($post) {
+            $postAuthorId = (int)$post->getRefUser();
+            $isAuthor = $userId === $postAuthorId;
+            
+            // Récupérer le rôle de l'utilisateur
+            $userRole = '';
+            if ($userId > 0) {
+                $currentUser = $userRepo->getUserById($userId);
+                if ($currentUser && method_exists($currentUser, 'getRole')) {
+                    $userRole = $currentUser->getRole();
+                }
+            }
+            
+            $isAdmin = $userRole === 'admin';
+            
+            // Debug: Afficher les informations de débogage
+            echo "<!-- ";
+            echo "Tentative de suppression - ";
+            echo "Post ID: $postId, ";
+            echo "User ID: $userId, ";
+            echo "Post Author ID: $postAuthorId, ";
+            echo "Is Author: " . ($isAuthor ? 'yes' : 'no') . ", ";
+            echo "User Role: " . htmlspecialchars($userRole) . ", ";
+            echo "Is Admin: " . ($isAdmin ? 'yes' : 'no');
+            echo " -->\n";
+            
+            // Vérifier les autorisations
+            if ($isAuthor || $isAdmin) {
+                $pRepo->delete($postId, $userId, $userRole);
+            } else {
+                // Debug: Enregistrer une tentative non autorisée
+                error_log("Tentative de suppression non autorisée - Accès refusé pour l'utilisateur $userId sur le post $postId");
+            }
+        }
     }
-    header('Location: forum.php?canal=' . $canalActif);
+    // Rediriger vers la même page pour éviter la resoumission du formulaire
+    header("Location: forum.php?canal=$canalActif");
     exit;
 }
 
@@ -315,7 +367,25 @@ $posts = $pRepo->findByCanal($canalActif);
                 <div class="meta">
                     Posté le <?= htmlspecialchars((string)$p->getDateCreation()) ?>
                     — <?= htmlspecialchars(getUserFullName((int)$p->getRefUser(), $userRepo)) ?>
-                    <?php if ($userId === (int)$p->getRefUser() || $role === 'admin'): ?>
+                    <?php 
+                    // Déclarer les variables au début pour éviter les erreurs
+                    $postAuthorId = (int)$p->getRefUser();
+                    $isAuthor = ($userId === $postAuthorId);
+                    
+                    // Vérifier si l'utilisateur est admin en utilisant la variable $role définie plus haut
+                    $isAdmin = ($role === 'admin');
+                    
+                    // Debug: Afficher les informations de débogage
+                    echo "<!-- ";
+                    echo "DEBUG - Post ID: " . $p->getIdPost() . ", ";
+                    echo "User ID: $userId, ";
+                    echo "Post Author ID: $postAuthorId, ";
+                    echo "Is Author: " . ($isAuthor ? 'yes' : 'no') . ", ";
+                    echo "User Role: " . htmlspecialchars($role) . ", ";
+                    echo "Is Admin: " . ($isAdmin ? 'yes' : 'no');
+                    echo " -->\n";
+                    ?>
+                    <?php if ($isAuthor || $isAdmin): ?>
                         <div class="post-actions" style="display: inline-block; margin-left: 10px;">
                             <a href="#" onclick="event.preventDefault(); document.getElementById('edit-post-<?= $p->getIdPost() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 10px;">
                                 <small>Modifier</small>
@@ -360,7 +430,12 @@ $posts = $pRepo->findByCanal($canalActif);
                                 <div class="meta">
                                     Le <?= htmlspecialchars((string)$r->getDateCreation()) ?>
                                     — <?= htmlspecialchars(getUserFullName((int)$r->getRefUser(), $userRepo)) ?>
-                                    <?php if ($userId === (int)$r->getRefUser() || $role === 'admin'): ?>
+                                    <?php 
+                                    $replyAuthorId = (int)$r->getRefUser();
+                                    $isReplyAuthor = $userId === $replyAuthorId;
+                                    $isAdmin = ($role === 'admin');
+                                    if ($isReplyAuthor || $isAdmin): 
+                                    ?>
                                         <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
                                             <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $r->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.9em;">
                                                 <small>Modifier</small>
@@ -400,7 +475,12 @@ $posts = $pRepo->findByCanal($canalActif);
                                                 <div class="meta">
                                                 Le <?= htmlspecialchars((string)$c->getDateCreation()) ?>
                                                 — <?= htmlspecialchars(getUserFullName((int)$c->getRefUser(), $userRepo)) ?>
-                                                <?php if ($userId === (int)$c->getRefUser() || $role === 'admin'): ?>
+                                                <?php 
+                                    $nestedReplyAuthorId = (int)$c->getRefUser();
+                                    $isNestedReplyAuthor = $userId === $nestedReplyAuthorId;
+                                    $isAdmin = ($role === 'admin');
+                                    if ($isNestedReplyAuthor || $isAdmin): 
+                                    ?>
                                                     <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
                                                         <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $c->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.8em;">
                                                             <small>Modifier</small>

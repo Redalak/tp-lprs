@@ -2,10 +2,10 @@
 // Définir le titre de la page
 $pageTitle = 'Inscription Evenement';
 
-// Inclure l'en-tête qui gère la session et l'authentification
-require_once __DIR__ . '/../includes/header.php';
-?>
+// Démarrer la session
+session_start();
 
+// Inclure les fichiers nécessaires
 require_once __DIR__ . '/../src/bootstrap.php';
 require_once __DIR__ . '/../src/repository/EventRepo.php';
 require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
@@ -13,11 +13,18 @@ require_once __DIR__ . '/../src/repository/InscriptionEventRepo.php';
 use repository\EventRepo;
 use repository\InscriptionEventRepo;
 
-session_start();
-
 // Vérifier si l'utilisateur est connecté
 if (empty($_SESSION['connexion']) || $_SESSION['connexion'] !== true || empty($_SESSION['id_user'])) {
     header('Location: connexion.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    exit();
+}
+
+// Vérifier si l'utilisateur est un administrateur
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    $message = "Les administrateurs ne peuvent pas s'inscrire aux événements.";
+    $success = false;
+    // Rediriger vers la page précédente après un court délai
+    header('Refresh: 3; URL=' . (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php'));
     exit();
 }
 
