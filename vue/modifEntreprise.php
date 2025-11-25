@@ -4,9 +4,8 @@ $pageTitle = 'ModifierEntreprise';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
 
-// Démarrer la session
+
 session_start();
 
 // Vérifier si l'utilisateur est connecté et est un administrateur

@@ -37,6 +37,9 @@
         .register-link a:hover{text-decoration:underline}
         /* Shared theme */
         @import url('../assets/css/site.css');
+        .champs-specifiques[style*="display: block"] {
+            display: block !important;
+        }
     </style>
 </head>
 <body>
@@ -55,28 +58,98 @@
         <div class="alert ok">Inscription réussie !</div>
     <?php endif; ?>
 
-    <form action="../src/traitement/gestionInscription.php" method="POST">
-        <label for="prenom">Prénom</label>
-        <input id="prenom" name="prenom" type="text" required autocomplete="given-name"/>
+    <form action="../src/traitement/gestionInscription.php" method="POST" id="inscriptionForm">
+        <label for="role">Type de compte</label>
+        <select id="role" name="role" required onchange="afficherChampsSpecifiques()">
+            <option value="">Sélectionnez un type de compte</option>
+            <option value="etudiant">Étudiant</option>
+            <option value="alumni">Alumni</option>
+            <option value="prof">Professeur</option>
+        </select>
 
-        <label for="nom">Nom</label>
-        <input id="nom" name="nom" type="text" required autocomplete="family-name"/>
+        <div id="champsCommuns">
+            <label for="prenom">Prénom</label>
+            <input id="prenom" name="prenom" type="text" required autocomplete="given-name"/>
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required autocomplete="email"/>
+            <label for="nom">Nom</label>
+            <input id="nom" name="nom" type="text" required autocomplete="family-name"/>
 
-        <label for="mdp">Mot de passe</label>
-        <input id="mdp" name="mdp" type="password" required minlength="6" autocomplete="new-password"/>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required autocomplete="email"/>
 
-        <label for="CMdp">Confirmer le mot de passe</label>
-        <input id="CMdp" name="CMdp" type="password" required minlength="6" autocomplete="new-password"/>
+            <label for="mdp">Mot de passe</label>
+            <input id="mdp" name="mdp" type="password" required minlength="6" autocomplete="new-password"/>
+
+            <label for="CMdp">Confirmer le mot de passe</label>
+            <input id="CMdp" name="CMdp" type="password" required minlength="6" autocomplete="new-password"/>
+        </div>
+
+        <!-- Champs spécifiques aux étudiants -->
+        <div id="champsEtudiant" class="champs-specifiques" style="display: none;">
+            <label for="annee_promo">Année de promotion</label>
+            <input id="annee_promo" name="annee_promo" type="text" placeholder="Ex: 2023-2024"/>
+        </div>
+
+        <!-- Champs spécifiques aux alumni -->
+        <div id="champsAlumni" class="champs-specifiques" style="display: none;">
+            <label for="emploi_actuel">Emploi actuel</label>
+            <input id="emploi_actuel" name="emploi_actuel" type="text" placeholder="Votre poste actuel"/>
+            
+            <label for="nom_entreprise">Nom de l'entreprise</label>
+            <input id="nom_entreprise" name="nom_entreprise" type="text" placeholder="Nom de votre entreprise actuelle"/>
+        </div>
+
+        <!-- Champs spécifiques aux professeurs -->
+        <div id="champsProf" class="champs-specifiques" style="display: none;">
+            <label for="matiere">Matière enseignée</label>
+            <input id="matiere" name="matiere" type="text" placeholder="Votre matière principale"/>
+        </div>
 
         <button type="submit">Créer un compte</button>
-
+    </form>
+    
     <div class="register-link">
         <p>Déjà inscrit ? <a href="connexion.php">Se connecter</a></p>
     </div>
 </div>
-<script src="../assets/js/site.js"></script>
+    <script>
+        // Fonction pour afficher les champs spécifiques
+        function afficherChampsSpecifiques() {
+            // Masquer tous les champs spécifiques
+            document.querySelectorAll('.champs-specifiques').forEach(div => {
+                div.style.display = 'none';
+            });
+
+            // Afficher les champs en fonction du rôle
+            const role = document.getElementById('role').value;
+            
+            if (role === 'etudiant') {
+                document.getElementById('champsEtudiant').style.display = 'block';
+            } else if (role === 'alumni') {
+                document.getElementById('champsAlumni').style.display = 'block';
+            } else if (role === 'prof') {
+                document.getElementById('champsProf').style.display = 'block';
+            }
+            
+            console.log('Affichage des champs pour le rôle:', role);
+        }
+        
+        // Initialisation au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page chargée, initialisation du formulaire');
+            
+            // Ajouter l'événement onchange au select
+            const roleSelect = document.getElementById('role');
+            if (roleSelect) {
+                roleSelect.addEventListener('change', afficherChampsSpecifiques);
+                
+                // Afficher les champs si un rôle est déjà sélectionné (en cas de rechargement de page)
+                if (roleSelect.value) {
+                    afficherChampsSpecifiques();
+                }
+            }
+        });
+    </script>
+    <script src="../assets/js/site.js"></script>
 </body>
 </html>

@@ -40,6 +40,42 @@ class EntrepriseRepo
     }
 
     /**
+     * Trouve une entreprise par son nom
+     */
+    public function trouverParNom($nom)
+    {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->prepare('SELECT * FROM entreprise WHERE nom = :nom');
+        $req->execute(['nom' => $nom]);
+        
+        return $req->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Crée une nouvelle entreprise
+     */
+    public function creerEntreprise($data)
+    {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        
+        $req = $database->prepare('INSERT INTO entreprise (nom, adresse, site_web, motif_partenariat, date_inscription, ref_offre) 
+                                 VALUES (:nom, :adresse, :site_web, :motif_partenariat, :date_inscription, :ref_offre)');
+        
+        $req->execute([
+            'nom' => $data['nom'],
+            'adresse' => $data['adresse'] ?? null,
+            'site_web' => $data['site_web'] ?? null,
+            'motif_partenariat' => $data['motif_partenariat'] ?? '',
+            'date_inscription' => date('Y-m-d'),
+            'ref_offre' => $data['ref_offre'] ?? null
+        ]);
+        
+        return $database->lastInsertId();
+    }
+
+    /**
      * Modification d'une entreprise
      */
     public function modifEntreprise(Entreprise $entreprise)

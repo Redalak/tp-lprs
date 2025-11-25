@@ -45,6 +45,32 @@ class UserRepo
         ]);
     }
 
+    /**
+     * Trouve un utilisateur par son ID
+     */
+    public function trouverParId($id)
+    {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+        $req = $database->prepare('SELECT * FROM user WHERE id_user = :id LIMIT 1');
+        $req->execute(['id' => $id]);
+        $row = $req->fetch();
+        
+        if (!$row) {
+            return null;
+        }
+        
+        return new User([
+            'idUser' => $row['id_user'],
+            'email' => $row['email'],
+            'nom' => $row['nom'],
+            'prenom' => $row['prenom'],
+            'mdp' => $row['mdp'],
+            'role' => $row['role'],
+            'isApproved' => $row['is_approved'] ?? 0,
+        ]);
+    }
+    
     public function inscription(User $user)
     {
         $bdd = new Bdd();

@@ -10,6 +10,45 @@ use modele\offre;
 
 class OffreRepo
 {
+    private $bdd;
+
+    public function __construct()
+    {
+        $this->bdd = new \PDO(
+            'mysql:host=localhost;dbname=tplprs;charset=utf8',
+            'root',
+            'root',
+            [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
+            ]
+        );
+    }
+
+    /**
+     * Ajoute une offre
+     */
+    public function ajouterOffre($data)
+    {
+        try {
+            $query = "INSERT INTO offre (titre, description, type_offre, salaire, ref_entreprise) 
+                     VALUES (:titre, :description, :type_offre, :salaire, :ref_entreprise)";
+            
+            $stmt = $this->bdd->prepare($query);
+            $stmt->execute([
+                ':titre' => $data['titre'],
+                ':description' => $data['description'],
+                ':type_offre' => $data['type_offre'],
+                ':salaire' => $data['salaire'] ?? null,
+                ':ref_entreprise' => $data['ref_entreprise']
+            ]);
+            
+            return $this->bdd->lastInsertId();
+        } catch (\PDOException $e) {
+            error_log("Erreur lors de l'ajout de l'offre : " . $e->getMessage());
+            return false;
+        }
+    }
     public function ajoutOffre(offre $offre) {
         $bdd = new Bdd();
         $database = $bdd->getBdd();

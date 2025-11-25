@@ -2,7 +2,7 @@
 
 namespace repository;
 
-class AlumniRepo
+class ElevesRepo
 {
     private $bdd;
 
@@ -19,22 +19,22 @@ class AlumniRepo
         );
     }
 
-    public function ajouterAlumni($data)
+    public function ajouterEleve($data)
     {
         try {
-            $query = "INSERT INTO alumni (ref_user, emploi_actuel, ref_entreprise) 
-                     VALUES (:ref_user, :emploi_actuel, :ref_entreprise)";
-
+            $query = "INSERT INTO eleves (ref_user, annee_promo, date_inscription) 
+                     VALUES (:ref_user, :annee_promo, :date_inscription)";
+            
             $stmt = $this->bdd->prepare($query);
             $stmt->execute([
                 ':ref_user' => $data['ref_user'],
-                ':emploi_actuel' => $data['emploi_actuel'],
-                ':ref_entreprise' => $data['ref_entreprise']
+                ':annee_promo' => $data['annee_promo'],
+                ':date_inscription' => $data['date_inscription']
             ]);
-
+            
             return $this->bdd->lastInsertId();
         } catch (\PDOException $e) {
-            error_log("Erreur lors de l'ajout de l'alumni : " . $e->getMessage());
+            error_log("Erreur lors de l'ajout de l'élève : " . $e->getMessage());
             return false;
         }
     }

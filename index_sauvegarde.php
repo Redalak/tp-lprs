@@ -10,12 +10,9 @@ require_once __DIR__ . "/src/bdd/Bdd.php";
 require_once __DIR__ . "/src/repository/EventRepo.php";
 require_once __DIR__ . "/src/repository/UserRepo.php";
 require_once __DIR__ . "/src/modele/User.php";
-require_once __DIR__ . "/src/modele/Actualites.php";
-require_once __DIR__ . "/src/repository/ActualitesRepo.php";
 
 use repository\EventRepo;
-use repository\UserRepo;
-use repository\ActualitesRepo;
+use repository\UserRepo; // NOUVEAU
 
 // Déconnexion simple via ?deco=true
 if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
@@ -28,10 +25,6 @@ if (!empty($_GET['deco']) && $_GET['deco'] === 'true') {
 $eventRepo = new EventRepo();
 $latestEvents = $eventRepo->getProchainsEvents(3);
 
-// Récupération des 3 dernières actualités
-$actualitesRepo = new ActualitesRepo();
-$dernieresActualites = $actualitesRepo->getDernieresActualites();
-
 // NOUVEAU: Récupérer l'utilisateur connecté
 $userLoggedIn = null; // Initialiser
 if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty($_SESSION['id_user'])) {
@@ -39,7 +32,7 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
     // On suppose que vous avez une méthode getUserById()
     $userLoggedIn = $userRepo->getUserById($_SESSION['id_user']);
 }
-// Déterminer si l'utilisateur est admin (robuste selon ton modèle)x
+// Déterminer si l'utilisateur est admin (robuste selon ton modèle)
 $isAdmin = false;
 
 if ($userLoggedIn) {
@@ -353,19 +346,10 @@ if ($userLoggedIn) {
     <section class="actus-events">
         <div class="card actus">
             <h3>Actualités</h3>
-            <ul>
-                <?php foreach($dernieresActualites as $actualite): ?>
-                    <li><a href="#"><?= htmlspecialchars($actualite->getContexte()) ?></a></li>
-                <?php endforeach; ?>
-                <?php if (empty($dernieresActualites)): ?>
-                    <li>Aucune actualité pour le moment</li>
-                <?php endif; ?>
+                <li><a href="#">Ouverture des candidatures pour la rentrée 2026</a></li>
+                <li><a href="#">Signature d'un partenariat stratégique avec TechLabs</a></li>
+                <li><a href="#">Lancement du nouveau master en Data Science & IA</a></li>
             </ul>
-            <?php if ($isAdmin): ?>
-                <div class="more-wrapper">
-                    <a class="btn-more" href="vue/admin.php?section=actualites">Gérer les actualités</a>
-                </div>
-            <?php endif; ?>
         </div>
         <div class="card events">
             <h3>Événements à venir</h3>
