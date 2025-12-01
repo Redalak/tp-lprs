@@ -4,11 +4,12 @@ $pageTitle = 'ModifierÉvénement';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
-
 require_once __DIR__ . '/../src/repository/EventRepo.php';
 use repository\EventRepo;
+?>
 
+
+<?php
 $eventRepo = new EventRepo();
 
 if (!isset($_GET['id'])) {
