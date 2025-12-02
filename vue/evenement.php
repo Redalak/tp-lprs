@@ -66,6 +66,28 @@ if (isset($_GET['event_id']) && is_numeric($_GET['event_id'])) {
         }
     }
     
+    // Traitement de la désinscription d'un utilisateur
+    if ($userLoggedIn && isset($_POST['desinscrire_event']) && isset($_POST['event_id'])) {
+        $eventId = filter_input(INPUT_POST, 'event_id', FILTER_VALIDATE_INT);
+        $userId = $userLoggedIn->getIdUser();
+        
+        if ($eventId) {
+            // Utiliser la méthode annulerParticipation qui gère la transaction complète
+            $annulationReussie = $inscriptionRepo->annulerParticipation($userId, $eventId);
+            
+            if ($annulationReussie) {
+                $_SESSION['message'] = "Vous avez été désinscrit de l'événement avec succès.";
+                $_SESSION['messageClass'] = "success";
+                // Recharger la page pour actualiser l'affichage
+                header("Location: evenement.php" . (isset($_GET['event_id']) ? '?event_id=' . $_GET['event_id'] : ''));
+                exit();
+            } else {
+                $message = "Une erreur est survenue lors de la désinscription.";
+                $messageClass = "error";
+            }
+        }
+    }
+    
     // Vérifier si l'utilisateur est déjà inscrit à l'événement
     if ($userLoggedIn) {
         $estInscrit = $inscriptionRepo->estInscrit($userLoggedIn->getIdUser(), $evenement->getIdEvent());
@@ -446,8 +468,16 @@ if (isset($_SESSION['message'])) {
                 <div class="event-actions" style="margin-top: 40px;">
                     <?php if (!empty($userLoggedIn)): ?>
                         <?php if ($estInscrit): ?>
-                            <div class="alert alert-success" style="padding: 15px; background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 20px;">
-                                <i class="bi bi-check-circle"></i> Vous êtes inscrit à cet événement
+                            <div class="alert alert-success" style="padding: 15px; background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="bi bi-check-circle"></i> Vous êtes inscrit à cet événement
+                                </div>
+                                <form method="post" action="" style="margin: 0;">
+                                    <input type="hidden" name="event_id" value="<?= $evenement->getIdEvent() ?>">
+                                    <button type="submit" name="desinscrire_event" class="btn btn-sm" style="background: #f8d7da; color: #721c24; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.9em;" onclick="return confirm('Êtes-vous sûr de vouloir vous désinscrire de cet événement ?')">
+                                        <i class="bi bi-x-circle"></i> Se désinscrire
+                                    </button>
+                                </form>
                             </div>
                         <?php elseif (strtotime($evenement->getDateEvent()) > time()): ?>
                             <a href="./inscription_evenement.php?id=<?= $evenement->getIdEvent() ?>" class="btn-inscription" style="background: var(--primary-color); color: white; padding: 12px 20px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: 500;">
@@ -596,8 +626,18 @@ if (isset($_SESSION['message'])) {
                                     }
                                     
                                     if ($userInscrit): ?>
-                                        <div class="alert alert-success" style="padding: 8px 12px; background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 10px; font-size: 0.9em;">
-                                            <i class="bi bi-check-circle"></i> Inscrit
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 10px; font-size: 0.9em; border-radius: 4px;">
+                                            <div>
+                                                <i class="bi bi-check-circle"></i> Inscrit
+                                            </div>
+                                            <?php if (isset($_GET['event_id'])): ?>
+                                            <form method="post" action="" style="margin: 0;">
+                                                <input type="hidden" name="event_id" value="<?= $event->getIdEvent() ?>">
+                                                <button type="submit" name="desinscrire_event" class="btn btn-sm" style="background: #f8d7da; color: #721c24; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em;" onclick="return confirm('Êtes-vous sûr de vouloir vous désinscrire de cet événement ?')">
+                                                    <i class="bi bi-x-circle"></i> Se désinscrire
+                                                </button>
+                                            </form>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
                                     

@@ -155,7 +155,7 @@ if (!$idEvent) {
             </div>
             <h1>Inscription réussie !</h1>
             <p><?= htmlspecialchars($message) ?></p>
-            <p>Vous recevrez un email de confirmation avec les détails de l'événement.</p>
+            <p>Votre inscription a été prise en compte.</p>
         <?php else: ?>
             <div class="icon error">
                 <i class="bi bi-exclamation-triangle-fill"></i>

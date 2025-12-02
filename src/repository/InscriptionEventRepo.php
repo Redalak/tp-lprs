@@ -69,14 +69,31 @@ class InscriptionEventRepo
     public function supprimerParticipant(int $idEvenement, int $idUtilisateur): bool
     {
         try {
+            error_log("supprimerParticipant - Début - Event: $idEvenement, User: $idUtilisateur");
             $bdd = new Bdd();
             $database = $bdd->getBdd();
             
-            $req = $database->prepare('DELETE FROM inscription_evenement WHERE ref_evenement = :id_evenement AND ref_user = :id_utilisateur');
-            return $req->execute([
+            $sql = 'DELETE FROM inscription_evenement WHERE ref_evenement = :id_evenement AND ref_user = :id_utilisateur';
+            error_log("Requête SQL: $sql");
+            error_log("Paramètres - id_evenement: $idEvenement, id_utilisateur: $idUtilisateur");
+            
+            $req = $database->prepare($sql);
+            $result = $req->execute([
                 'id_evenement' => $idEvenement,
                 'id_utilisateur' => $idUtilisateur
             ]);
+            
+            $rowCount = $req->rowCount();
+            error_log("Lignes affectées: $rowCount");
+            error_log("Résultat de l'exécution: " . ($result ? 'true' : 'false'));
+            
+            if ($rowCount > 0) {
+                error_log("Suppression réussie");
+                return true;
+            } else {
+                error_log("Aucune ligne supprimée - Vérifiez les paramètres");
+                return false;
+            }
         } catch (\PDOException $e) {
             error_log("Erreur lors de la suppression du participant : " . $e->getMessage());
             return false;
