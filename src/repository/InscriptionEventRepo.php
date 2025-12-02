@@ -17,6 +17,78 @@ class InscriptionEventRepo
 
 
     // Vérifie si un utilisateur est déjà inscrit à un événement
+    /**
+     * Récupère la liste des participants à un événement
+     * @param int $idEvenement ID de l'événement
+     * @return array Tableau des utilisateurs inscrits à l'événement
+     */
+    public function getParticipantsEvenement(int $idEvenement): array
+    {
+        $bdd = new Bdd();
+        $database = $bdd->getBdd();
+
+        $req = $database->prepare('
+            SELECT u.id_user, u.nom, u.prenom, u.email, u.role,
+                   CASE 
+                       WHEN u.role LIKE "%CC%" THEN "Utilisateur"
+                       WHEN u.role LIKE "%DC%" THEN "Utilisateur"
+                       ELSE COALESCE(NULLIF(TRIM(u.role), ""), "Utilisateur")
+                   END as role_clean
+            FROM inscription_evenement ie
+            JOIN user u ON ie.ref_user = u.id_user
+            WHERE ie.ref_evenement = :id_evenement
+            ORDER BY u.nom, u.prenom
+        ');
+        $req->execute(['id_evenement' => $idEvenement]);
+        
+        $participants = $req->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Nettoyer les rôles des préfixes indésirables
+        foreach ($participants as &$participant) {
+            if (isset($participant['role_clean'])) {
+                $participant['role'] = $participant['role_clean'];
+                unset($participant['role_clean']);
+            }
+            // Nettoyage supplémentaire au cas où
+            $participant['role'] = preg_replace('/^(CC|DC)\s*/i', '', $participant['role']);
+            $participant['role'] = trim($participant['role']);
+            if (empty($participant['role'])) {
+                $participant['role'] = 'Utilisateur';
+            }
+        }
+        
+        return $participants;
+    }
+    
+    /**
+     * Supprime un participant d'un événement
+     * @param int $idEvenement ID de l'événement
+     * @param int $idUtilisateur ID de l'utilisateur à supprimer
+     * @return bool True si la suppression a réussi, false sinon
+     */
+    public function supprimerParticipant(int $idEvenement, int $idUtilisateur): bool
+    {
+        try {
+            $bdd = new Bdd();
+            $database = $bdd->getBdd();
+            
+            $req = $database->prepare('DELETE FROM inscription_evenement WHERE ref_evenement = :id_evenement AND ref_user = :id_utilisateur');
+            return $req->execute([
+                'id_evenement' => $idEvenement,
+                'id_utilisateur' => $idUtilisateur
+            ]);
+        } catch (\PDOException $e) {
+            error_log("Erreur lors de la suppression du participant : " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Vérifie si un utilisateur est déjà inscrit à un événement
+     * @param int $idUtilisateur ID de l'utilisateur
+     * @param int $idEvenement ID de l'événement
+     * @return bool True si l'utilisateur est déjà inscrit, false sinon
+     */
     public function estInscrit(int $idUtilisateur, int $idEvenement): bool
     {
         error_log("Vérification de l'inscription - User: $idUtilisateur, Event: $idEvenement");
