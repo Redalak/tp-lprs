@@ -206,6 +206,9 @@ $offres = $offreRepo->listeOffre();
                 <li><a href="formations.php">Formations</a></li>
                 <li><a href="entreprise.php">Entreprises</a></li>
                 <li><a class="active" href="offres.php">Offres</a></li>
+                <?php if ($userLoggedIn && method_exists($userLoggedIn, 'getRole') && $userLoggedIn->getRole() === 'entreprise'): ?>
+                    <li><a href="ajoutOffre.php">Créer une offre</a></li>
+                <?php endif; ?>
                 <li><a  href="evenement.php">Evenements</a></li>
                 <li><a href="supportContact.php">Contact</a></li>
 

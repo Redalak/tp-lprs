@@ -1,10 +1,10 @@
 <?php
 // Définir le titre de la page
-$pageTitle = 'AjouterOffre';
+$pageTitle = 'Ajouter une offre';
+$pageDescription = 'Ajouter une nouvelle offre d\'emploi';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
-?>
 
 require_once __DIR__ . '/../src/repository/OffreRepo.php';
 require_once __DIR__ . '/../src/repository/EntrepriseRepo.php';
@@ -18,26 +18,25 @@ $entreprises = $entrepriseRepo->listeEntreprise();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $offre = new offre([
-        'titre' => $_POST['titre'],
-        'rue' => $_POST['rue'],
-        'cp' => $_POST['cp'],
-        'ville' => $_POST['ville'],
-        'description' => $_POST['description'],
-        'salaire' => $_POST['salaire'],
-        'type_offre' => $_POST['type_offre'],
-        'etat' => 'en_attente',
+        'titre'          => $_POST['titre'],
+        'rue'            => $_POST['rue'],
+        'cp'             => $_POST['cp'],
+        'ville'          => $_POST['ville'],
+        'description'    => $_POST['description'],
+        'type_offre'     => $_POST['type_offre'],
+        'etat'           => 'en_attente',
         'ref_entreprise' => $_POST['ref_entreprise']
     ]);
 
     $offreRepo = new OffreRepo();
     $offreRepo->ajoutOffre($offre);
-    
+
     header('Location: adminOffre.php');
     exit;
 }
 ?>
 
-<!DOCTYPE html>
+<!-- Le contenu de la page sera inséré ici par header.php -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -94,40 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-<header>
-    <div class="container">
-        <a class="logo">École Sup.</a>
-        <nav>
-            <ul>
-                <li><a href="../index.php">Accueil</a></li>
-                <li><a href="formations.php">Formations</a></li>
-                <li><a href="entreprise.php">Entreprises</a></li>
-                <li><a href="offres.php">Offres</a></li>
-                <li><a href="evenement.php">Evenement</a></li>
-                <li><a href="supportContact.php">Contact</a></li>
-                <?php if (isset($_SESSION['id_user'])): ?>
-                    <li><a href="forum.php">Forum</a></li>
-                    <li class="profile-dropdown">
-                        <a href="profilUser.php" class="profile-icon">👤</a>
-                        <div class="dropdown-content">
-                            <span>Bonjour, <?= htmlspecialchars((string)($_SESSION['prenom'] ?? '')) ?> !</span>
-                            <a href="profilUser.php" class="profile-button">Mon Profil</a>
-                            <a href="../index.php?deco=true" class="logout-button">Déconnexion</a>
-                        </div>
-                    </li>
-                <?php else: ?>
-                    <li><a href="connexion.php">Connexion</a></li>
-                    <li><a href="inscription.php">Inscription</a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-    </div>
-</header>
+<!-- La navigation est gérée par header.php -->
 
     <main class="main-content">
         <div class="container">
             <h1>Ajouter une offre d'emploi</h1>
-            
+
             <div class="form-container">
                 <form method="post" action="ajoutOffre.php">
                     <div class="form-group">
@@ -156,12 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="Alternance">Alternance</option>
                             <option value="Autre">Autre</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="salaire">Salaire (optionnel)</label>
-                        <input type="text" id="salaire" name="salaire" class="form-control" 
-                               placeholder="Ex: 35000€/an">
                     </div>
 
                     <div class="form-group">
@@ -198,11 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; <?= date('Y') ?> École Supérieure. Tous droits réservés.</p>
-        </div>
-    </footer>
-<script src="../assets/js/site.js"></script>
-</body>
-</html>
+<?php
+// Inclure le pied de page
+require_once __DIR__ . '/../includes/footer.php';
+?>

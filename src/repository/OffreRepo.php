@@ -85,7 +85,7 @@ class OffreRepo
             'description'  => $offre->getDescription(),
             'salaire'      => ($offre->getSalaire() === '' ? null : $offre->getSalaire()),
             'type_offre'     => $offre->getTypeOffre(),
-            'etat'           => $offre->getEtat(),
+            'etat'           => 'ouvert',
             'ref_entreprise' => $offre->getRefEntreprise()
         ]);
 
@@ -116,10 +116,10 @@ class OffreRepo
                 unset($row['id_offre']);
             }
             
-            // Ajouter le nom de l'entreprise comme propriété dynamique
+            // Ajouter le nom de l'entreprise via le setter du modèle
             $offre = new offre($row);
             if (isset($row['entreprise_nom'])) {
-                $offre->entreprise_nom = $row['entreprise_nom'];
+                $offre->setEntrepriseNom($row['entreprise_nom']);
             }
             
             $offres[] = $offre;
