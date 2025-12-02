@@ -16,7 +16,7 @@ class offre
     private $etat;
     private $dateCreation;
     private $refEntreprise;
-    private $entreprise_nom;
+    public $entreprise_nom;
 
     // --- Constructeur ---
     public function __construct(array $data = [])
