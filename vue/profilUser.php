@@ -542,7 +542,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             </div>
         <?php endif; ?>
 
-        <!-- Section Gestion de l'entreprise -->
+        <!-- Section Gestion de l'entreprise (uniquement pour les alumni) -->
+        <?php if ($user->getRole() === 'alumni'): ?>
         <section class="entreprise-section mt-5">
             <h2 class="mb-4">
                 <i class="bi bi-building"></i> Mon entreprise
@@ -624,6 +625,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 </div>
             <?php endif; ?>
         </section>
+        <?php endif; ?>
 
         <!-- Section des événements créés par l'utilisateur -->
         <?php if ($user->getRole() === 'alumni'): ?>

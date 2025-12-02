@@ -166,6 +166,61 @@ class RForumRepo
         $st = $pdo->prepare("DELETE FROM {$this->table} WHERE `{$this->cols['post']}` = ?");
         $st->execute([$postId]);
     }
+    
+    /**
+     * Récupère les réponses d'un utilisateur spécifique
+     * @param int $userId ID de l'utilisateur
+     * @return array Tableau d'objets RForum
+     */
+    public function findByUser(int $userId): array
+    {
+        $this->detect();
+        $pdo = $this->pdo();
+        $order = $this->cols['date'] ?: 'id';
+        
+        $sql = "SELECT * FROM {$this->table} WHERE `{$this->cols['user']}` = :userId ";
+        
+        // Ajouter l'ordre de tri si la colonne de date est détectée
+        if (!empty($order)) {
+            $sql .= " ORDER BY `{$order}` DESC";
+        }
+        
+        // Debug: Afficher la requête SQL
+        error_log("Requête SQL: " . $sql);
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+        $result = $stmt->execute();
+        
+        // Debug: Afficher le résultat de l'exécution
+        error_log("Résultat de l'exécution: " . ($result ? 'succès' : 'échec'));
+        
+        $replies = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            // Debug: Afficher chaque ligne récupérée
+            error_log("Ligne récupérée: " . print_r($row, true));
+            
+            // Créer un tableau avec les noms de colonnes corrects pour le modèle
+            $formattedRow = [
+                'id_reply' => $row[$this->cols['id']] ?? null,
+                'post_id' => $row[$this->cols['post']] ?? null,
+                'parent_id' => ($this->cols['parent'] ?? '') !== '' ? ($row[$this->cols['parent']] ?? null) : null,
+                'ref_user' => $row[$this->cols['user']] ?? null,
+                'contenue' => $row[$this->cols['body']] ?? '',
+                'date_creation' => $row[$this->cols['date']] ?? null,
+            ];
+            
+            // Debug: Afficher la ligne formatée
+            error_log("Ligne formatée: " . print_r($formattedRow, true));
+            
+            $replies[] = new \modele\RForum($formattedRow);
+        }
+        
+        // Debug: Afficher le nombre de réponses trouvées
+        error_log("Nombre de réponses trouvées: " . count($replies));
+        
+        return $replies;
+    }
 
     /**
      * Supprime les réponses enfants d'une réponse

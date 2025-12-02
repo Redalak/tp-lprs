@@ -1,6 +1,4 @@
 <?php
-use PDO;
-use PDOException;
 
 function bdd(): PDO {
     static $pdo = null;

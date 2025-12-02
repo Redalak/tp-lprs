@@ -36,28 +36,44 @@ function getUserFullName($userId, $userRepo) {
     return 'Utilisateur #' . $userId;
 }
 
-// Récupérer le rôle de l'utilisateur
-$role = '';
+// Récupérer l'ID de l'utilisateur depuis la session
 $userId = (int)($_SESSION['id_user'] ?? 0);
 
-// Récupérer les informations de l'utilisateur
+// Initialiser les variables utilisateur
 $prenom = $_SESSION['prenom'] ?? '';
 $nom = $_SESSION['nom'] ?? '';
+$role = '';
+
+// Debug: Afficher les informations de session
+// echo "<pre>Session: "; print_r($_SESSION); echo "</pre>";
 
 if ($userId > 0) {
     try {
         $uRepo = new UserRepo();
         $u = $uRepo->getUserById($userId);
         if ($u) {
+            // Récupérer le prénom et le nom
             if (method_exists($u, 'getPrenom')) { $prenom = $u->getPrenom(); }
             if (method_exists($u, 'getNom'))    { $nom = $u->getNom(); }
-            if (method_exists($u, 'getRole'))   { $role = strtolower((string)$u->getRole()); }
+            
+            // Récupérer le rôle
+            if (method_exists($u, 'getRole')) { 
+                $role = strtolower(trim((string)$u->getRole()));
+                // Debug: Afficher le rôle récupéré
+                // echo "<p>Rôle récupéré de la base de données: $role</p>";
+            }
         }
-    } catch (\Throwable $e) {}
+    } catch (\Throwable $e) {
+        // En cas d'erreur, on laisse le rôle vide
+        // Debug: Afficher l'erreur
+        // echo "<p>Erreur lors de la récupération du rôle: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
 }
 
 // Si le rôle n'est pas défini, on utilise une valeur par défaut
 if (empty($role)) {
+    // Debug: Afficher un avertissement si le rôle n'est pas défini
+    // echo "<p>Avertissement: Aucun rôle défini pour l'utilisateur, utilisation de 'etudiant' par défaut</p>";
     $role = 'etudiant';
 }
 
@@ -106,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $contenue = trim((string)($_POST['contenue'] ?? ''));
     
     if ($postId > 0 && $titre !== '' && $contenue !== '') {
-        $pRepo->update($postId, $userId, $titre, $contenue);
+        $pRepo->update($postId, $userId, $titre, $contenue, $role);
     }
     header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
@@ -116,9 +132,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 if (isset($_GET['delete_post'])) {
     $postId = (int)$_GET['delete_post'];
     if ($postId > 0) {
-        $pRepo->delete($postId, $userId);
+        // Récupérer le post pour vérifier l'auteur
+        $post = $pRepo->find($postId);
+        if ($post) {
+            $postAuthorId = (int)$post->getRefUser();
+            $isAuthor = $userId === $postAuthorId;
+            
+            // Récupérer le rôle de l'utilisateur
+            $userRole = '';
+            if ($userId > 0) {
+                $currentUser = $userRepo->getUserById($userId);
+                if ($currentUser && method_exists($currentUser, 'getRole')) {
+                    $userRole = $currentUser->getRole();
+                }
+            }
+            
+            $isAdmin = $userRole === 'admin';
+            
+            // Debug: Afficher les informations de débogage
+            echo "<!-- ";
+            echo "Tentative de suppression - ";
+            echo "Post ID: $postId, ";
+            echo "User ID: $userId, ";
+            echo "Post Author ID: $postAuthorId, ";
+            echo "Is Author: " . ($isAuthor ? 'yes' : 'no') . ", ";
+            echo "User Role: " . htmlspecialchars($userRole) . ", ";
+            echo "Is Admin: " . ($isAdmin ? 'yes' : 'no');
+            echo " -->\n";
+            
+            // Vérifier les autorisations
+            if ($isAuthor || $isAdmin) {
+                $pRepo->delete($postId, $userId, $userRole);
+            } else {
+                // Debug: Enregistrer une tentative non autorisée
+                error_log("Tentative de suppression non autorisée - Accès refusé pour l'utilisateur $userId sur le post $postId");
+            }
+        }
     }
-    header('Location: forum.php?canal=' . $canalActif);
+    // Rediriger vers la même page pour éviter la resoumission du formulaire
+    header("Location: forum.php?canal=$canalActif");
     exit;
 }
 
@@ -152,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply
     if ($userId > 0 && $postId > 0 && $contenue !== '') {
         $rRepo->create($postId, $userId, $contenue, $parentId);
     }
-    header('Location: forum_v3.php?canal=' . $canalActif . '#post-' . $postId);
+    header('Location: forum.php?canal=' . $canalActif . '#post-' . $postId);
     exit;
 }
 
@@ -251,6 +303,7 @@ $posts = $pRepo->findByCanal($canalActif);
                         <div class="dropdown-content">
                             <span>Bonjour, <?= htmlspecialchars((string)$userName) ?> !</span>
                             <a href="profilUser.php" class="profile-button">Mon Profil</a>
+                            <a href="mes_discussions.php" class="profile-button">Mes discussions</a>
                             <a href="?deco=true" class="logout-button">Déconnexion</a>
                         </div>
                     </li>
@@ -286,7 +339,7 @@ $posts = $pRepo->findByCanal($canalActif);
     <?php if ($userId > 0 && $peutPoster): ?>
         <div class="panel">
             <h3>Nouveau post</h3>
-            <form method="post" action="forum_v3.php?canal=<?= $canalActif ?>">
+            <form method="post" action="forum.php?canal=<?= $canalActif ?>">
                 <input type="hidden" name="action" value="post">
                 <input type="hidden" name="canal" value="<?= $canalActif ?>">
                 <input type="text" name="titre" placeholder="Titre" required>
@@ -314,7 +367,25 @@ $posts = $pRepo->findByCanal($canalActif);
                 <div class="meta">
                     Posté le <?= htmlspecialchars((string)$p->getDateCreation()) ?>
                     — <?= htmlspecialchars(getUserFullName((int)$p->getRefUser(), $userRepo)) ?>
-                    <?php if ($userId === (int)$p->getRefUser() || $role === 'admin'): ?>
+                    <?php 
+                    // Déclarer les variables au début pour éviter les erreurs
+                    $postAuthorId = (int)$p->getRefUser();
+                    $isAuthor = ($userId === $postAuthorId);
+                    
+                    // Vérifier si l'utilisateur est admin en utilisant la variable $role définie plus haut
+                    $isAdmin = ($role === 'admin');
+                    
+                    // Debug: Afficher les informations de débogage
+                    echo "<!-- ";
+                    echo "DEBUG - Post ID: " . $p->getIdPost() . ", ";
+                    echo "User ID: $userId, ";
+                    echo "Post Author ID: $postAuthorId, ";
+                    echo "Is Author: " . ($isAuthor ? 'yes' : 'no') . ", ";
+                    echo "User Role: " . htmlspecialchars($role) . ", ";
+                    echo "Is Admin: " . ($isAdmin ? 'yes' : 'no');
+                    echo " -->\n";
+                    ?>
+                    <?php if ($isAuthor || $isAdmin): ?>
                         <div class="post-actions" style="display: inline-block; margin-left: 10px;">
                             <a href="#" onclick="event.preventDefault(); document.getElementById('edit-post-<?= $p->getIdPost() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 10px;">
                                 <small>Modifier</small>
@@ -359,7 +430,12 @@ $posts = $pRepo->findByCanal($canalActif);
                                 <div class="meta">
                                     Le <?= htmlspecialchars((string)$r->getDateCreation()) ?>
                                     — <?= htmlspecialchars(getUserFullName((int)$r->getRefUser(), $userRepo)) ?>
-                                    <?php if ($userId === (int)$r->getRefUser() || $role === 'admin'): ?>
+                                    <?php 
+                                    $replyAuthorId = (int)$r->getRefUser();
+                                    $isReplyAuthor = $userId === $replyAuthorId;
+                                    $isAdmin = ($role === 'admin');
+                                    if ($isReplyAuthor || $isAdmin): 
+                                    ?>
                                         <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
                                             <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $r->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.9em;">
                                                 <small>Modifier</small>
@@ -383,7 +459,7 @@ $posts = $pRepo->findByCanal($canalActif);
                                 </div>
                                 <div><?= nl2br(htmlspecialchars($r->getContenue())) ?></div>
                                 <?php if ($userId > 0): ?>
-                                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                                    <form class="reply" method="post" action="forum.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="action" value="reply">
                                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                                         <input type="hidden" name="parent_id" value="<?= (int)$r->getIdReply() ?>">
@@ -399,7 +475,12 @@ $posts = $pRepo->findByCanal($canalActif);
                                                 <div class="meta">
                                                 Le <?= htmlspecialchars((string)$c->getDateCreation()) ?>
                                                 — <?= htmlspecialchars(getUserFullName((int)$c->getRefUser(), $userRepo)) ?>
-                                                <?php if ($userId === (int)$c->getRefUser() || $role === 'admin'): ?>
+                                                <?php 
+                                    $nestedReplyAuthorId = (int)$c->getRefUser();
+                                    $isNestedReplyAuthor = $userId === $nestedReplyAuthorId;
+                                    $isAdmin = ($role === 'admin');
+                                    if ($isNestedReplyAuthor || $isAdmin): 
+                                    ?>
                                                     <div class="reply-actions" style="display: inline-block; margin-left: 5px;">
                                                         <a href="#" onclick="event.preventDefault(); document.getElementById('edit-reply-<?= $c->getIdReply() ?>').style.display='block'" style="color: var(--sec); text-decoration: none; margin-right: 5px; font-size: 0.8em;">
                                                             <small>Modifier</small>
@@ -432,7 +513,7 @@ $posts = $pRepo->findByCanal($canalActif);
                 <?php endif; ?>
 
                 <?php if ($userId > 0): ?>
-                    <form class="reply" method="post" action="forum_v3.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
+                    <form class="reply" method="post" action="forum.php?canal=<?= $canalActif ?>#post-<?= (int)$p->getIdPost() ?>">
                         <input type="hidden" name="action" value="reply">
                         <input type="hidden" name="post_id" value="<?= (int)$p->getIdPost() ?>">
                         <textarea name="contenue" rows="3" placeholder="Répondre…" required></textarea>
@@ -444,5 +525,174 @@ $posts = $pRepo->findByCanal($canalActif);
     <?php endif; ?>
 </div>
 <script src="../assets/js/site.js"></script>
+<script>
+// Fonction pour afficher les messages de débogage
+function debugLog(message) {
+    console.log(message);
+    const debugConsole = document.getElementById('debug-console');
+    if (debugConsole) {
+        const p = document.createElement('p');
+        p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+        debugConsole.appendChild(p);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+}
+
+// Fonction pour faire défiler vers un élément
+function scrollToElement(elementId) {
+    debugLog('Tentative de défilement vers: ' + elementId);
+    const element = document.getElementById(elementId.replace('#', ''));
+    
+    if (element) {
+        debugLog('Élément trouvé, défilement en cours...');
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        element.classList.add('highlighted-post');
+        
+        // Retirer la mise en surbrillance après 3 secondes
+        setTimeout(() => {
+            element.classList.remove('highlighted-post');
+        }, 3000);
+        
+        return true;
+    } else {
+        debugLog('Élément non trouvé: ' + elementId);
+        return false;
+    }
+}
+
+// Fonction pour gérer le défilement
+function handleScrollToHash() {
+    if (window.location.hash) {
+        debugLog('Hash détecté dans l\'URL: ' + window.location.hash);
+        
+        // Essayer de faire défiler immédiatement
+        if (scrollToElement(window.location.hash)) {
+            return;
+        }
+        
+        // Si l'élément n'est pas encore chargé, essayer plusieurs fois avec un délai
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = 200; // ms
+        
+        const checkForElement = setInterval(() => {
+            attempts++;
+            debugLog(`Tentative ${attempts}/${maxAttempts} pour trouver l'élément`);
+            
+            if (scrollToElement(window.location.hash)) {
+                clearInterval(checkForElement);
+            } else if (attempts >= maxAttempts) {
+                debugLog('Échec: élément non trouvé après ' + maxAttempts + ' tentatives');
+                clearInterval(checkForElement);
+            }
+        }, checkInterval);
+    } else {
+        debugLog('Aucun hash trouvé dans l\'URL');
+    }
+}
+
+// Démarrer le processus de défilement quand le DOM est chargé
+document.addEventListener('DOMContentLoaded', function() {
+    debugLog('DOM entièrement chargé');
+    
+    // Si le contenu est chargé de manière asynchrone, il faudra peut-être attendre plus longtemps
+    // ou utiliser un événement personnalisé déclenché quand le contenu est chargé
+    
+    // Essayer de faire défiler immédiatement
+    handleScrollToHash();
+    
+    // Réessayer après un certain délai au cas où le contenu se charge de manière asynchrone
+    setTimeout(handleScrollToHash, 1000);
+});
+
+// Écouter les changements d'URL (au cas où le hash change sans rechargement de page)
+window.addEventListener('hashchange', handleScrollToHash, false);
+
+// Afficher la console de débogage si le paramètre debug est présent dans l'URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === '1') {
+    const debugConsole = document.createElement('div');
+    debugConsole.id = 'debug-console';
+    debugConsole.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#fff;padding:10px;font-family:monospace;font-size:12px;max-height:200px;overflow-y:auto;z-index:9999;';
+    document.body.appendChild(debugConsole);
+    debugLog('Console de débogage activée');
+}
+});
+</script>
+<style>
+/* Style pour la mise en surbrillance du post cible */
+.highlighted-post {
+    animation: highlight 3s ease-in-out;
+    border-left: 4px solid #4a90e2;
+    padding-left: 10px;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+@keyframes highlight {
+    0% { 
+        background-color: rgba(74, 144, 226, 0.2);
+        transform: translateX(-5px);
+    }
+    50% {
+        background-color: rgba(74, 144, 226, 0.1);
+    }
+    100% { 
+        background-color: transparent;
+        transform: translateX(0);
+    }
+}
+
+/* Style pour la console de débogage (visible uniquement en développement) */
+#debug-console {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none; /* Caché par défaut */
+}
+
+/* Pour afficher la console de débogage, ajoutez ?debug=1 à l'URL */
+</style>
+
+<!-- Console de débogage -->
+<div id="debug-console"></div>
+
+<script>
+// Fonction pour afficher les messages de débogage
+function debugLog(message) {
+    console.log(message);
+    const debugConsole = document.getElementById('debug-console');
+    if (debugConsole) {
+        const p = document.createElement('p');
+        p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+        debugConsole.appendChild(p);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+}
+
+// Afficher la console de débogage si le paramètre debug est présent dans l'URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === '1') {
+    document.getElementById('debug-console').style.display = 'block';
+}
+
+// Redéfinir la fonction scrollToPost pour utiliser debugLog
+const originalScrollToPost = window.scrollToPost;
+window.scrollToPost = function() {
+    debugLog('Fonction scrollToPost appelée');
+    if (originalScrollToPost) {
+        return originalScrollToPost.apply(this, arguments);
+    }
+};
+</script>
 </body>
 </html>
