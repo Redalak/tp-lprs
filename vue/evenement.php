@@ -427,6 +427,7 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                                         </a>
                                         <?php 
                                         $peutSInscrire = !empty($userLoggedIn) && 
+                                                       $userLoggedIn->getRole() !== 'admin' && 
                                                        !$userInscrit && 
                                                        strtotime($event->getDateEvent()) > time() && 
                                                        $places['disponibles'] > 0;

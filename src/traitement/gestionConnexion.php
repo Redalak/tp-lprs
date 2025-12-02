@@ -43,6 +43,7 @@ if (!empty($userFromDb->getIdUser()) && password_verify($_POST['password'], $use
     }
     $_SESSION['id_user'] = $userFromDb->getIdUser();
     $_SESSION['email'] = $userFromDb->getEmail();
+    $_SESSION['role'] = $userFromDb->getRole();
     $_SESSION["connexion"] = true;
 
     if ($userFromDb->getRole() === "admin") {

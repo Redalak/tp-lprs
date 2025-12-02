@@ -41,9 +41,21 @@
                         <a class="nav-link" href="../index.php">Accueil</a>
                     </li>
                     <?php if (isset($_SESSION['id_user'])): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="profilUser.php">Mon Profil</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="profilUser.php">Mon Profil</a>
+                        </li>
+                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'entreprise'): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/offres/creer">
+                                    <i class="bi bi-plus-circle"></i> Créer une offre
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/offres">
+                                    <i class="bi bi-briefcase"></i> Mes offres
+                                </a>
+                            </li>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav">

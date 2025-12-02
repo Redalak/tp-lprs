@@ -4,9 +4,11 @@ $pageTitle = 'ModifierUtilisateurÉvénement';
 
 // Inclure l'en-tête qui gère la session et l'authentification
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../src/repository/EventRepo.php';
+use repository\EventRepo;
 ?>
+<?php
 
-session_start();
 
 // Vérification de l'authentification
 if (!isset($_SESSION['id_user'])) {
@@ -14,8 +16,7 @@ if (!isset($_SESSION['id_user'])) {
     exit;
 }
 
-require_once __DIR__ . '/../src/repository/EventRepo.php';
-use repository\EventRepo;
+
 
 $userId = (int)$_SESSION['id_user'];
 $eventRepo = new EventRepo();
@@ -43,10 +44,6 @@ if (isset($_GET['id'])) {
             
             $messageClass = 'danger';
         }
-    } else {
-        // L'événement n'existe pas
-        $message = 'L\'événement demandé n\'existe pas.';
-        $messageClass = 'danger';
     }
 }
 
@@ -107,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $editionMode ? 'Modifier un événement' : 'Mes événements' ?> - Mon Compte</title>
+    <title style="color: black"><?= $editionMode ? 'Modifier un événement' : 'Mes événements' ?> - Mon Compte</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
@@ -260,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Liste des événements -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Mes événements</h5>
+                    <h5 class="mb-0" style="color: black"><i class="bi bi-calendar3"></i> Mes événements</h5>
                     <a href="profilUser.php" class="btn btn-sm btn-outline-light">
                         <i class="bi bi-arrow-left"></i> Retour au profil
                     </a>
