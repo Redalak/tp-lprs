@@ -693,7 +693,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="modifUtilisateurEvent.php?id=<?= $event->getRefUser() ?>" 
+                                        <a href="evenement.php?event_id=<?= $event->getIdEvent() ?>" 
+                                           class="btn btn-outline-info"
+                                           title="Voir les participants">
+                                            <i class="bi bi-people"></i> Participants
+                                        </a>
+                                        <a href="modifUtilisateurEvent.php?id=<?= $event->getIdEvent() ?>" 
                                            class="btn btn-outline-primary"
                                            title="Modifier l'événement">
                                             <i class="bi bi-pencil"></i>
