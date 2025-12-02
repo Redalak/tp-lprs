@@ -14,15 +14,8 @@ class OffreRepo
 
     public function __construct()
     {
-        $this->bdd = new \PDO(
-            'mysql:host=localhost;dbname=tplprs;charset=utf8',
-            'root',
-            '',
-            [
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
-            ]
-        );
+        $bdd = new \bdd\Bdd();
+        $this->bdd = $bdd->getBdd();
     }
 
     /**
@@ -85,7 +78,7 @@ class OffreRepo
             'description'  => $offre->getDescription(),
             'salaire'      => ($offre->getSalaire() === '' ? null : $offre->getSalaire()),
             'type_offre'     => $offre->getTypeOffre(),
-            'etat'           => 'ouvert',
+            'etat'           => $offre->getEtat(),
             'ref_entreprise' => $offre->getRefEntreprise()
         ]);
 
@@ -116,10 +109,10 @@ class OffreRepo
                 unset($row['id_offre']);
             }
             
-            // Ajouter le nom de l'entreprise via le setter du modèle
+            // Ajouter le nom de l'entreprise comme propriété dynamique
             $offre = new offre($row);
             if (isset($row['entreprise_nom'])) {
-                $offre->setEntrepriseNom($row['entreprise_nom']);
+                $offre->entreprise_nom = $row['entreprise_nom'];
             }
             
             $offres[] = $offre;

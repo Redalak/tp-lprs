@@ -13,37 +13,81 @@ use repository\InscriptionEventRepo;
 
 // La session est déjà démarrée dans header.php
 
+// Initialisation des variables
+$userLoggedIn = null;
+$estInscrit = false;
+$estCreateur = false;
+$evenement = null;
+$participants = [];
+$message = '';
+$messageClass = '';
+
 // Initialisation des repositories
-
-
 $evenementRepo = new EventRepo();
 $inscriptionRepo = new InscriptionEventRepo();
 
+// Récupérer l'utilisateur connecté (pour le header)
+if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty($_SESSION['id_user'])) {
+    require_once __DIR__ . '/../src/repository/UserRepo.php';
+    $userRepo = new \repository\UserRepo();
+    $userLoggedIn = $userRepo->getUserById($_SESSION['id_user']);
+}
+
 // Vérifier si on affiche un événement spécifique
-$evenement = null;
 if (isset($_GET['event_id']) && is_numeric($_GET['event_id'])) {
     $evenement = $evenementRepo->getEvenementById($_GET['event_id']);
     if (!$evenement) {
         header('Location: evenement.php');
         exit();
     }
+    
+    // Traitement de la suppression d'un participant (doit être avant la récupération des participants)
+    if ($userLoggedIn && isset($_POST['supprimer_participant'])) {
+        $idParticipant = filter_input(INPUT_POST, 'participant_id', FILTER_VALIDATE_INT);
+        if ($idParticipant) {
+            $estCreateur = ($userLoggedIn->getIdUser() === $evenement->getRefUser());
+            
+            if ($estCreateur) {
+                $suppressionReussie = $inscriptionRepo->supprimerParticipant(
+                    $evenement->getIdEvent(),
+                    $idParticipant
+                );
+                if ($suppressionReussie) {
+                    $_SESSION['message'] = "Le participant a été supprimé avec succès.";
+                    $_SESSION['messageClass'] = "success";
+                    // Recharger la page pour actualiser la liste
+                    header("Location: evenement.php?event_id=" . $evenement->getIdEvent());
+                    exit();
+                } else {
+                    $message = "Une erreur est survenue lors de la suppression du participant.";
+                    $messageClass = "error";
+                }
+            }
+        }
+    }
+    
+    // Vérifier si l'utilisateur est déjà inscrit à l'événement
+    if ($userLoggedIn) {
+        $estInscrit = $inscriptionRepo->estInscrit($userLoggedIn->getIdUser(), $evenement->getIdEvent());
+        // Vérifier si l'utilisateur est le créateur de l'événement
+        $estCreateur = ($userLoggedIn->getIdUser() === $evenement->getRefUser());
+        
+        // Récupérer la liste des participants si l'utilisateur est le créateur de l'événement
+        if ($estCreateur) {
+            $participants = $inscriptionRepo->getParticipantsEvenement($evenement->getIdEvent());
+        }
+    }
 } else {
     // Si pas d'ID spécifique, récupérer tous les événements
     $evenements = $evenementRepo->getTousLesEvenements();
 }
 
-// Récupérer l'utilisateur connecté (pour le header)
-$userLoggedIn = null;
-$estInscrit = false;
-if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty($_SESSION['id_user'])) {
-    require_once __DIR__ . '/../src/repository/UserRepo.php';
-    $userRepo = new \repository\UserRepo();
-    $userLoggedIn = $userRepo->getUserById($_SESSION['id_user']);
-    
-    // Vérifier si l'utilisateur est déjà inscrit à l'événement
-    if ($evenement) {
-        $estInscrit = $inscriptionRepo->estInscrit($userLoggedIn->getIdUser(), $evenement->getIdEvent());
-    }
+// Récupérer les messages de session s'ils existent
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $messageClass = $_SESSION['messageClass'] ?? 'info';
+    unset($_SESSION['message']);
+    unset($_SESSION['messageClass']);
 }
 ?>
 <!DOCTYPE html>
@@ -59,6 +103,69 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 
     <style>
+        /* Style pour la section des participants */
+        .participants-section {
+            margin-top: 30px;
+            background: var(--surface-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .participant-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .participant-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .participant-email {
+            font-size: 0.9em;
+            color: #666;
+            word-break: break-word;
+        }
+
+        .participants-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .participants-count {
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .event-creator-badge {
+            display: inline-block;
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+
         :root {
             --primary-color: #0A4D68;
 {{ ... }}
@@ -303,7 +410,12 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
             </a>
             
             <article class="event-detail">
-                <h1><?= htmlspecialchars($evenement->getTitre()) ?></h1>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px;">
+    <h1 style="margin: 0;"><?= htmlspecialchars($evenement->getTitre()) ?></h1>
+    <?php if ($userLoggedIn && $evenement->getRefUser() === $userLoggedIn->getIdUser()): ?>
+        <span class="event-creator-badge" style="font-size: 1rem;">Créé par vous</span>
+    <?php endif; ?>
+</div>
                 
                 <div class="event-meta" style="margin: 20px 0; display: flex; gap: 20px; flex-wrap: wrap;">
                     <div class="meta-item" style="display: flex; align-items: center; gap: 5px;">
@@ -348,7 +460,70 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                         </a>
                     <?php endif; ?>
                 </div>
-            </article>
+
+                <?php if ($estCreateur): ?>
+                    <div class="participants-section" style="margin: 20px 0; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px;">
+                        <div class="participants-header" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;">
+                            <h3 style="margin: 0; color: #2c3e50; font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-people-fill" style="color: var(--primary-color); font-size: 1.1em;"></i>
+                                Participants
+                                <span class="badge bg-primary" style="font-size: 0.75em; padding: 4px 8px; border-radius: 10px; font-weight: 500; margin-left: 5px;">
+                                    <?= count($participants) ?>
+                                </span>
+                            </h3>
+                        </div>
+                        
+                        <?php if (!empty($participants)): ?>
+                            <div class="table-responsive" style="border-radius: 6px; overflow: hidden; border: 1px solid #eaeaea; font-size: 0.9em;">
+                                <table class="table table-hover align-middle" style="margin: 0;">
+                                    <thead style="background-color: #f8f9fa;">
+                                        <tr>
+                                            <th style="padding: 10px 15px; font-weight: 600; color: #495057; border-bottom: 1px solid #eaeaea;">Nom</th>
+                                            <th style="padding: 10px 15px; font-weight: 600; color: #495057; border-bottom: 1px solid #eaeaea; width: 120px;">Rôle</th>
+                                            <th style="padding: 10px 15px; font-weight: 600; color: #495057; border-bottom: 1px solid #eaeaea; width: 100px; text-align: center;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($participants as $participant): ?>
+                                            <tr style="border-bottom: 1px solid #f5f5f5;">
+                                                <td style="padding: 12px 15px; color: #2c3e50;">
+                                                    <?= htmlspecialchars($participant['prenom'] . ' ' . $participant['nom']) ?>
+                                                </td>
+                                                <td style="padding: 12px 15px;">
+                                                    <?php 
+                                                    $role = $participant['role'] ?? 'Utilisateur';
+                                                    $role = str_replace(['CC', 'DC'], '', $role);
+                                                    $role = trim($role) ?: 'Utilisateur';
+                                                    ?>
+                                                    <span class="badge" style="background-color: #e9ecef; color: #495057; font-size: 0.85em; padding: 4px 8px; border-radius: 4px; font-weight: 500;">
+                                                        <?= htmlspecialchars($role) ?>
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 12px 15px; text-align: center;">
+                                                    <?php if ($participant['id_user'] != $userLoggedIn->getIdUser()): ?>
+                                                        <form method="post" class="d-inline" onsubmit="return confirm('Supprimer ce participant ?');">
+                                                            <input type="hidden" name="participant_id" value="<?= $participant['id_user'] ?>">
+                                                            <button type="submit" name="supprimer_participant" class="btn btn-sm btn-outline-danger" style="padding: 3px 8px; border-radius: 4px; font-size: 0.85em;" title="Supprimer">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <span class="text-muted" style="font-size: 0.9em;">Vous</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-info mb-0" style="background-color: #e7f5ff; border: 1px solid #d0ebff; color: #1864ab; padding: 10px; border-radius: 6px; font-size: 0.9em; margin: 0;">
+                                <i class="bi bi-info-circle-fill" style="margin-right: 6px; font-size: 0.9em;"></i> Aucun participant
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </main>
 <?php else: ?>
@@ -367,7 +542,12 @@ if (!empty($_SESSION['connexion']) && $_SESSION['connexion'] === true && !empty(
                     <?php foreach ($evenements as $event): ?>
                         <article class="card">
                             <div class="card-content">
-                                <h3><?= htmlspecialchars($event->getTitre()) ?></h3>
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <h3 style="margin: 0;"><?= htmlspecialchars($event->getTitre()) ?></h3>
+    <?php if ($userLoggedIn && $event->getRefUser() === $userLoggedIn->getIdUser()): ?>
+        <span class="event-creator-badge">Créé par vous</span>
+    <?php endif; ?>
+</div>
 
                                 <div class="event-meta">
                                     <div class="meta-item">
