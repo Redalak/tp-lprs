@@ -1,6 +1,6 @@
 <?php
 // Détection du chemin de base
-$base_path = '/lprs/tp-lprs';
+$base_path = '/tp-lprs';
 
 // Liste des dossiers et fichiers accessibles sans authentification
 $public_paths = [
