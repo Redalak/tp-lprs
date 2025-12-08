@@ -79,7 +79,7 @@ try {
     ]);
 
     $_SESSION['success'] = "Votre candidature a été envoyée avec succès.";
-    header('Location: ' . $base_path . '/vue/offres/detail.php?id=' . urlencode((string)$refOffre));
+    header('Location: ' . $base_path . '/index.php?applied=1');
     exit();
 } catch (Throwable $e) {
     error_log('Erreur candidature: ' . $e->getMessage());

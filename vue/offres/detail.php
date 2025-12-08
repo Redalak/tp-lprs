@@ -1,4 +1,51 @@
 <?php require_once __DIR__ . '/../includes/header.php'; ?>
+<?php
+// Chargement utilitaires requis par la vue lorsqu'elle est appelée directement
+require_once __DIR__ . '/../../src/bdd/Bdd.php';
+require_once __DIR__ . '/../../src/helpers/AuthHelper.php';
+use bdd\Bdd;
+use helpers\AuthHelper;
+
+// Initialiser PDO pour les vérifications de droits et requêtes locales
+$pdo = (new Bdd())->getBdd();
+
+// Si $offre n'est pas fourni par un contrôleur, on le récupère via l'id en GET
+if (!isset($offre)) {
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    if ($id > 0) {
+        $stmt = $pdo->prepare('
+            SELECT o.*, e.nom AS nom_entreprise
+            FROM offre o
+            LEFT JOIN entreprise e ON o.ref_entreprise = e.id_entreprise
+            WHERE o.id_offre = :id
+        ');
+        $stmt->execute(['id' => $id]);
+        $offre = $stmt->fetch();
+    }
+}
+
+if (empty($offre)) {
+    $_SESSION['error'] = "Offre introuvable.";
+    header('Location: /lprs/tp-lprs/vue/offres.php');
+    exit();
+}
+?>
+
+<?php
+// Charger les candidatures uniquement pour l'entreprise propriétaire
+$candidatures = [];
+if (AuthHelper::hasRole('entreprise') && !empty($offre['id_offre']) && AuthHelper::isOwnerOfOffer((int)$offre['id_offre'], $pdo)) {
+    $stmt = $pdo->prepare('
+        SELECT c.motivation, c.cv, c.date_candidature, u.prenom, u.nom, u.email
+        FROM candidature c
+        JOIN user u ON c.ref_user = u.id_user
+        WHERE c.ref_offre = :id
+        ORDER BY c.date_candidature DESC
+    ');
+    $stmt->execute(['id' => (int)$offre['id_offre']]);
+    $candidatures = $stmt->fetchAll();
+}
+?>
 
 <div class="container mt-4">
     <?php if (!empty($_SESSION['success'])): ?>

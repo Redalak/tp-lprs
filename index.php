@@ -274,6 +274,19 @@ if ($userLoggedIn) {
     /* --- Keyframes --- */
     @keyframes floaty { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(0,-12px) scale(1.02); } }
     @keyframes shine { to { transform: translateX(120%); } }
+    /* Toast animé pour confirmation candidature */
+    .toast-pop {
+        position: fixed; top: 20px; right: 20px; z-index: 2000;
+        background: #10b981; color: #fff; padding: 14px 18px; border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(16,185,129,.35); font-weight: 700;
+        transform: translateY(-12px); opacity: 0;
+        display: flex; gap: 10px; align-items: center;
+        animation: toastIn .35s ease forwards, toastStay 2.6s linear 0.35s forwards, toastOut .35s ease 3s forwards;
+    }
+    .toast-pop svg { width: 20px; height: 20px; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-12px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+    @keyframes toastOut { to { opacity: 0; transform: translateY(-12px) scale(.98); } }
+    @keyframes toastStay { to { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -502,6 +515,26 @@ if ($userLoggedIn) {
       if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
     });
   }
+
+  // Toast de remerciement après candidature (?applied=1)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('applied') === '1') {
+      const toast = document.createElement('div');
+      toast.className = 'toast-pop';
+      toast.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.477 22 2 17.523 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Z" fill="rgba(255,255,255,.15)"/><path d="M10.2 14.8 7.7 12.3a1 1 0 1 0-1.4 1.4l3.2 3.2a1 1 0 0 0 1.414 0l6.6-6.6a1 1 0 1 0-1.414-1.414l-5.9 5.9Z" fill="#fff"/></svg>
+        <span>Merci pour votre candidature !</span>
+      `;
+      document.body.appendChild(toast);
+      // Retirer le paramètre de l'URL sans recharger
+      params.delete('applied');
+      const url = window.location.pathname + (params.toString() ? `?${params}` : '') + window.location.hash;
+      window.history.replaceState({}, '', url);
+      // Nettoyage DOM après l’animation
+      setTimeout(()=>{ toast.remove(); }, 3450);
+    }
+  } catch(_) { /* no-op */ }
 })();
 </script>
     <!-- Carousel JavaScript -->

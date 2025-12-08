@@ -1,6 +1,13 @@
 <?php
 // Détection du chemin de base
-$base_path = '/tp-lprs';
+// Détection auto du base_path selon l’emplacement réel du projet
+$docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+
+if (is_dir($docRoot . '/lprs/tp-lprs')) {
+    $base_path = '/lprs/tp-lprs';
+} else {
+    $base_path = '/tp-lprs';
+}
 
 // Liste des dossiers et fichiers accessibles sans authentification
 $public_paths = [
