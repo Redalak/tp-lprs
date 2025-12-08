@@ -67,7 +67,7 @@
                 <hr>
                 <div class="mt-4">
                     <h5 class="mb-3">Postuler à cette offre</h5>
-                    <form action="/candidatures/creer" method="POST" enctype="multipart/form-data">
+                    <form action="/lprs/tp-lprs/src/traitement/candidatures_creer.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="ref_offre" value="<?= $offre['id_offre']; ?>">
                         
                         <div class="mb-3">
