@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'ville'          => $_POST['ville'],
         'description'    => $_POST['description'],
         'type_offre'     => $_POST['type_offre'],
-        'etat'           => 'en_attente',
+        'etat'           => 'ouvert',
         'ref_entreprise' => $_POST['ref_entreprise']
     ]);
 

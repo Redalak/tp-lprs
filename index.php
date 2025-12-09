@@ -56,6 +56,22 @@ if ($userLoggedIn) {
         $isAdmin = in_array($role, ['admin', 'role_admin'], true);
     }
 }
+
+// Déterminer si l'utilisateur est une entreprise
+$isEntreprise = false;
+if ($userLoggedIn) {
+    $roleStr = null;
+    if (method_exists($userLoggedIn, 'getRole')) {
+        $roleStr = strtolower((string) $userLoggedIn->getRole());
+    } elseif (property_exists($userLoggedIn, 'role')) {
+        $roleStr = strtolower((string) $userLoggedIn->role);
+    } elseif (!empty($_SESSION['role'])) {
+        $roleStr = strtolower((string) $_SESSION['role']);
+    }
+    if ($roleStr !== null) {
+        $isEntreprise = in_array($roleStr, ['entreprise', 'role_entreprise'], true);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -306,6 +322,10 @@ if ($userLoggedIn) {
                 <?php if ($userLoggedIn): ?>
 
                     <li><a href="vue/forum.php">Forum</a></li>
+
+                    <?php if ($isEntreprise): ?>
+                        <li><a href="vue/candidatures.php">Candidatures</a></li>
+                    <?php endif; ?>
 
                     <?php if ($isAdmin): ?>
                         <li><a href="vue/admin.php">Admin</a></li>

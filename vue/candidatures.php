@@ -2,8 +2,11 @@
 // Définir le titre de la page
 $pageTitle = 'Candidatures reçues';
 
-// En-tête (démarre la session + auth de base)
-require_once __DIR__ . '/../includes/header.php';
+// Démarrer la session et charger l'auth de base AVANT tout output HTML
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../src/auth/check_auth.php';
 
 // Dépendances
 require_once __DIR__ . '/../src/bdd/Bdd.php';
@@ -56,16 +59,7 @@ $stmt = $pdo->prepare('
 $stmt->execute(['idEntreprise' => (int)$refEntreprise]);
 $candidatures = $stmt->fetchAll();
 ?>
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidatures reçues</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+<?php require_once __DIR__ . '/../includes/header.php'; ?>
 <div class="container py-4">
     <?php if (!empty($_SESSION['success'])): ?>
         <div class="alert alert-success"><?= htmlspecialchars($_SESSION['success']); ?></div>
@@ -78,7 +72,7 @@ $candidatures = $stmt->fetchAll();
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4 mb-0">Candidatures reçues</h1>
-        <a class="btn btn-outline-secondary" href="/lprs/tp-lprs/vue/entreprise.php">Retour espace entreprise</a>
+        <a class="btn btn-outline-secondary" href="<?= ($base_path ?? '') ?>/vue/entreprise.php">Retour espace entreprise</a>
     </div>
 
     <?php if (empty($candidatures)): ?>
@@ -100,7 +94,7 @@ $candidatures = $stmt->fetchAll();
                     <?php foreach ($candidatures as $c): ?>
                         <tr>
                             <td>
-                                <a href="/lprs/tp-lprs/vue/offres/detail.php?id=<?= (int)$c['ref_offre']; ?>">
+                                <a href="<?= ($base_path ?? '') ?>/vue/offres/detail.php?id=<?= (int)$c['ref_offre']; ?>">
                                     <?= htmlspecialchars($c['titre']); ?>
                                 </a>
                             </td>
@@ -108,7 +102,7 @@ $candidatures = $stmt->fetchAll();
                             <td><a href="mailto:<?= htmlspecialchars($c['email']); ?>"><?= htmlspecialchars($c['email']); ?></a></td>
                             <td><?= (new DateTime($c['date_candidature']))->format('d/m/Y H:i'); ?></td>
                             <td>
-                                <a class="btn btn-sm btn-outline-primary" target="_blank" href="/lprs/tp-lprs/uploads/cv/<?= htmlspecialchars($c['cv']); ?>">Télécharger</a>
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" href="<?= ($base_path ?? '') ?>/uploads/cv/<?= htmlspecialchars($c['cv']); ?>">Télécharger</a>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#motivationModal" data-motivation="<?= htmlspecialchars($c['motivation']); ?>">Voir</button>
@@ -137,7 +131,6 @@ $candidatures = $stmt->fetchAll();
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const modalEl = document.getElementById('motivationModal');
 modalEl?.addEventListener('show.bs.modal', (e) => {

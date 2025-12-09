@@ -69,6 +69,24 @@ class OffreRepo
                 :ref_entreprise
             )
         ');
+        
+        // Normaliser la valeur d'etat pour l'ENUM('ouvert','ferme','brouillon')
+        $etatVal = $offre->getEtat();
+        if (is_string($etatVal)) {
+            $map = [
+                'ouvert' => 'ouvert',
+                'ouverte' => 'ouvert',
+                'open' => 'ouvert',
+                'ferme' => 'ferme',
+                'fermé' => 'ferme',
+                'closed' => 'ferme',
+                'brouillon' => 'brouillon',
+                'draft' => 'brouillon',
+            ];
+            $etatVal = $map[strtolower(trim($etatVal))] ?? 'ouvert';
+        } elseif ($etatVal === null || $etatVal === '') {
+            $etatVal = 'ouvert';
+        }
 
         $req->execute([
             'titre'        => $offre->getTitre(),
@@ -77,8 +95,8 @@ class OffreRepo
             'ville'        => $offre->getVille(),
             'description'  => $offre->getDescription(),
             'salaire'      => ($offre->getSalaire() === '' ? null : $offre->getSalaire()),
-            'type_offre'     => $offre->getTypeOffre(),
-            'etat'           => $offre->getEtat(),
+            'type_offre'   => $offre->getTypeOffre(),
+            'etat'         => $etatVal,
             'ref_entreprise' => $offre->getRefEntreprise()
         ]);
 
